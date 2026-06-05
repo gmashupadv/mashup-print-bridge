@@ -1,0 +1,41 @@
+appId: com.mashupadv.print-bridge
+productName: Mashup Print Bridge
+copyright: Copyright © 2026 Mashup ADV
+
+directories:
+  output: dist-electron-builder
+
+files:
+  - out/**/*
+  - package.json
+
+publish:
+  provider: github
+  owner: gmashupadv
+  repo: mashup-print-bridge
+  releaseType: draft
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icon.ico
+
+nsis:
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  icon: resources/icon.png
+  category: public.app-category.utilities
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: resources/icon.png
+  category: Utility
