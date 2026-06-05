@@ -1,22 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { DriverPicker } from './components/DriverPicker'
-import { ConnectionForm } from './components/ConnectionForm'
-import { DeptMapping } from './components/DeptMapping'
+import React, { useEffect, useState } from 'react'
+import { PrinterCard } from './components/PrinterCard'
 import { EventLog } from './components/EventLog'
-import type { AppConfig } from '../../main/config'
+import type { AppConfig, PrinterConfig } from '../../main/config'
 
-const DEFAULT: AppConfig = {
-  driver: 'epson-fpmate',
-  autostart: true,
-  port: 8765,
-  logLevel: 'info',
-  connection: { ip: '', port: 80, timeout: 10000 },
-  operatorId: '1',
-  deptMapping: {},
+function newPrinter(): PrinterConfig {
+  return {
+    id: `printer-${Date.now()}`,
+    label: 'Nuova stampante',
+    driver: 'escpos-network',
+    connection: { ip: '', port: 9100, timeout: 5000 },
+    operatorId: '1',
+    deptMapping: {},
+  }
 }
 
 export default function App() {
-  const [config, setConfig] = useState<AppConfig>(DEFAULT)
+  const [config, setConfig] = useState<AppConfig>({
+    printers: [],
+    autostart: true,
+    port: 8765,
+    logLevel: 'info',
+  })
   const [drivers, setDrivers] = useState<string[]>([])
   const [events, setEvents] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
@@ -31,6 +35,15 @@ export default function App() {
     return unsub
   }, [])
 
+  const updatePrinter = (updated: PrinterConfig) =>
+    setConfig((c) => ({ ...c, printers: c.printers.map((p) => (p.id === updated.id ? updated : p)) }))
+
+  const addPrinter = () =>
+    setConfig((c) => ({ ...c, printers: [...c.printers, newPrinter()] }))
+
+  const removePrinter = (id: string) =>
+    setConfig((c) => ({ ...c, printers: c.printers.filter((p) => p.id !== id) }))
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -44,31 +57,26 @@ export default function App() {
     }
   }
 
-  const handleTest = useCallback(async () => {
-    const status = await window.bridge.testDriver()
-    if (!status.online) throw new Error(status.errorMessage || 'Stampante offline')
-  }, [])
-
   return (
-    <div className="p-4 bg-white min-h-screen text-gray-800 text-sm">
+    <div className="p-4 bg-white h-screen overflow-y-auto text-gray-800 text-sm">
       <h1 className="font-semibold mb-4">Mashup Print Bridge — Configurazione</h1>
 
-      <DriverPicker
-        drivers={drivers}
-        value={config.driver}
-        onChange={(d) => setConfig({ ...config, driver: d })}
-      />
+      {config.printers.map((printer) => (
+        <PrinterCard
+          key={printer.id}
+          printer={printer}
+          drivers={drivers}
+          onChange={updatePrinter}
+          onRemove={config.printers.length > 1 ? () => removePrinter(printer.id) : undefined}
+        />
+      ))}
 
-      <ConnectionForm
-        value={config.connection}
-        onChange={(c) => setConfig({ ...config, connection: c })}
-        onTest={handleTest}
-      />
-
-      <DeptMapping
-        value={config.deptMapping}
-        onChange={(m) => setConfig({ ...config, deptMapping: m })}
-      />
+      <button
+        className="w-full mb-4 py-1.5 border-2 border-dashed border-gray-300 text-gray-500 rounded hover:border-blue-400 hover:text-blue-500 text-sm"
+        onClick={addPrinter}
+      >
+        + Aggiungi stampante
+      </button>
 
       <div className="flex items-center gap-3 mb-4">
         <button

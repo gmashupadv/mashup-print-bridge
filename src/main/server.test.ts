@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { buildServer } from './server'
+import type { ServerOptions } from './server'
 import type { PrinterDriver } from './drivers/interface'
 
 function makeMockDriver(overrides?: Partial<PrinterDriver>): PrinterDriver {
@@ -15,32 +16,67 @@ function makeMockDriver(overrides?: Partial<PrinterDriver>): PrinterDriver {
   }
 }
 
+function makeOpts(driver = makeMockDriver(), deptMapping: Record<string, number> = {}): ServerOptions {
+  return {
+    getPrinters: () => [
+      {
+        config: {
+          id: 'fiscal',
+          label: 'Test',
+          driver: 'mock',
+          connection: { ip: '0', port: 0, timeout: 0 },
+          operatorId: '1',
+          deptMapping,
+        },
+        driver,
+      },
+    ],
+    version: '1.0.0',
+  }
+}
+
 describe('GET /ping', () => {
-  it('returns ok, version, and driver name', async () => {
-    const app = buildServer({ getDriver: () => makeMockDriver(), version: '1.0.0' })
+  it('returns ok, version, driver name, and printers list', async () => {
+    const app = buildServer(makeOpts())
     const res = await app.inject({ method: 'GET', url: '/ping' })
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toMatchObject({ ok: true, version: '1.0.0', driver: 'mock' })
+    const body = res.json()
+    expect(body).toMatchObject({ ok: true, version: '1.0.0', driver: 'mock' })
+    expect(body.printers).toEqual([{ id: 'fiscal', driver: 'mock' }])
   })
 })
 
 describe('GET /status', () => {
   it('returns printer status from driver', async () => {
-    const app = buildServer({ getDriver: () => makeMockDriver(), version: '1.0.0' })
+    const app = buildServer(makeOpts())
     const res = await app.inject({ method: 'GET', url: '/status' })
     expect(res.statusCode).toBe(200)
     expect(res.json().online).toBe(true)
+  })
+
+  it('returns 503 when no printers configured', async () => {
+    const app = buildServer({ getPrinters: () => [], version: '1.0.0' })
+    const res = await app.inject({ method: 'GET', url: '/status' })
+    expect(res.statusCode).toBe(503)
+  })
+})
+
+describe('GET /printers', () => {
+  it('returns list of printers with status', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'GET', url: '/printers' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(Array.isArray(body)).toBe(true)
+    expect(body[0]).toMatchObject({ id: 'fiscal', label: 'Test', driver: 'mock', ip: '0' })
+    expect(body[0].status.online).toBe(true)
   })
 })
 
 describe('POST /print', () => {
   it('applies vatRate→dept mapping before calling printReceipt', async () => {
     const driver = makeMockDriver()
-    const app = buildServer({
-      getDriver: () => driver,
-      version: '1.0.0',
-      getDeptMapping: () => ({ '22.00': 3 }),
-    })
+    const app = buildServer(makeOpts(driver, { '22.00': 3 }))
     await app.inject({
       method: 'POST',
       url: '/print',
@@ -58,7 +94,7 @@ describe('POST /print', () => {
     const driver = makeMockDriver({
       printReceipt: vi.fn().mockRejectedValue(new Error('Paper jam')),
     })
-    const app = buildServer({ getDriver: () => driver, version: '1.0.0' })
+    const app = buildServer(makeOpts(driver))
     const res = await app.inject({
       method: 'POST',
       url: '/print',
@@ -67,11 +103,21 @@ describe('POST /print', () => {
     expect(res.statusCode).toBe(500)
     expect(res.json().error).toContain('Paper jam')
   })
+
+  it('returns 404 when printerId is specified but not found', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print',
+      payload: { items: [], discount: 0, payments: [], printerId: 'unknown' },
+    })
+    expect(res.statusCode).toBe(404)
+  })
 })
 
 describe('POST /daily-close', () => {
   it('calls dailyClose and returns result', async () => {
-    const app = buildServer({ getDriver: () => makeMockDriver(), version: '1.0.0' })
+    const app = buildServer(makeOpts())
     const res = await app.inject({
       method: 'POST',
       url: '/daily-close',
@@ -84,7 +130,7 @@ describe('POST /daily-close', () => {
 
 describe('POST /open-drawer', () => {
   it('returns 204 on success', async () => {
-    const app = buildServer({ getDriver: () => makeMockDriver(), version: '1.0.0' })
+    const app = buildServer(makeOpts())
     const res = await app.inject({ method: 'POST', url: '/open-drawer', payload: {} })
     expect(res.statusCode).toBe(204)
   })

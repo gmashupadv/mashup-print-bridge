@@ -2,19 +2,38 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } from 'ele
 import * as path from 'node:path'
 import log from 'electron-log'
 import { createConfigManager } from './config'
+import type { PrinterConfig } from './config'
 import { createDriver, listDrivers } from './drivers/registry'
 import { startServer } from './server'
+import type { ManagedPrinter } from './server'
 import { initUpdater } from './updater'
 import type { FastifyInstance } from 'fastify'
 import type { PrinterDriver } from './drivers/interface'
 
 const configPath = path.join(app.getPath('userData'), 'config.json')
 const config = createConfigManager(configPath)
-let driver: PrinterDriver = createDriver(config.get().driver)
+const drivers = new Map<string, PrinterDriver>()
 let tray: Tray | null = null
 let configWindow: BrowserWindow | null = null
 let server: FastifyInstance | null = null
 let updateVersion: string | null = null
+
+function driverConfigFrom(pc: PrinterConfig) {
+  return {
+    ip: pc.connection.ip,
+    port: pc.connection.port,
+    timeout: pc.connection.timeout,
+    operatorId: pc.operatorId,
+    deptMapping: pc.deptMapping,
+  }
+}
+
+function buildManagedPrinters(): ManagedPrinter[] {
+  return config.get().printers.map((pc) => ({
+    config: pc,
+    driver: drivers.get(pc.id) ?? createDriver(pc.driver),
+  }))
+}
 
 // ------- Tray -------
 
@@ -28,9 +47,10 @@ function createTray(): void {
 
 function refreshTrayMenu(online: boolean): void {
   const cfg = config.get()
+  const ipList = cfg.printers.map((p) => p.connection.ip).join(', ')
   const items: Electron.MenuItemConstructorOptions[] = [
     { label: `Bridge attivo (v${app.getVersion()})`, enabled: false },
-    { label: `Stampante: ${cfg.connection.ip} ${online ? '✓' : '✗'}`, enabled: false },
+    { label: `Stampante: ${ipList} ${online ? '✓' : '✗'}`, enabled: false },
     { type: 'separator' },
     { label: 'Apri configurazione...', click: openConfigWindow },
     { label: 'Test di stampa', click: testStatus },
@@ -39,7 +59,8 @@ function refreshTrayMenu(online: boolean): void {
   if (updateVersion) {
     items.push({
       label: `Aggiornamento disponibile (${updateVersion})`,
-      click: () => shell.openExternal('https://github.com/gmashupadv/mashup-print-bridge/releases/latest'),
+      click: () =>
+        shell.openExternal('https://github.com/gmashupadv/mashup-print-bridge/releases/latest'),
     })
     items.push({ type: 'separator' })
   }
@@ -48,7 +69,10 @@ function refreshTrayMenu(online: boolean): void {
 }
 
 function openConfigWindow(): void {
-  if (configWindow) { configWindow.focus(); return }
+  if (configWindow) {
+    configWindow.focus()
+    return
+  }
   configWindow = new BrowserWindow({
     width: 400,
     height: 520,
@@ -65,15 +89,19 @@ function openConfigWindow(): void {
   } else {
     configWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
-  configWindow.on('closed', () => { configWindow = null })
+  configWindow.on('closed', () => {
+    configWindow = null
+  })
 }
 
 async function testStatus(): Promise<void> {
-  try {
-    const status = await driver.getStatus()
-    emitLog(`Test: ${status.online ? 'online' : 'offline'} — ${status.errorMessage || 'OK'}`)
-  } catch (err: unknown) {
-    emitLog(`Test error: ${err instanceof Error ? err.message : 'Unknown'}`)
+  for (const [id, driver] of drivers) {
+    try {
+      const status = await driver.getStatus()
+      emitLog(`Test [${id}]: ${status.online ? 'online' : 'offline'} — ${status.errorMessage || 'OK'}`)
+    } catch (err: unknown) {
+      emitLog(`Test [${id}] error: ${err instanceof Error ? err.message : 'Unknown'}`)
+    }
   }
 }
 
@@ -82,8 +110,13 @@ async function testStatus(): Promise<void> {
 function startStatusPolling(): void {
   const poll = async (): Promise<void> => {
     try {
-      const status = await driver.getStatus()
-      refreshTrayMenu(status.online)
+      const statuses = await Promise.allSettled(
+        [...drivers.values()].map((d) => d.getStatus())
+      )
+      const anyOnline = statuses.some(
+        (s) => s.status === 'fulfilled' && s.value.online
+      )
+      refreshTrayMenu(anyOnline)
     } catch {
       refreshTrayMenu(false)
     }
@@ -100,33 +133,55 @@ function emitLog(msg: string): void {
   configWindow?.webContents.send('log:event', line)
 }
 
-function driverConfig() {
-  const cfg = config.get()
-  return {
-    ip: cfg.connection.ip,
-    port: cfg.connection.port,
-    timeout: cfg.connection.timeout,
-    operatorId: cfg.operatorId,
-    deptMapping: cfg.deptMapping,
-  }
-}
-
 // ------- IPC handlers -------
 
 ipcMain.handle('config:get', () => config.get())
 
 ipcMain.handle('config:save', async (_e, partial: Partial<ReturnType<typeof config.get>>) => {
   await config.save(partial)
-  driver = createDriver(config.get().driver)
-  try {
-    await driver.connect(driverConfig())
-  } catch (err: unknown) {
-    log.error('Driver connect after config save:', err)
+  const newPrinters = config.get().printers
+  const newIds = new Set(newPrinters.map((p) => p.id))
+
+  // Remove drivers whose printer was removed
+  for (const id of drivers.keys()) {
+    if (!newIds.has(id)) {
+      drivers.delete(id)
+    }
   }
-  emitLog(`Config salvata — driver: ${driver.name}`)
+
+  // Connect/reconnect drivers
+  for (const pc of newPrinters) {
+    if (drivers.has(pc.id)) {
+      try {
+        await drivers.get(pc.id)!.connect(driverConfigFrom(pc))
+      } catch (err: unknown) {
+        log.error(`Driver reconnect [${pc.id}]:`, err)
+      }
+    } else {
+      const d = createDriver(pc.driver)
+      try {
+        await d.connect(driverConfigFrom(pc))
+      } catch (err: unknown) {
+        log.error(`Driver connect [${pc.id}]:`, err)
+      }
+      drivers.set(pc.id, d)
+    }
+  }
+
+  emitLog(`Config salvata — stampanti: ${newPrinters.map((p) => p.driver).join(', ')}`)
 })
 
-ipcMain.handle('driver:test', () => driver.getStatus())
+ipcMain.handle('driver:test', async (_e, printerId?: string) => {
+  if (printerId) {
+    const driver = drivers.get(printerId)
+    if (!driver) throw new Error(`Driver not found: ${printerId}`)
+    return driver.getStatus()
+  }
+  // Default: first driver
+  const first = [...drivers.values()][0]
+  if (!first) throw new Error('No drivers configured')
+  return first.getStatus()
+})
 
 ipcMain.handle('driver:list', () => listDrivers())
 
@@ -135,16 +190,19 @@ ipcMain.handle('driver:list', () => listDrivers())
 app.whenReady().then(async () => {
   app.setLoginItemSettings({ openAtLogin: config.get().autostart })
 
-  try {
-    await driver.connect(driverConfig())
-  } catch (err: unknown) {
-    log.error('Initial driver connect failed:', err)
+  for (const pc of config.get().printers) {
+    const d = createDriver(pc.driver)
+    try {
+      await d.connect(driverConfigFrom(pc))
+    } catch (err: unknown) {
+      log.error(`Initial driver connect [${pc.id}] failed:`, err)
+    }
+    drivers.set(pc.id, d)
   }
 
   server = await startServer({
-    getDriver: () => driver,
+    getPrinters: buildManagedPrinters,
     version: app.getVersion(),
-    getDeptMapping: () => config.get().deptMapping,
     port: config.get().port,
   })
   log.info(`Server listening on 127.0.0.1:${config.get().port}`)
@@ -166,6 +224,6 @@ app.on('window-all-closed', (e: Event) => {
 })
 
 app.on('before-quit', async () => {
+  await Promise.all([...drivers.values()].map((d) => d.disconnect()))
   await server?.close()
-  await driver.disconnect()
 })

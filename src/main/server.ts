@@ -1,41 +1,92 @@
 import Fastify, { type FastifyInstance } from 'fastify'
 import type { PrinterDriver } from './drivers/interface'
+import type { PrinterConfig } from './config'
 
-interface ServerOptions {
-  getDriver: () => PrinterDriver
+export interface ManagedPrinter {
+  config: PrinterConfig
+  driver: PrinterDriver
+}
+
+export interface ServerOptions {
+  getPrinters: () => ManagedPrinter[]
   version: string
-  getDeptMapping?: () => Record<string, number>
+}
+
+function resolvePrinter(printers: ManagedPrinter[], id?: string): ManagedPrinter | null {
+  if (id) return printers.find((p) => p.config.id === id) ?? null
+  return printers[0] ?? null
 }
 
 export function buildServer(opts: ServerOptions): FastifyInstance {
   const app = Fastify({ logger: false })
-  const { getDriver, version, getDeptMapping } = opts
+  const { getPrinters, version } = opts
 
-  app.get('/ping', async () => ({
-    ok: true,
-    version,
-    driver: getDriver().name,
-  }))
+  app.get('/ping', async () => {
+    const printers = getPrinters()
+    return {
+      ok: true,
+      version,
+      driver: printers[0]?.driver.name ?? '',
+      printers: printers.map((p) => ({ id: p.config.id, driver: p.driver.name })),
+    }
+  })
 
   app.get('/status', async (_req, reply) => {
+    const printer = resolvePrinter(getPrinters())
+    if (!printer) {
+      reply.status(503)
+      return { error: 'No printers configured' }
+    }
     try {
-      return await getDriver().getStatus()
+      return await printer.driver.getStatus()
     } catch (err: unknown) {
       reply.status(500)
       return { error: err instanceof Error ? err.message : 'Unknown error' }
     }
   })
 
-  app.post<{ Body: { items: any[]; discount: number; payments: any[] } }>(
+  app.get('/printers', async () => {
+    const printers = getPrinters()
+    const results = await Promise.allSettled(
+      printers.map((p) => p.driver.getStatus())
+    )
+    return printers.map((p, i) => {
+      const settled = results[i]
+      return {
+        id: p.config.id,
+        label: p.config.label,
+        driver: p.driver.name,
+        ip: p.config.connection.ip,
+        status: settled.status === 'fulfilled' ? settled.value : { online: false, errorMessage: settled.reason?.message ?? 'Error' },
+      }
+    })
+  })
+
+  app.post<{ Body: { items: any[]; discount: number; payments: any[]; printerId?: string } }>(
     '/print',
     async (req, reply) => {
+      const printers = getPrinters()
+      const printer = resolvePrinter(printers, req.body.printerId)
+      if (!printer) {
+        reply.status(req.body.printerId ? 404 : 503)
+        return {
+          success: false,
+          error: req.body.printerId
+            ? `Printer not found: ${req.body.printerId}`
+            : 'No printers configured',
+        }
+      }
       try {
-        const mapping = getDeptMapping?.() ?? {}
+        const mapping = printer.config.deptMapping
         const items = req.body.items.map((item) => ({
           ...item,
           department: mapping[Number(item.vatRate).toFixed(2)] ?? item.department ?? 1,
         }))
-        return await getDriver().printReceipt({ items, discount: req.body.discount, payments: req.body.payments })
+        return await printer.driver.printReceipt({
+          items,
+          discount: req.body.discount,
+          payments: req.body.payments,
+        })
       } catch (err: unknown) {
         reply.status(500)
         return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
@@ -43,18 +94,36 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
     }
   )
 
-  app.post<{ Body: { operatorId?: string } }>('/daily-close', async (req, reply) => {
+  app.post<{ Body: { operatorId?: string; printerId?: string } }>('/daily-close', async (req, reply) => {
+    const printers = getPrinters()
+    const printer = resolvePrinter(printers, req.body.printerId)
+    if (!printer) {
+      reply.status(req.body.printerId ? 404 : 503)
+      return {
+        success: false,
+        error: req.body.printerId
+          ? `Printer not found: ${req.body.printerId}`
+          : 'No printers configured',
+      }
+    }
     try {
-      return await getDriver().dailyClose(req.body.operatorId ?? '1')
+      const operatorId = req.body.operatorId ?? printer.config.operatorId ?? '1'
+      return await printer.driver.dailyClose(operatorId)
     } catch (err: unknown) {
       reply.status(500)
       return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   })
 
-  app.post<{ Body: { operatorId?: string } }>('/open-drawer', async (req, reply) => {
+  app.post<{ Body: { operatorId?: string; printerId?: string } }>('/open-drawer', async (req, reply) => {
+    const printers = getPrinters()
+    const printer = resolvePrinter(printers, req.body.printerId)
+    if (!printer) {
+      reply.status(req.body.printerId ? 404 : 503)
+      return { error: req.body.printerId ? `Printer not found: ${req.body.printerId}` : 'No printers configured' }
+    }
     try {
-      await getDriver().openDrawer(req.body.operatorId ?? '1')
+      await printer.driver.openDrawer(req.body.operatorId ?? printer.config.operatorId ?? '1')
       reply.status(204)
     } catch (err: unknown) {
       reply.status(500)

@@ -13,25 +13,65 @@ beforeEach(async () => {
 describe('createConfigManager', () => {
   it('returns defaults when config file does not exist', () => {
     const cfg = createConfigManager(path.join(tmpDir, 'config.json'))
-    expect(cfg.get().driver).toBe('epson-fpmate')
+    expect(cfg.get().printers.length).toBe(1)
+    expect(cfg.get().printers[0].id).toBe('fiscal')
+    expect(cfg.get().printers[0].driver).toBe('epson-fpmate')
     expect(cfg.get().port).toBe(8765)
     expect(cfg.get().autostart).toBe(true)
   })
 
-  it('reads persisted values and merges with defaults', async () => {
+  it('reads persisted values (new format) and merges with defaults', async () => {
     const filePath = path.join(tmpDir, 'config.json')
-    await fs.writeFile(filePath, JSON.stringify({ driver: 'ditron-wec', port: 9999 }))
+    await fs.writeFile(
+      filePath,
+      JSON.stringify({
+        printers: [
+          {
+            id: 'fiscal',
+            label: 'Test',
+            driver: 'ditron-wec',
+            connection: { ip: '10.0.0.1', port: 12345, timeout: 5000 },
+            operatorId: '2',
+            deptMapping: {},
+          },
+        ],
+        port: 9999,
+      })
+    )
     const cfg = createConfigManager(filePath)
-    expect(cfg.get().driver).toBe('ditron-wec')
+    expect(cfg.get().printers[0].driver).toBe('ditron-wec')
     expect(cfg.get().port).toBe(9999)
     expect(cfg.get().autostart).toBe(true) // default fills missing fields
+  })
+
+  it('migrates old single-printer format to new printers[] format', async () => {
+    const filePath = path.join(tmpDir, 'config.json')
+    await fs.writeFile(
+      filePath,
+      JSON.stringify({
+        driver: 'ditron-wec',
+        port: 9999,
+        connection: { ip: '192.168.1.50', port: 12345, timeout: 10000 },
+        operatorId: '3',
+        deptMapping: { '22.00': 1 },
+        autostart: false,
+      })
+    )
+    const cfg = createConfigManager(filePath)
+    expect(cfg.get().printers.length).toBe(1)
+    expect(cfg.get().printers[0].id).toBe('fiscal')
+    expect(cfg.get().printers[0].driver).toBe('ditron-wec')
+    expect(cfg.get().printers[0].operatorId).toBe('3')
+    expect(cfg.get().printers[0].deptMapping).toEqual({ '22.00': 1 })
+    expect(cfg.get().port).toBe(9999)
+    expect(cfg.get().autostart).toBe(false)
   })
 
   it('falls back to defaults on corrupt JSON', async () => {
     const filePath = path.join(tmpDir, 'config.json')
     await fs.writeFile(filePath, 'NOT JSON {{{')
     const cfg = createConfigManager(filePath)
-    expect(cfg.get().driver).toBe('epson-fpmate')
+    expect(cfg.get().printers[0].driver).toBe('epson-fpmate')
   })
 
   it('save() merges partial config and persists to disk', async () => {
@@ -40,12 +80,22 @@ describe('createConfigManager', () => {
     await cfg.save({ port: 1234 })
     const stored = JSON.parse(await fs.readFile(filePath, 'utf-8'))
     expect(stored.port).toBe(1234)
-    expect(stored.driver).toBe('epson-fpmate') // unchanged default
+    expect(stored.printers[0].driver).toBe('epson-fpmate') // unchanged default
   })
 
   it('get() reflects the latest saved values', async () => {
     const cfg = createConfigManager(path.join(tmpDir, 'config.json'))
-    await cfg.save({ operatorId: '5' })
-    expect(cfg.get().operatorId).toBe('5')
+    const updatedPrinters = [
+      {
+        id: 'fiscal',
+        label: 'Stampante fiscale',
+        driver: 'epson-fpmate',
+        connection: { ip: '192.168.1.10', port: 80, timeout: 10000 },
+        operatorId: '5',
+        deptMapping: { '22.00': 1, '10.00': 2, '5.00': 3, '4.00': 4, '0.00': 5 },
+      },
+    ]
+    await cfg.save({ printers: updatedPrinters })
+    expect(cfg.get().printers[0].operatorId).toBe('5')
   })
 })

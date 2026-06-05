@@ -3,7 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('bridge', {
   getConfig: () => ipcRenderer.invoke('config:get'),
   saveConfig: (partial: Record<string, unknown>) => ipcRenderer.invoke('config:save', partial),
-  testDriver: () => ipcRenderer.invoke('driver:test'),
+  testDriver: (printerId?: string) => ipcRenderer.invoke('driver:test', printerId),
   listDrivers: () => ipcRenderer.invoke('driver:list'),
   onLogEvent: (cb: (msg: string) => void) => {
     const handler = (_e: Electron.IpcRendererEvent, msg: string) => cb(msg)
