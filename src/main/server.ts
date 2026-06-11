@@ -87,21 +87,12 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
   app.post<{ Body: { items: any[]; discount: number; payments: any[]; printerId?: string } }>(
     '/print',
     async (req, reply) => {
-      const printers = getPrinters()
-      const printer = resolvePrinter(printers, req.body.printerId)
-      if (!printer) {
-        reply.status(req.body.printerId ? 404 : 503)
-        return {
-          success: false,
-          error: req.body.printerId
-            ? `Printer not found: ${req.body.printerId}`
-            : 'No printers configured',
-        }
+      const resolved = resolveByCapability(getPrinters(), 'fiscal-receipt', req.body.printerId)
+      if ('error' in resolved) {
+        reply.status(resolved.status)
+        return { success: false, error: resolved.error }
       }
-      if (!printer.driver.capabilities.includes('fiscal-receipt')) {
-        reply.status(409)
-        return { success: false, error: capabilityError(printer, 'fiscal-receipt') }
-      }
+      const printer = resolved.printer
       try {
         const mapping = printer.config.deptMapping
         const items = req.body.items.map((item) => ({
@@ -121,21 +112,12 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
   )
 
   app.post<{ Body: { operatorId?: string; printerId?: string } }>('/daily-close', async (req, reply) => {
-    const printers = getPrinters()
-    const printer = resolvePrinter(printers, req.body.printerId)
-    if (!printer) {
-      reply.status(req.body.printerId ? 404 : 503)
-      return {
-        success: false,
-        error: req.body.printerId
-          ? `Printer not found: ${req.body.printerId}`
-          : 'No printers configured',
-      }
+    const resolved = resolveByCapability(getPrinters(), 'daily-close', req.body.printerId)
+    if ('error' in resolved) {
+      reply.status(resolved.status)
+      return { success: false, error: resolved.error }
     }
-    if (!printer.driver.capabilities.includes('daily-close')) {
-      reply.status(409)
-      return { success: false, error: capabilityError(printer, 'daily-close') }
-    }
+    const printer = resolved.printer
     try {
       const operatorId = req.body.operatorId ?? printer.config.operatorId ?? '1'
       return await printer.driver.dailyClose!(operatorId)
@@ -146,16 +128,12 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
   })
 
   app.post<{ Body: { operatorId?: string; printerId?: string } }>('/open-drawer', async (req, reply) => {
-    const printers = getPrinters()
-    const printer = resolvePrinter(printers, req.body.printerId)
-    if (!printer) {
-      reply.status(req.body.printerId ? 404 : 503)
-      return { error: req.body.printerId ? `Printer not found: ${req.body.printerId}` : 'No printers configured' }
+    const resolved = resolveByCapability(getPrinters(), 'drawer', req.body.printerId)
+    if ('error' in resolved) {
+      reply.status(resolved.status)
+      return { error: resolved.error }
     }
-    if (!printer.driver.capabilities.includes('drawer')) {
-      reply.status(409)
-      return { error: capabilityError(printer, 'drawer') }
-    }
+    const printer = resolved.printer
     try {
       await printer.driver.openDrawer!(req.body.operatorId ?? printer.config.operatorId ?? '1')
       reply.status(204)
