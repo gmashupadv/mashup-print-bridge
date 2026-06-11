@@ -7,7 +7,7 @@
 // NOTE: some firmware versions respond without HTTP headers (bare WEC text).
 // We use raw tls.connect() so both HTTP-wrapped and bare responses are handled uniformly.
 import tls from 'node:tls'
-import type { Capability, DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
+import type { Capability, DriverConfig, NonFiscalDoc, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
 
 const TLS_OPTS: tls.ConnectionOptions = { rejectUnauthorized: false }
 
@@ -17,6 +17,24 @@ const TLS_OPTS: tls.ConnectionOptions = { rejectUnauthorized: false }
 // TERM=0 = contanti (cash) — verified REP=3 (5% VAT dept) works.
 // Adjust TERM codes to match the specific printer's programming.
 const TENDER: Record<number, number> = { 0: 0, 1: 2, 2: 0 }
+
+// Comandi non fiscali WEC — DA VERIFICARE ON-SITE (i pcap in repo sono TLS-cifrati).
+// Il firmware supporta lo scontrino di cortesia (chiavi Ecr_ScontrinoCortesia nel capture):
+// confermare la sintassi esatta dal FCR Manager (https://<ip>) o dal manuale WEC Ditron
+// e aggiornare queste tre costanti se diverse.
+const NONFISCAL_OPEN = 'NFIS APRI'
+const NONFISCAL_LINE = (text: string): string => `NFIS RIGA='${text}'`
+const NONFISCAL_CLOSE = 'NFIS CHIUDI'
+
+export function buildNonFiscal(doc: NonFiscalDoc): string {
+  const lines: string[] = [NONFISCAL_OPEN]
+  for (const l of doc.lines) {
+    // bold/size/align non mappabili su WEC testo piano → ignorati
+    lines.push(NONFISCAL_LINE(l.text.slice(0, 40).replace(/'/g, ' ')))
+  }
+  lines.push(NONFISCAL_CLOSE)
+  return lines.join('\n') + '\n'
+}
 
 function eur(n: number): string {
   return n.toFixed(2)
@@ -64,7 +82,7 @@ function parseResult(body: string): PrintResult {
 
 export class DitronStreamWecDriver implements PrinterDriver {
   readonly name = 'ditron-streamwec'
-  readonly capabilities: Capability[] = ['fiscal-receipt', 'daily-close', 'drawer']
+  readonly capabilities: Capability[] = ['fiscal-receipt', 'non-fiscal', 'daily-close', 'drawer']
   private host = ''
   private port = 443
   private timeout = 15000
@@ -139,6 +157,10 @@ export class DitronStreamWecDriver implements PrinterDriver {
 
   async printReceipt(data: ReceiptData): Promise<PrintResult> {
     return parseResult(await this.request('POST', '/cmd/wec', buildReceipt(data)))
+  }
+
+  async printNonFiscal(doc: NonFiscalDoc): Promise<PrintResult> {
+    return parseResult(await this.request('POST', '/cmd/wec', buildNonFiscal(doc)))
   }
 
   async dailyClose(_operatorId: string): Promise<PrintResult> {
