@@ -52,7 +52,10 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
   })
 
   app.get('/status', async (_req, reply) => {
-    const printer = resolvePrinter(getPrinters())
+    // /status is the health-check used by legacy POS clients that expect THE fiscal printer.
+    // Fallback to printers[0] keeps the endpoint useful in non-fiscal installations.
+    const printers = getPrinters()
+    const printer = printers.find((p) => p.driver.capabilities.includes('fiscal-receipt')) ?? printers[0] ?? null
     if (!printer) {
       reply.status(503)
       return { error: 'No printers configured' }
@@ -131,7 +134,7 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
     const resolved = resolveByCapability(getPrinters(), 'drawer', req.body.printerId)
     if ('error' in resolved) {
       reply.status(resolved.status)
-      return { error: resolved.error }
+      return { success: false, error: resolved.error }
     }
     const printer = resolved.printer
     try {
@@ -140,7 +143,7 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       return
     } catch (err: unknown) {
       reply.status(500)
-      return { error: err instanceof Error ? err.message : 'Unknown error' }
+      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   })
 

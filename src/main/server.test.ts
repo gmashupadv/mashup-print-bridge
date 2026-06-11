@@ -242,4 +242,118 @@ describe('POST /open-drawer capability check', () => {
     expect(res.statusCode).toBe(503)
     expect(res.json().error).toMatch(/non supporta|Nessuna stampante/i)
   })
+
+  it('includes success:false alongside error when resolve fails (no capability)', async () => {
+    const driver = makeMockDriver({ capabilities: ['label'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/open-drawer',
+      payload: {},
+    })
+    expect(res.statusCode).toBe(503)
+    const body = res.json()
+    expect(body.success).toBe(false)
+    expect(body.error).toBeDefined()
+  })
+
+  it('includes success:false alongside error when driver throws', async () => {
+    const driver = makeMockDriver({
+      openDrawer: vi.fn().mockRejectedValue(new Error('Drawer stuck')),
+    })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/open-drawer',
+      payload: {},
+    })
+    expect(res.statusCode).toBe(500)
+    const body = res.json()
+    expect(body.success).toBe(false)
+    expect(body.error).toContain('Drawer stuck')
+  })
+})
+
+describe('POST /print with explicit printerId lacking fiscal-receipt', () => {
+  it('returns 409 when printerId points to a printer without fiscal-receipt capability', async () => {
+    const driver = makeMockDriver({ capabilities: ['label', 'drawer'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print',
+      payload: { items: [], discount: 0, payments: [], printerId: 'fiscal' },
+    })
+    expect(res.statusCode).toBe(409)
+    expect(res.json().error).toMatch(/non supporta/i)
+  })
+})
+
+describe('POST /daily-close without printerId — no capable printer', () => {
+  it('returns 503 when no printer has daily-close capability', async () => {
+    const driver = makeMockDriver({ capabilities: ['fiscal-receipt', 'label'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/daily-close',
+      payload: {},
+    })
+    expect(res.statusCode).toBe(503)
+    expect(res.json().error).toMatch(/Nessuna stampante/i)
+  })
+})
+
+describe('GET /status multi-printer: prefers fiscal-capable printer', () => {
+  it('returns status of the fiscal-receipt printer, not the label-only printer', async () => {
+    const labelDriver = makeMockDriver({
+      capabilities: ['label'],
+      getStatus: vi.fn().mockResolvedValue({
+        online: true,
+        paperPresent: true,
+        coverClosed: true,
+        errorMessage: 'label-only-printer',
+      }),
+    })
+    const fiscalDriver = makeMockDriver({
+      capabilities: ['fiscal-receipt', 'daily-close', 'drawer'],
+      getStatus: vi.fn().mockResolvedValue({
+        online: true,
+        paperPresent: true,
+        coverClosed: true,
+        errorMessage: 'fiscal-printer',
+      }),
+    })
+    const opts: ServerOptions = {
+      getPrinters: () => [
+        {
+          config: {
+            id: 'label-printer',
+            label: 'Label',
+            role: 'label',
+            driver: 'mock',
+            connection: { ip: '0', port: 0, timeout: 0 },
+            operatorId: '1',
+            deptMapping: {},
+          },
+          driver: labelDriver,
+        },
+        {
+          config: {
+            id: 'fiscal-printer',
+            label: 'Fiscal',
+            role: 'fiscal',
+            driver: 'mock',
+            connection: { ip: '0', port: 0, timeout: 0 },
+            operatorId: '1',
+            deptMapping: {},
+          },
+          driver: fiscalDriver,
+        },
+      ],
+      version: '1.0.0',
+    }
+    const app = buildServer(opts)
+    const res = await app.inject({ method: 'GET', url: '/status' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().errorMessage).toBe('fiscal-printer')
+  })
 })
