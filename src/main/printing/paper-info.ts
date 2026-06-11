@@ -49,7 +49,8 @@ async function cupsPaperInfo(deviceName: string): Promise<PaperInfo> {
   // Whitelist sanitisation: CUPS queue names are [A-Za-z0-9._-] plus spaces.
   // Strip everything else to prevent shell injection via a crafted printer name.
   const safe = deviceName.replace(/[^A-Za-z0-9._\- ]/g, '')
-  const { stdout } = await execAsync(`lpoptions -p "${safe}" -l`)
+  // timeout: a hung CUPS daemon must not leave the IPC handler pending forever
+  const { stdout } = await execAsync(`lpoptions -p "${safe}" -l`, { timeout: 5000 })
   const parsed = parseLpoptionsPageSizes(stdout)
   return {
     papers: parsed.papers.map(withMm),
@@ -62,7 +63,7 @@ async function windowsPaperInfo(deviceName: string): Promise<PaperInfo> {
   // punctuation, but we strip shell-dangerous chars to prevent injection.
   const safe = deviceName.replace(/[^A-Za-z0-9._\- ]/g, '')
   const cmd = `powershell -NoProfile -Command "(Get-PrintConfiguration -PrinterName '${safe}').PaperSize"`
-  const { stdout } = await execAsync(cmd)
+  const { stdout } = await execAsync(cmd, { timeout: 5000 })
   const name = stdout.trim()
   if (!name) return { papers: [] }
   return { papers: [withMm(name)], defaultPaper: withMm(name) }
