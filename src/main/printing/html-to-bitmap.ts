@@ -12,18 +12,27 @@ export async function htmlToMonoBitmap(html: string, widthPx: number): Promise<M
     show: false,
     width: widthPx,
     height: 64,
-    webPreferences: { offscreen: true, sandbox: true },
+    // FIX 2: zoomFactor impostato alla creazione evita race pre-load; ridetto dopo loadURL come cintura
+    webPreferences: { offscreen: true, sandbox: true, zoomFactor: ZOOM },
   })
   try {
-    win.webContents.setZoomFactor(ZOOM)
     await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html))
+    win.webContents.setZoomFactor(ZOOM) // cintura: rinforza lo zoom post-caricamento
     const contentHeight: number = await win.webContents.executeJavaScript(
       'Math.ceil(document.body.getBoundingClientRect().height) || 64'
     )
     const heightPx = Math.max(8, Math.min(4096, Math.ceil(contentHeight * ZOOM)))
-    win.setContentSize(Math.ceil(widthPx / ZOOM), Math.ceil(heightPx / ZOOM))
-    // attesa di un frame di repaint offscreen
-    await new Promise((r) => setTimeout(r, 120))
+    // FIX 1: widthPx/heightPx sono già in DIP (stessa unità della creazione); non dividere per ZOOM
+    win.setContentSize(widthPx, heightPx)
+    // FIX 3: attende il primo frame paint invece di un timeout fisso; fallback 500ms su hardware lento
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 500) // fallback se nessun frame arriva
+      win.webContents.once('paint', () => {
+        clearTimeout(timer)
+        resolve()
+      })
+      win.webContents.invalidate()
+    })
     const image = await win.webContents.capturePage()
     const size = image.getSize()
     const bgra = image.getBitmap() // BGRA, size.width * size.height * 4
