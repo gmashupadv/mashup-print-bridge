@@ -109,10 +109,9 @@ export class EpsonFpMateDriver implements PrinterDriver {
     xml += '<printerNonFiscal>'
     xml += `<beginNonFiscal operator="${op}" />`
     for (const line of doc.lines) {
-      // font: 1 = normale, 2 = grassetto, 4 = doppia altezza (rif. manuale FP-Mate;
-      // verificare la resa di font="4" sull'unità in campo).
+      // font FP-Mate: 1=normale, 2=bold, 3=doppia altezza, 4=bold+doppia (verificare resa 3/4 in campo)
       // align non è supportato da printNormal in FP-Mate (ignorato); cut non serve (endNonFiscal taglia già).
-      const font = line.size === 'double' ? '4' : line.bold ? '2' : '1'
+      const font = line.size === 'double' ? (line.bold ? '4' : '3') : line.bold ? '2' : '1'
       xml += `<printNormal operator="${op}" font="${font}" data="${escapeXml(line.text)}" />`
     }
     xml += `<endNonFiscal operator="${op}" />`

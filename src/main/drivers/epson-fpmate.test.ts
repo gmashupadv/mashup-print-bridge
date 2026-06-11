@@ -104,13 +104,25 @@ describe('_buildNonFiscalXml', () => {
     expect(xml).toContain('<endNonFiscal')
   })
 
-  it('uses font 4 for double size and font 1 for plain', () => {
+  it('uses correct font codes: double=3, bold+double=4, bold=2, plain=1', () => {
     const d = new EpsonFpMateDriver()
     const xml = d._buildNonFiscalXml({
-      lines: [{ text: 'GRANDE', size: 'double' }, { text: 'normale' }],
+      lines: [
+        { text: 'GRANDE', size: 'double' },
+        { text: 'GRASSETTO GRANDE', size: 'double', bold: true },
+        { text: 'GRASSETTO', bold: true },
+        { text: 'normale' },
+      ],
     })
-    expect(xml).toContain('font="4"')
-    expect(xml).toContain('font="1"')
+    // double solo → font 3
+    expect(xml).toContain('data="GRANDE" />')
+    expect(xml).toMatch(/printNormal[^/]*font="3"[^/]*data="GRANDE"/)
+    // bold+double → font 4
+    expect(xml).toMatch(/printNormal[^/]*font="4"[^/]*data="GRASSETTO GRANDE"/)
+    // bold solo → font 2
+    expect(xml).toMatch(/printNormal[^/]*font="2"[^/]*data="GRASSETTO"/)
+    // plain → font 1
+    expect(xml).toMatch(/printNormal[^/]*font="1"[^/]*data="normale"/)
   })
 })
 
