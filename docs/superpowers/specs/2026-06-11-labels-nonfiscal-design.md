@@ -130,7 +130,7 @@ Stesso payload per fiscale e termiche; il bridge traduce nel protocollo del driv
 
 ### Risoluzione stampante
 
-`printerId` è opzionale su tutti gli endpoint di stampa: se omesso, il bridge usa la **prima stampante che dichiara la capability richiesta** (non semplicemente la prima in lista — un'etichetta senza `printerId` non deve finire in 409 contro la fiscale). Per `/print` e `/status` il comportamento attuale (prima stampante) resta invariato per compatibilità.
+`printerId` è opzionale su tutti gli endpoint di stampa: se omesso, il bridge usa la **prima stampante che dichiara la capability richiesta** (non semplicemente la prima in lista — un'etichetta senza `printerId` non deve finire in 409 contro la fiscale). La regola vale anche per le rotte fiscali (`/print`, `/daily-close`, `/open-drawer`): così il client legacy senza `printerId` continua a raggiungere la fiscale anche se non è la prima in lista. Solo `/status` mantiene la risoluzione "prima stampante".
 
 ### Errori
 
