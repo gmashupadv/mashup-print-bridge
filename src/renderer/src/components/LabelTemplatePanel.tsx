@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import type { PaperConfig, LabelTemplate } from '../../../main/drivers/interface'
-
-const DEFAULT_PAPER: PaperConfig = {
-  widthMm: 50,
-  heightMm: 30,
-  orientation: 'portrait',
-  marginsMm: { top: 1, right: 2, bottom: 1, left: 2 },
-}
-const DEFAULT_TEMPLATE: LabelTemplate = { preset: 'product-price', showBarcode: true, fontScale: 1 }
+import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from '../../../main/printing/defaults'
 
 interface Props {
   paper?: PaperConfig
@@ -16,8 +9,8 @@ interface Props {
 }
 
 export function LabelTemplatePanel({
-  paper = DEFAULT_PAPER,
-  template = DEFAULT_TEMPLATE,
+  paper = DEFAULT_LABEL_PAPER,
+  template = DEFAULT_LABEL_TEMPLATE,
   onChange,
 }: Props) {
   const [previewHtml, setPreviewHtml] = useState('')
@@ -36,7 +29,7 @@ export function LabelTemplatePanel({
   return (
     <div className="mt-3 border-t border-gray-100 pt-3">
       <label className="block text-sm font-medium text-gray-700 mb-1">Etichetta</label>
-      <div className="grid grid-cols-3 gap-2 mb-2">
+      <div className="grid grid-cols-2 gap-2 mb-2">
         <div>
           <label className="block text-xs text-gray-500 mb-0.5">Largh. (mm)</label>
           <input
@@ -51,20 +44,9 @@ export function LabelTemplatePanel({
           <input
             type="number"
             className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-            value={paper.heightMm ?? 30}
+            value={paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!}
             onChange={(e) => setPaper({ heightMm: Number(e.target.value) })}
           />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-0.5">Orientamento</label>
-          <select
-            className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white"
-            value={paper.orientation ?? 'portrait'}
-            onChange={(e) => setPaper({ orientation: e.target.value as PaperConfig['orientation'] })}
-          >
-            <option value="portrait">Verticale</option>
-            <option value="landscape">Orizzontale</option>
-          </select>
         </div>
       </div>
       <div className="flex items-center gap-4 mb-2">
@@ -97,7 +79,7 @@ export function LabelTemplatePanel({
             srcDoc={previewHtml}
             style={{
               width: `${paper.widthMm}mm`,
-              height: `${paper.heightMm ?? 30}mm`,
+              height: `${paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!}mm`,
               border: '1px solid #ddd',
               background: '#fff',
             }}

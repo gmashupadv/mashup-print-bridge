@@ -158,6 +158,11 @@ ipcMain.handle('config:save', async (_e, partial: Partial<ReturnType<typeof conf
 
   // Connect/reconnect drivers
   for (const pc of newPrinters) {
+    const existing = drivers.get(pc.id)
+    if (existing && existing.name !== pc.driver) {
+      // Driver type changed — discard old instance so we recreate with correct capabilities
+      drivers.delete(pc.id)
+    }
     if (drivers.has(pc.id)) {
       try {
         await drivers.get(pc.id)!.connect(driverConfigFrom(pc))

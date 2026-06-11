@@ -10,6 +10,7 @@ import type {
 } from './drivers/interface'
 import type { PrinterConfig } from './config'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
+import { normalizeEan13 } from './printing/barcode'
 
 export interface ManagedPrinter {
   config: PrinterConfig
@@ -150,6 +151,15 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       if (!label || typeof label.name !== 'string' || !Number.isFinite(label.price)) {
         reply.status(400)
         return { success: false, error: 'label.name (string) e label.price (number) sono obbligatori' }
+      }
+
+      if (label.barcode !== undefined) {
+        try {
+          normalizeEan13(String(label.barcode))
+        } catch (err: unknown) {
+          reply.status(400)
+          return { success: false, error: err instanceof Error ? err.message : 'Barcode non valido' }
+        }
       }
 
       // Validate copies: if provided must be a finite number >= 1

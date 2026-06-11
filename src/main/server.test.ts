@@ -507,6 +507,33 @@ describe('POST /print-label', () => {
     expect(layoutArg.paper.orientation).toBe('portrait')
     expect(layoutArg.paper.marginsMm).toBeDefined()
   })
+
+  it('returns 400 with EAN-13 error when barcode is invalid (e.g. "ABC")', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { label: { name: 'Prodotto', price: 9.9, barcode: 'ABC' } },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().success).toBe(false)
+    expect(res.json().error).toMatch(/EAN-13/i)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0)
+  })
+
+  it('accepts a valid 12-digit barcode (800123456789) and returns 200', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { label: { name: 'Prodotto', price: 9.9, barcode: '800123456789' } },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().success).toBe(true)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
+  })
 })
 
 describe('GET /status multi-printer: prefers fiscal-capable printer', () => {
