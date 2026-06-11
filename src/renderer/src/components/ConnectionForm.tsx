@@ -28,10 +28,16 @@ export function ConnectionForm({
   const [testing, setTesting] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
   const [systemPrinters, setSystemPrinters] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (mode === 'system') {
-      window.bridge.listSystemPrinters().then(setSystemPrinters).catch(() => setSystemPrinters([]))
+      setLoading(true)
+      window.bridge
+        .listSystemPrinters()
+        .then(setSystemPrinters)
+        .catch(() => setSystemPrinters([]))
+        .finally(() => setLoading(false))
     }
   }, [mode])
 
@@ -73,20 +79,29 @@ export function ConnectionForm({
         <div className="flex flex-col gap-2 mb-2">
           <div>
             <label className="block text-xs text-gray-500 mb-0.5">Stampante di sistema</label>
-            <select
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white"
-              value={value.deviceName ?? ''}
-              onChange={(e) => handleDeviceSelect(e.target.value)}
-            >
-              <option value="">— Seleziona —</option>
-              {systemPrinters.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+            {loading ? (
+              <p className="text-xs text-gray-400 py-1">Ricerca stampanti…</p>
+            ) : (
+              <select
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+                value={value.deviceName ?? ''}
+                onChange={(e) => handleDeviceSelect(e.target.value)}
+              >
+                <option value="">— Seleziona —</option>
+                {value.deviceName && !systemPrinters.includes(value.deviceName) && (
+                  <option key="__orphan__" value={value.deviceName} disabled>
+                    {value.deviceName} (non trovata)
+                  </option>
+                )}
+                {systemPrinters.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-          {systemPrinters.length === 0 && (
+          {!loading && systemPrinters.length === 0 && (
             <p className="text-xs text-amber-600">
               Nessuna stampante di sistema trovata. Installa il driver del produttore e riapri
               questa finestra.
