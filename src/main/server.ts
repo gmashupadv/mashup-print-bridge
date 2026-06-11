@@ -12,11 +12,6 @@ export interface ServerOptions {
   version: string
 }
 
-function resolvePrinter(printers: ManagedPrinter[], id?: string): ManagedPrinter | null {
-  if (id) return printers.find((p) => p.config.id === id) ?? null
-  return printers[0] ?? null
-}
-
 function capabilityError(printer: ManagedPrinter, cap: Capability): string {
   return `La stampante '${printer.config.id}' non supporta l'operazione '${cap}'`
 }
