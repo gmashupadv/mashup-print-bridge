@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser'
-import type { Capability, DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
+import type { Capability, DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver, NonFiscalDoc } from './interface'
 
 const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
 
@@ -33,7 +33,7 @@ function findFirst(obj: unknown, key: string): Record<string, string> | undefine
 
 export class EpsonFpMateDriver implements PrinterDriver {
   readonly name = 'epson-fpmate'
-  readonly capabilities: Capability[] = ['fiscal-receipt', 'daily-close', 'drawer']
+  readonly capabilities: Capability[] = ['fiscal-receipt', 'non-fiscal', 'daily-close', 'drawer']
   private url = ''
   private timeout = 15000
   private operatorId = '1'
@@ -101,6 +101,28 @@ export class EpsonFpMateDriver implements PrinterDriver {
 
   _buildDailyCloseXml(operatorId: string): string {
     return `<?xml version="1.0" encoding="utf-8"?><printerFiscalReport><printZReport operator="${operatorId}" /></printerFiscalReport>`
+  }
+
+  _buildNonFiscalXml(doc: NonFiscalDoc): string {
+    const op = this.operatorId
+    let xml = '<?xml version="1.0" encoding="utf-8"?>'
+    xml += '<printerNonFiscal>'
+    xml += `<beginNonFiscal operator="${op}" />`
+    for (const line of doc.lines) {
+      // font: 1 = normale, 2 = grassetto, 4 = doppia altezza (rif. manuale FP-Mate;
+      // verificare la resa di font="4" sull'unità in campo).
+      // align non è supportato da printNormal in FP-Mate (ignorato); cut non serve (endNonFiscal taglia già).
+      const font = line.size === 'double' ? '4' : line.bold ? '2' : '1'
+      xml += `<printNormal operator="${op}" font="${font}" data="${escapeXml(line.text)}" />`
+    }
+    xml += `<endNonFiscal operator="${op}" />`
+    xml += '</printerNonFiscal>'
+    return xml
+  }
+
+  async printNonFiscal(doc: NonFiscalDoc): Promise<PrintResult> {
+    const responseXml = await this.send(this._buildNonFiscalXml(doc))
+    return this._parseResponse(responseXml)
   }
 
   _parseResponse(xmlText: string): PrintResult {

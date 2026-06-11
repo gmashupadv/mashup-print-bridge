@@ -87,6 +87,39 @@ describe('EpsonFpMateDriver parseResponse', () => {
   })
 })
 
+describe('_buildNonFiscalXml', () => {
+  it('wraps lines in printerNonFiscal block', () => {
+    const d = new EpsonFpMateDriver()
+    const xml = d._buildNonFiscalXml({
+      lines: [
+        { text: 'PRECONTO', bold: true },
+        { text: 'riga & speciale' },
+      ],
+    })
+    expect(xml).toContain('<printerNonFiscal>')
+    expect(xml).toContain('<beginNonFiscal')
+    expect(xml).toContain('data="PRECONTO"')
+    expect(xml).toContain('font="2"') // bold
+    expect(xml).toContain('riga &amp; speciale')
+    expect(xml).toContain('<endNonFiscal')
+  })
+
+  it('uses font 4 for double size and font 1 for plain', () => {
+    const d = new EpsonFpMateDriver()
+    const xml = d._buildNonFiscalXml({
+      lines: [{ text: 'GRANDE', size: 'double' }, { text: 'normale' }],
+    })
+    expect(xml).toContain('font="4"')
+    expect(xml).toContain('font="1"')
+  })
+})
+
+describe('capabilities', () => {
+  it('declares non-fiscal', () => {
+    expect(new EpsonFpMateDriver().capabilities).toContain('non-fiscal')
+  })
+})
+
 describe('EpsonFpMateDriver.getStatus', () => {
   it('returns offline status on network error', async () => {
     const driver = new EpsonFpMateDriver()
