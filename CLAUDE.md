@@ -45,7 +45,7 @@ Three Electron layers, each compiled by electron-vite into `out/`:
     - `html-to-bitmap.ts` — renders HTML to a monochrome bitmap via an offscreen BrowserWindow (for ESC/POS raster)
     - `silent-print.ts` — silent printing of HTML through the OS driver (hidden BrowserWindow, **no print dialog**) + `listSystemPrinters()`
     - `paper-info.ts` — per-OS probing of paper sizes for a system printer (`lpoptions` on macOS/Linux, PowerShell on Windows)
-- **`src/preload/index.ts`** — exposes a typed `window.bridge` API to the renderer over `contextBridge` (`getConfig`, `saveConfig`, `testDriver`, `listDrivers`, plus `onLogEvent`/`onUpdateAvailable` subscriptions).
+- **`src/preload/index.ts`** — exposes a typed `window.bridge` API to the renderer over `contextBridge` (`getConfig`, `saveConfig`, `testDriver(printerId?, kind?)` with test prints, `listDrivers`, `listSystemPrinters`, `getPaperInfo`, `previewLabel`, plus `onLogEvent`/`onUpdateAvailable` subscriptions).
 - **`src/renderer/`** — React + Tailwind config UI (single window). Talks to main **only via `window.bridge` IPC**, never via the HTTP server.
 
 ### Two separate interfaces — don't confuse them
