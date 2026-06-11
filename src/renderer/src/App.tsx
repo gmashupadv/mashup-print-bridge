@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { PrinterCard } from './components/PrinterCard'
 import { EventLog } from './components/EventLog'
 import type { AppConfig, PrinterConfig } from '../../main/config'
+import type { PaperConfig } from '../../main/drivers/interface'
 
 function newPrinter(): PrinterConfig {
   return {
@@ -39,6 +40,12 @@ export default function App() {
   const updatePrinter = (updated: PrinterConfig) =>
     setConfig((c) => ({ ...c, printers: c.printers.map((p) => (p.id === updated.id ? updated : p)) }))
 
+  const patchPrinterPaper = (id: string, paper: Partial<PaperConfig>) =>
+    setConfig((c) => ({
+      ...c,
+      printers: c.printers.map((p) => (p.id === id ? { ...p, paper: { ...p.paper, ...paper } as PaperConfig } : p)),
+    }))
+
   const addPrinter = () =>
     setConfig((c) => ({ ...c, printers: [...c.printers, newPrinter()] }))
 
@@ -69,6 +76,7 @@ export default function App() {
           drivers={drivers}
           onChange={updatePrinter}
           onRemove={config.printers.length > 1 ? () => removePrinter(printer.id) : undefined}
+          onPatchPaper={(paper) => patchPrinterPaper(printer.id, paper)}
         />
       ))}
 

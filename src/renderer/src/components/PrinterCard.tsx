@@ -24,9 +24,10 @@ interface Props {
   drivers: string[]
   onChange: (updated: PrinterConfig) => void
   onRemove?: () => void
+  onPatchPaper: (paper: Partial<PaperConfig>) => void
 }
 
-export function PrinterCard({ printer, drivers, onChange, onRemove }: Props) {
+export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper }: Props) {
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
@@ -60,13 +61,13 @@ export function PrinterCard({ printer, drivers, onChange, onRemove }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <input
-          className="font-medium text-sm bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-400 outline-none px-0.5"
+          className="flex-1 min-w-0 font-medium text-sm bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-400 outline-none px-0.5"
           value={printer.label}
           onChange={(e) => onChange({ ...printer, label: e.target.value })}
         />
         <div className="flex items-center gap-2">
           {testResult && (
-            <span className={`text-xs ${testResult.ok ? 'text-green-600' : 'text-red-500'}`}>
+            <span className={`text-xs truncate max-w-[120px] ${testResult.ok ? 'text-green-600' : 'text-red-500'}`}>
               {testResult.msg}
             </span>
           )}
@@ -114,6 +115,7 @@ export function PrinterCard({ printer, drivers, onChange, onRemove }: Props) {
           value={printer.role}
           onChange={(e) => {
             const role = e.target.value as PrinterRole
+            setTestResult(null)
             onChange({ ...printer, role, driver: DRIVERS_BY_ROLE[role][0] })
           }}
         >
@@ -128,7 +130,10 @@ export function PrinterCard({ printer, drivers, onChange, onRemove }: Props) {
       <DriverPicker
         drivers={displayDrivers}
         value={printer.driver}
-        onChange={(d) => onChange({ ...printer, driver: d })}
+        onChange={(d) => {
+          setTestResult(null)
+          onChange({ ...printer, driver: d })
+        }}
         className="mb-3"
       />
 
@@ -138,9 +143,7 @@ export function PrinterCard({ printer, drivers, onChange, onRemove }: Props) {
         onTest={() => runTest('status')}
         showTestButton={false}
         mode={printer.driver === 'os-printer' ? 'system' : 'network'}
-        onPaperDetected={(paper) =>
-          onChange({ ...printer, paper: { ...printer.paper, ...paper } as PaperConfig })
-        }
+        onPaperDetected={onPatchPaper}
       />
 
       {printer.role === 'fiscal' && (
