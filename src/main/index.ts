@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } from 'electron'
 import * as path from 'node:path'
+import { existsSync } from 'node:fs'
 import log from 'electron-log'
 import { createConfigManager } from './config'
 import type { PrinterConfig } from './config'
@@ -13,8 +14,13 @@ import { listSystemPrinters } from './printing/silent-print'
 import { getPaperInfo } from './printing/paper-info'
 import { renderLabelHtml } from './printing/label-renderer'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE, SAMPLE_LABEL } from './printing/defaults'
+// ?asset: electron-vite copia il file in out/ e risolve il percorso anche dentro app.asar.
+// Un path costruito a mano verso resources/ funziona in dev ma non esiste nell'app impacchettata.
+import trayIconAsset from '../../resources/icon.png?asset'
 
 const configPath = path.join(app.getPath('userData'), 'config.json')
+// Valutato prima che un salvataggio crei il file: vero solo alla primissima apertura
+const firstRun = !existsSync(configPath)
 const config = createConfigManager(configPath)
 const drivers = new Map<string, PrinterDriver>()
 let tray: Tray | null = null
@@ -45,9 +51,16 @@ function buildManagedPrinters(): ManagedPrinter[] {
 // ------- Tray -------
 
 function createTray(): void {
-  const iconPath = path.join(__dirname, '../../resources/icon.png')
-  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
+  let icon = nativeImage.createFromPath(trayIconAsset)
+  if (!icon.isEmpty()) {
+    icon = icon.resize({ width: 16, height: 16 })
+  }
   tray = new Tray(icon)
+  if (icon.isEmpty()) {
+    // Mai invisibili: senza icona la tray su macOS ha larghezza zero e l'app sembra non avviata
+    log.error(`Tray icon missing or unreadable: ${trayIconAsset}`)
+    if (process.platform === 'darwin') tray.setTitle('Bridge')
+  }
   tray.setToolTip('Mashup Print Bridge')
   refreshTrayMenu(false)
 }
@@ -239,6 +252,16 @@ ipcMain.handle('label:preview', (_e, paper?: PaperConfig, template?: LabelTempla
 
 // ------- App lifecycle -------
 
+// Una sola istanza: rilanciare l'app (doppio click sull'icona installata) non deve
+// avviare un secondo processo invisibile che fallisce il bind della porta 8765.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+}
+app.on('second-instance', () => openConfigWindow())
+
+// macOS: click sull'icona nel Dock quando non ci sono finestre
+app.on('activate', () => openConfigWindow())
+
 app.whenReady().then(async () => {
   app.setLoginItemSettings({ openAtLogin: config.get().autostart })
 
@@ -261,6 +284,10 @@ app.whenReady().then(async () => {
 
   createTray()
   startStatusPolling()
+
+  // Primo avvio dopo l'installazione: mostra subito la configurazione,
+  // altrimenti l'app parte solo nella tray e sembra non essersi aperta
+  if (firstRun) openConfigWindow()
 
   initUpdater({
     getConfigWindow: () => configWindow,

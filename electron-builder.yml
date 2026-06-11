@@ -5,8 +5,11 @@ copyright: Copyright © 2026 Mashup ADV
 directories:
   output: dist-electron-builder
 
+# resources/ deve viaggiare nell'asar: gli import `?asset` di electron-vite
+# emettono percorsi relativi a out/ che puntano a app.asar/resources/*
 files:
   - out/**/*
+  - resources/**/*
   - package.json
 
 publish:
