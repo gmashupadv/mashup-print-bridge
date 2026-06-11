@@ -79,6 +79,31 @@ describe('renderLabelHtml', () => {
     // height fallback from DEFAULT_LABEL_PAPER.heightMm = 30
     expect(html).toContain('size: 40mm 30mm')
   })
+
+  // FIX — numeric coercion: CSS injection guard via injected widthMm string
+  it('throws on non-finite widthMm (e.g. "50mm; } </style><script>")', () => {
+    const injected = '50mm; } </style><script>' as unknown as number
+    expect(() =>
+      renderLabelHtml(
+        { name: 'A', price: 1 },
+        { paper: { ...DEFAULT_LABEL_PAPER, widthMm: injected }, template: DEFAULT_LABEL_TEMPLATE }
+      )
+    ).toThrow(/non valide/)
+  })
+
+  // FIX — numeric coercion: partial marginsMm must not produce NaN in CSS
+  it('partial marginsMm { top: 2 } uses defaults for missing sides and never emits NaN', () => {
+    const html = renderLabelHtml(
+      { name: 'A', price: 1 },
+      {
+        paper: { ...DEFAULT_LABEL_PAPER, marginsMm: { top: 2 } as unknown as { top: number; right: number; bottom: number; left: number } },
+        template: DEFAULT_LABEL_TEMPLATE,
+      }
+    )
+    expect(html).not.toContain('NaN')
+    // default marginsMm = { top:1, right:2, bottom:1, left:2 }; top overridden to 2
+    expect(html).toContain('padding: 2mm 2mm 1mm 2mm')
+  })
 })
 
 describe('renderNonFiscalHtml', () => {
@@ -140,5 +165,12 @@ describe('renderNonFiscalHtml', () => {
   it('renderNonFiscalHtml(doc, 80) without third arg contains size: 80mm 297mm', () => {
     const html = renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 80)
     expect(html).toContain('size: 80mm 297mm')
+  })
+
+  // FIX — numeric coercion: non-finite widthMm throws
+  it('throws on non-finite widthMm (e.g. "x" as any)', () => {
+    expect(() =>
+      renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 'x' as unknown as number)
+    ).toThrow(/non valide/)
   })
 })

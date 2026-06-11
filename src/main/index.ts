@@ -185,15 +185,18 @@ ipcMain.handle(
     if (!driver) throw new Error(printerId ? `Driver not found: ${printerId}` : 'No drivers configured')
 
     if (kind === 'label') {
-      const pc = config.get().printers.find((p) => p.id === printerId) ?? config.get().printers[0]
-      if (!driver.printLabel) throw new Error('La stampante non supporta le etichette')
-      const result = await driver.printLabel(SAMPLE_LABEL, {
-        paper: { ...DEFAULT_LABEL_PAPER, ...pc?.paper },
-        template: { ...DEFAULT_LABEL_TEMPLATE, ...pc?.template },
+      const printers = config.get().printers
+      const pc = printerId ? printers.find((p) => p.id === printerId) : printers[0]
+      if (!pc) throw new Error(printerId ? `Printer not found: ${printerId}` : 'No printers configured')
+      const labelDriver = drivers.get(pc.id)
+      if (!labelDriver?.printLabel) throw new Error('La stampante non supporta le etichette')
+      const result = await labelDriver.printLabel(SAMPLE_LABEL, {
+        paper: { ...DEFAULT_LABEL_PAPER, ...pc.paper },
+        template: { ...DEFAULT_LABEL_TEMPLATE, ...pc.template },
       })
-      if (!result.success) throw new Error(result.errorMessage)
-      emitLog(`Etichetta di prova inviata [${printerId ?? 'default'}]`)
-      return driver.getStatus()
+      if (!result.success) throw new Error(result.errorMessage || 'Stampa fallita')
+      emitLog(`Etichetta di prova inviata [${pc.id}]`)
+      return labelDriver.getStatus()
     }
 
     if (kind === 'nonfiscal') {
@@ -206,7 +209,7 @@ ipcMain.handle(
         cut: true,
       }
       const result = await driver.printNonFiscal(doc)
-      if (!result.success) throw new Error(result.errorMessage)
+      if (!result.success) throw new Error(result.errorMessage || 'Stampa fallita')
       emitLog(`Documento di prova inviato [${printerId ?? 'default'}]`)
       return driver.getStatus()
     }

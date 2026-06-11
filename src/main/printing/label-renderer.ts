@@ -21,10 +21,21 @@ function eurIt(n: number): string {
 
 export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
   const { paper, template } = layout
-  // Fix #6: use DEFAULT_LABEL_PAPER for fallback margins and height instead of duplicating literals
-  const m = paper.marginsMm ?? DEFAULT_LABEL_PAPER.marginsMm!
-  const w = paper.widthMm
-  const h = paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!
+  // Fix: numeric coercion guards CSS/HTML injection from unvalidated IPC inputs
+  const w = Number(paper.widthMm)
+  const h = Number(paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!)
+  if (!Number.isFinite(w) || !Number.isFinite(h)) {
+    throw new Error(`Dimensioni etichetta non valide: ${paper.widthMm}x${paper.heightMm}`)
+  }
+  // Fix: merge per-field so a partial marginsMm never produces NaN or undefined
+  const dm = DEFAULT_LABEL_PAPER.marginsMm!
+  const pm = paper.marginsMm ?? dm
+  const m = {
+    top: Number(pm.top ?? dm.top),
+    right: Number(pm.right ?? dm.right),
+    bottom: Number(pm.bottom ?? dm.bottom),
+    left: Number(pm.left ?? dm.left),
+  }
   const fs = template.fontScale || 1
   const innerW = w - m.left - m.right
   const innerH = h - m.top - m.bottom
@@ -70,6 +81,12 @@ export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number, heightMm
   // doc.cut è ignorato qui: la responsabilità del taglio carta appartiene al driver, non al renderer HTML.
   // heightMm: l'altezza la passa il chiamante per farla coincidere col pageSize di stampa.
   // Se omessa, si usa 297mm (A4) come fallback sicuro per driver che non impostano un pageSize esplicito.
+  // Fix: numeric coercion guard against CSS injection from unvalidated IPC inputs
+  const w = Number(widthMm)
+  const hVal = heightMm !== undefined ? Number(heightMm) : 297
+  if (!Number.isFinite(w) || !Number.isFinite(hVal)) {
+    throw new Error(`Dimensioni documento non valide: ${widthMm}x${heightMm}`)
+  }
   const rows = doc.lines
     .map((l) => {
       const styles = [
@@ -85,8 +102,8 @@ export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number, heightMm
   // Fix #2: "size: Xmm auto" è CSS invalido — Chromium scarta la dichiarazione e usa A4 di default.
   // L'altezza la passa il chiamante; se non specificata cade su 297mm.
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-@page { size: ${widthMm}mm ${heightMm ?? 297}mm; margin: 0; }
+@page { size: ${w}mm ${hVal}mm; margin: 0; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { width: ${widthMm}mm; font-family: monospace; color: #000; padding: 2mm; white-space: pre-wrap; }
+body { width: ${w}mm; font-family: monospace; color: #000; padding: 2mm; white-space: pre-wrap; }
 </style></head><body>${rows}</body></html>`
 }
