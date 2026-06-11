@@ -22,15 +22,16 @@ const TENDER: Record<number, number> = { 0: 0, 1: 2, 2: 0 }
 // Il firmware supporta lo scontrino di cortesia (chiavi Ecr_ScontrinoCortesia nel capture):
 // confermare la sintassi esatta dal FCR Manager (https://<ip>) o dal manuale WEC Ditron
 // e aggiornare queste tre costanti se diverse.
-const NONFISCAL_OPEN = 'NFIS APRI'
-const NONFISCAL_LINE = (text: string): string => `NFIS RIGA='${text}'`
-const NONFISCAL_CLOSE = 'NFIS CHIUDI'
+export const NONFISCAL_OPEN = 'NFIS APRI'
+export const NONFISCAL_LINE = (text: string): string => `NFIS RIGA='${text}'`
+export const NONFISCAL_CLOSE = 'NFIS CHIUDI'
 
 export function buildNonFiscal(doc: NonFiscalDoc): string {
   const lines: string[] = [NONFISCAL_OPEN]
   for (const l of doc.lines) {
-    // bold/size/align non mappabili su WEC testo piano → ignorati
-    lines.push(NONFISCAL_LINE(l.text.slice(0, 40).replace(/'/g, ' ')))
+    // bold/size/align/cut non mappabili su WEC testo piano → ignorati.
+    // \r\n neutralizzati insieme agli apici: una riga logica = un comando RIGA.
+    lines.push(NONFISCAL_LINE(l.text.slice(0, 40).replace(/[\r\n']/g, ' ')))
   }
   lines.push(NONFISCAL_CLOSE)
   return lines.join('\n') + '\n'
