@@ -42,6 +42,43 @@ describe('renderLabelHtml', () => {
   it('throws on invalid barcode', () => {
     expect(() => renderLabelHtml({ name: 'X', price: 1, barcode: 'NOT-EAN' }, layout)).toThrow(/EAN-13/i)
   })
+
+  // Fix #1: barcode never sacrificed — .name clamps to 2 lines
+  it('.name style contains -webkit-line-clamp: 2', () => {
+    const html = renderLabelHtml({ name: 'A', price: 1 }, layout)
+    expect(html).toContain('-webkit-line-clamp: 2')
+  })
+
+  // Fix #1: barcode never sacrificed — .barcode has flex-shrink: 0
+  it('.barcode style contains flex-shrink: 0', () => {
+    const html = renderLabelHtml({ name: 'A', price: 1, barcode: '8001234567897' }, layout)
+    expect(html).toContain('flex-shrink: 0')
+  })
+
+  // Fix #5: .price is not breakable
+  it('.price style contains white-space: nowrap', () => {
+    const html = renderLabelHtml({ name: 'A', price: 1 }, layout)
+    expect(html).toContain('white-space: nowrap')
+  })
+
+  // New: @page contains exactly size: 50mm 30mm with default layout
+  it('@page has size: 50mm 30mm with default layout', () => {
+    const html = renderLabelHtml({ name: 'A', price: 1 }, layout)
+    expect(html).toContain('size: 50mm 30mm')
+  })
+
+  // New: layout without marginsMm/heightMm (paper only {widthMm: 40}) uses defaults
+  it('paper without marginsMm/heightMm uses DEFAULT_LABEL_PAPER fallback values', () => {
+    const minimalLayout = {
+      paper: { widthMm: 40 },
+      template: DEFAULT_LABEL_TEMPLATE,
+    }
+    const html = renderLabelHtml({ name: 'A', price: 1 }, minimalLayout)
+    // width is 40mm
+    expect(html).toContain('40mm')
+    // height fallback from DEFAULT_LABEL_PAPER.heightMm = 30
+    expect(html).toContain('size: 40mm 30mm')
+  })
 })
 
 describe('renderNonFiscalHtml', () => {
@@ -53,5 +90,43 @@ describe('renderNonFiscalHtml', () => {
     expect(html).toContain('PRECONTO')
     expect(html).toContain('font-weight:bold')
     expect(html).toContain('text-align:center')
+  })
+
+  // Fix #2: valid @page size for non fiscal
+  it('@page has size: 80mm 297mm (not "auto")', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 80)
+    expect(html).toContain('size: 80mm 297mm')
+    expect(html).not.toContain('size: 80mm auto')
+  })
+
+  // Fix #3: box-sizing: border-box in reset
+  it('CSS reset includes box-sizing: border-box', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 80)
+    expect(html).toContain('box-sizing: border-box')
+  })
+
+  // New: empty line renders &nbsp;
+  it('empty text line renders as &nbsp;', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: '' }] }, 80)
+    expect(html).toContain('&nbsp;')
+  })
+
+  // New: size double → font-size:6mm
+  it('size double renders font-size:6mm', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'X', size: 'double' }] }, 80)
+    expect(html).toContain('font-size:6mm')
+  })
+
+  // New: align right → text-align:right
+  it('align right renders text-align:right', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'X', align: 'right' }] }, 80)
+    expect(html).toContain('text-align:right')
+  })
+
+  // New: HTML escaping in non-fiscal
+  it('escapes HTML special characters in line text', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: '<b>hello</b>' }] }, 80)
+    expect(html).not.toContain('<b>hello</b>')
+    expect(html).toContain('&lt;b&gt;')
   })
 })

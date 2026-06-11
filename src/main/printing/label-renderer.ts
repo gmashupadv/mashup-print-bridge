@@ -5,6 +5,7 @@
 // - escpos-network lo rasterizza a bitmap (html-to-bitmap.ts)
 import type { LabelData, LabelLayout, NonFiscalDoc } from '../drivers/interface'
 import { ean13Svg } from './barcode'
+import { DEFAULT_LABEL_PAPER } from './defaults'
 
 function esc(s: string): string {
   return s
@@ -20,16 +21,21 @@ function eurIt(n: number): string {
 
 export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
   const { paper, template } = layout
-  const m = paper.marginsMm ?? { top: 1, right: 2, bottom: 1, left: 2 }
+  // Fix #6: use DEFAULT_LABEL_PAPER for fallback margins and height instead of duplicating literals
+  const m = paper.marginsMm ?? DEFAULT_LABEL_PAPER.marginsMm!
   const w = paper.widthMm
-  const h = paper.heightMm ?? 30
+  const h = paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!
   const fs = template.fontScale || 1
   const innerW = w - m.left - m.right
   const innerH = h - m.top - m.bottom
 
   const barcodeSvg =
     template.showBarcode && label.barcode
-      ? ean13Svg(label.barcode, { heightMm: Math.min(10, innerH * 0.35), moduleMm: 0.33 })
+      ? ean13Svg(label.barcode, {
+          heightMm: Math.min(10, innerH * 0.35),
+          // Fix #4: 0.375mm = 3 dot esatti a 203dpi — evita barre anti-aliased nella rasterizzazione ESC/POS
+          moduleMm: 0.375,
+        })
       : ''
 
   const parts: string[] = []
@@ -50,17 +56,18 @@ body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; color: #000;
   padding: ${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm; overflow: hidden; }
 .inner { width: ${innerW}mm; height: ${innerH}mm; display: flex; flex-direction: column; }
 .name { font-size: ${(3.2 * fs).toFixed(2)}mm; font-weight: 700; line-height: 1.15;
-  overflow: hidden; }
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .variant { font-size: ${(2.6 * fs).toFixed(2)}mm; }
 .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.5mm; }
-.price { font-size: ${(4.2 * fs).toFixed(2)}mm; font-weight: 700; }
+.price { font-size: ${(4.2 * fs).toFixed(2)}mm; font-weight: 700; white-space: nowrap; }
 .sku { font-size: ${(2.2 * fs).toFixed(2)}mm; font-family: monospace; }
-.barcode { margin-top: auto; text-align: center; }
+.barcode { margin-top: auto; text-align: center; flex-shrink: 0; }
 .barcode svg { max-width: ${innerW}mm; }
 </style></head><body><div class="inner">${parts.join('')}</div></body></html>`
 }
 
 export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number): string {
+  // doc.cut è ignorato qui: la responsabilità del taglio carta appartiene al driver, non al renderer HTML.
   const rows = doc.lines
     .map((l) => {
       const styles = [
@@ -73,9 +80,11 @@ export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number): string 
       return `<div style="${styles}">${esc(l.text) || '&nbsp;'}</div>`
     })
     .join('')
+  // Fix #2: "size: Xmm auto" è CSS invalido — Chromium scarta la dichiarazione e usa A4 di default.
+  // L'altezza reale la decide il chiamante (pageSize di webContents.print o capture offscreen).
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-@page { size: ${widthMm}mm auto; margin: 0; }
-* { margin: 0; padding: 0; }
+@page { size: ${widthMm}mm 297mm; margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body { width: ${widthMm}mm; font-family: monospace; color: #000; padding: 2mm; white-space: pre-wrap; }
 </style></head><body>${rows}</body></html>`
 }
