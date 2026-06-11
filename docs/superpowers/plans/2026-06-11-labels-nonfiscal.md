@@ -2476,6 +2476,10 @@ git commit -m "docs: CLAUDE.md — printing module, label/non-fiscal API, capabi
 - [ ] Etichetta su etichettatrice reale via `os-printer` (Win e Mac)
 - [ ] Non fiscale su ESC/POS 80mm reale (accenti, €, taglio)
 - [ ] Etichetta raster su ESC/POS (nitidezza barcode a 203dpi — se le barre sbavano, ridurre `moduleMm` a 0.25 o alzare la soglia in `html-to-bitmap.ts`)
+- [ ] Rasterizer offscreen: salvare un capture come PNG (`image.toPNG()`) e verificare barre EAN-13 esattamente 3px/modulo e larghezza = widthPx (valida zoom su data: URL, resize DIP e misura in un colpo)
+- [ ] Su Mac Retina: verificare che il capture offscreen esca a deviceScaleFactor 1.0 (se esce doppio, aggiungere guardia `image.resize`)
+- [ ] Su Windows: verificare che lo spooler rispetti il `pageSize` custom in micron (alcuni driver termici usano il form del driver)
+- [ ] `webContents.print` con deviceName inesistente: confermare callback `(false, reason)` su tutte le piattaforme (il timeout 30s copre il caso silenzioso)
 - [ ] Non fiscale su Ditron: se risponde `ERRORE DI SINTASSI`, correggere le tre costanti `NONFISCAL_*` in `ditron-streamwec.ts` col comando giusto dal FCR Manager
 - [ ] Non fiscale su Epson FP-Mate (resa di `font="2"`/`font="4"`)
 ```
