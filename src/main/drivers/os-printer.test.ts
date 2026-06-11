@@ -46,7 +46,9 @@ describe('OsPrinterDriver', () => {
     expect(res.success).toBe(true)
     const [html, opts] = deps.printHtml.mock.calls[0]
     expect(html).toContain('X')
-    expect(opts).toMatchObject({ deviceName: 'Brother QL-800', widthMm: 62, heightMm: 29, landscape: true })
+    // FIX 1: dimensions are already final (cfg.paper has 62×29, already in landscape form);
+    // os-printer must NOT re-apply rotation — landscape is always false
+    expect(opts).toMatchObject({ deviceName: 'Brother QL-800', widthMm: 62, heightMm: 29, landscape: false })
   })
 
   it('printNonFiscal prints with configured width', async () => {
@@ -63,5 +65,72 @@ describe('OsPrinterDriver', () => {
     const res = await driver.printLabel({ name: 'X', price: 1 }, { paper: cfg.paper, template: DEFAULT_LABEL_TEMPLATE })
     expect(res.success).toBe(false)
     expect(res.errorMessage).toMatch(/deviceName|stampante di sistema/i)
+  })
+
+  // FIX 2: printNonFiscal height is double-aware and ignores cfg.paper.heightMm (label geometry)
+  it('printNonFiscal with 3 normal + 2 double lines uses height 38 (not label heightMm 29)', async () => {
+    const { driver, deps } = makeDriver()
+    // cfg.paper has heightMm 29 — must NOT be used for non-fiscal
+    await driver.connect(cfg)
+    const res = await driver.printNonFiscal({
+      lines: [
+        { text: 'A' },
+        { text: 'B' },
+        { text: 'C' },
+        { text: 'D', size: 'double' },
+        { text: 'E', size: 'double' },
+      ],
+    })
+    expect(res.success).toBe(true)
+    const opts = deps.printHtml.mock.calls[0][1]
+    // 10 + 3*4 + 2*8 = 10+12+16 = 38
+    expect(opts.heightMm).toBe(38)
+  })
+
+  // FIX 2: renderNonFiscalHtml also receives the estimated height (not 297)
+  it('printNonFiscal passes estimated heightMm to renderNonFiscalHtml @page', async () => {
+    const { driver, deps } = makeDriver()
+    await driver.connect(cfg)
+    await driver.printNonFiscal({
+      lines: [
+        { text: 'A' },
+        { text: 'B' },
+        { text: 'C' },
+        { text: 'D', size: 'double' },
+        { text: 'E', size: 'double' },
+      ],
+    })
+    const html = deps.printHtml.mock.calls[0][0] as string
+    expect(html).toContain('size: 62mm 38mm')
+  })
+
+  // FIX 2: printNonFiscal respects minimum height of 30
+  it('printNonFiscal with 0 lines uses minimum height 30', async () => {
+    const { driver, deps } = makeDriver()
+    await driver.connect(cfg)
+    await driver.printNonFiscal({ lines: [] })
+    const opts = deps.printHtml.mock.calls[0][1]
+    expect(opts.heightMm).toBe(30)
+  })
+
+  // FIX 3: printHtml rejection propagates as success:false with errorMessage
+  it('printHtml rejection propagates as success:false with errorMessage', async () => {
+    const deps = {
+      listPrinters: vi.fn().mockResolvedValue(['Brother QL-800']),
+      printHtml: vi.fn().mockRejectedValue(new Error('spooler crash')),
+    }
+    const driver = new OsPrinterDriver(deps)
+    await driver.connect(cfg)
+    const res = await driver.printNonFiscal({ lines: [{ text: 'x' }] })
+    expect(res.success).toBe(false)
+    expect(res.errorMessage).toBe('spooler crash')
+  })
+
+  // FIX 3: getStatus case-insensitive match (Windows queue names are case-insensitive)
+  it('getStatus online:true when deviceName matches case-insensitively (brother ql-800 vs Brother QL-800)', async () => {
+    const { driver } = makeDriver(['brother ql-800'])
+    await driver.connect(cfg) // cfg.deviceName = 'Brother QL-800'
+    const st = await driver.getStatus()
+    expect(st.online).toBe(true)
   })
 })

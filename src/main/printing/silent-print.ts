@@ -4,8 +4,15 @@ import { BrowserWindow } from 'electron'
 
 export interface SilentPrintOptions {
   deviceName: string
+  /** Dimensioni FINALI della pagina, già nella forma in cui il contenuto è impaginato
+   *  (@page del renderer). Il chiamante fornisce le dimensioni così come devono comparire
+   *  nel pageSize di webContents.print — nessuna rotazione viene applicata qui. */
   widthMm: number
+  /** Vedi widthMm: altezza FINALE della pagina già nella forma impaginata. */
   heightMm: number
+  /** Riservato: NON usare insieme a dimensioni già ruotate; default false.
+   *  Da attivare solo se un driver vendor sul campo richiede media portrait + rotazione
+   *  software (caso eccezionale, non standard). */
   landscape?: boolean
 }
 

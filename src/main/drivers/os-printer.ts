@@ -7,6 +7,7 @@ import type {
 } from './interface'
 import { renderLabelHtml, renderNonFiscalHtml } from '../printing/label-renderer'
 import type { SilentPrintOptions } from '../printing/silent-print'
+import { DEFAULT_LABEL_PAPER } from '../printing/defaults'
 
 export interface OsPrinterDeps {
   listPrinters(): Promise<string[]>
@@ -53,7 +54,8 @@ export class OsPrinterDriver implements PrinterDriver {
       return { online: false, paperPresent: false, coverClosed: false, errorMessage: 'Nessuna stampante di sistema selezionata' }
     try {
       const names = await (await this.deps()).listPrinters()
-      const online = names.includes(device)
+      // Case-insensitive: su Windows i nomi coda non hanno capitalizzazione garantita
+      const online = names.some((n) => n.toLowerCase() === device.toLowerCase())
       return {
         online,
         paperPresent: online,
@@ -75,8 +77,10 @@ export class OsPrinterDriver implements PrinterDriver {
   async printLabel(label: LabelData, layout: LabelLayout): Promise<PrintResult> {
     const opts = this.printOpts(
       layout.paper.widthMm,
-      layout.paper.heightMm ?? 30,
-      layout.paper.orientation === 'landscape'
+      layout.paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!,
+      // FIX 1: le dimensioni sono già finali (il @page del renderer coincide col pageSize di stampa).
+      // landscape è riservato a driver vendor che richiedono media portrait + rotazione: non usare qui.
+      false
     )
     if (!opts) return fail('os-printer: deviceName non configurato (seleziona la stampante di sistema)')
     try {
@@ -89,12 +93,16 @@ export class OsPrinterDriver implements PrinterDriver {
 
   async printNonFiscal(doc: NonFiscalDoc): Promise<PrintResult> {
     const widthMm = this.cfg?.paper?.widthMm ?? 80
-    // altezza stimata: 5mm a riga (+10mm di respiro); i driver roll-paper troncano il vuoto
-    const heightMm = this.cfg?.paper?.heightMm ?? Math.max(30, doc.lines.length * 5 + 10)
-    const opts = this.printOpts(widthMm, heightMm, false)
+    // FIX 2: stima altezza consapevole delle righe double; IGNORA cfg.paper.heightMm
+    // (quella è la geometria delle etichette: un documento non fiscale non deve essere troncato all'altezza etichetta)
+    const estimatedHeightMm = Math.max(
+      30,
+      10 + doc.lines.reduce((mm, l) => mm + (l.size === 'double' ? 8 : 4), 0)
+    )
+    const opts = this.printOpts(widthMm, estimatedHeightMm, false)
     if (!opts) return fail('os-printer: deviceName non configurato (seleziona la stampante di sistema)')
     try {
-      await (await this.deps()).printHtml(renderNonFiscalHtml(doc, widthMm), opts)
+      await (await this.deps()).printHtml(renderNonFiscalHtml(doc, widthMm, estimatedHeightMm), opts)
       return { ...OK }
     } catch (err: unknown) {
       return fail(err instanceof Error ? err.message : 'Unknown error')

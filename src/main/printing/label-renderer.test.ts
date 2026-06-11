@@ -129,4 +129,16 @@ describe('renderNonFiscalHtml', () => {
     expect(html).not.toContain('<b>hello</b>')
     expect(html).toContain('&lt;b&gt;')
   })
+
+  // FIX 2: renderNonFiscalHtml with explicit heightMm uses it in @page
+  it('renderNonFiscalHtml(doc, 80, 120) contains size: 80mm 120mm', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 80, 120)
+    expect(html).toContain('size: 80mm 120mm')
+  })
+
+  // FIX 2: renderNonFiscalHtml without third arg falls back to 297mm
+  it('renderNonFiscalHtml(doc, 80) without third arg contains size: 80mm 297mm', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 80)
+    expect(html).toContain('size: 80mm 297mm')
+  })
 })
