@@ -434,6 +434,79 @@ describe('POST /print-label', () => {
     const res = await app.inject({ method: 'POST', url: '/print-label', payload: { label: { name: 'X' } } })
     expect(res.statusCode).toBe(400)
   })
+
+  // --- NEW TESTS (TDD: written before production fix) ---
+
+  it('returns 400 when copies is a non-numeric string like "abc" and never calls printLabel', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 'abc' },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toMatchObject({ success: false, error: expect.stringContaining('copies') })
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0)
+  })
+
+  it('returns 400 when copies is 0', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 0 },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toMatchObject({ success: false, error: expect.stringContaining('copies') })
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0)
+  })
+
+  it('clamps copies to 50 and reports copiesPrinted: 50 in response when copies: 100', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 100 },
+    })
+    expect(res.statusCode).toBe(200)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(50)
+    expect(res.json()).toMatchObject({ copiesRequested: 100, copiesPrinted: 50 })
+  })
+
+  it('early-breaks on failure and reports copiesPrinted correctly', async () => {
+    const driver = makeMockDriver({
+      printLabel: vi.fn()
+        .mockResolvedValueOnce({ success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' })
+        .mockResolvedValueOnce({ success: false, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: 'Jam' })
+        .mockResolvedValue({ success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }),
+    })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 5 },
+    })
+    expect(res.statusCode).toBe(200)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(2)
+    expect(res.json()).toMatchObject({ success: false, copiesPrinted: 1, copiesRequested: 5 })
+  })
+
+  it('merges partial paper config with defaults so orientation and marginsMm come from defaults', async () => {
+    const driver = makeMockDriver()
+    const opts = makeOpts(driver)
+    const printers = opts.getPrinters()
+    printers[0].config.paper = { widthMm: 62, heightMm: 29 } as any
+    const app = buildServer({ ...opts, getPrinters: () => printers })
+    await app.inject({ method: 'POST', url: '/print-label', payload })
+    const [, layoutArg] = (driver.printLabel as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(layoutArg.paper.widthMm).toBe(62)
+    expect(layoutArg.paper.heightMm).toBe(29)
+    expect(layoutArg.paper.orientation).toBe('portrait')
+    expect(layoutArg.paper.marginsMm).toBeDefined()
+  })
 })
 
 describe('GET /status multi-printer: prefers fiscal-capable printer', () => {

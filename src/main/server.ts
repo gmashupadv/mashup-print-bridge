@@ -134,10 +134,21 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
     '/print-label',
     async (req, reply) => {
       const { label } = req.body
-      if (!label || typeof label.name !== 'string' || typeof label.price !== 'number') {
+      if (!label || typeof label.name !== 'string' || !Number.isFinite(label.price)) {
         reply.status(400)
         return { success: false, error: 'label.name (string) e label.price (number) sono obbligatori' }
       }
+
+      // Validate copies: if provided must be a finite number >= 1
+      const rawCopies = req.body.copies
+      if (rawCopies !== undefined && rawCopies !== null) {
+        if (!Number.isFinite(rawCopies) || Math.trunc(rawCopies as number) < 1) {
+          reply.status(400)
+          return { success: false, error: 'copies deve essere un numero ≥ 1' }
+        }
+      }
+      const copies = Math.min(50, Math.trunc((rawCopies as number) ?? 1))
+
       const resolved = resolveByCapability(getPrinters(), 'label', req.body.printerId)
       if ('error' in resolved) {
         reply.status(resolved.status)
@@ -145,20 +156,21 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       }
       const pc = resolved.printer.config
       const layout = {
-        paper: pc.paper ?? DEFAULT_LABEL_PAPER,
-        template: pc.template ?? DEFAULT_LABEL_TEMPLATE,
+        paper: { ...DEFAULT_LABEL_PAPER, ...pc.paper },
+        template: { ...DEFAULT_LABEL_TEMPLATE, ...pc.template },
       }
-      const copies = Math.max(1, Math.min(50, Math.trunc(req.body.copies ?? 1)))
+      let copiesPrinted = 0
       try {
         let last: PrintResult | null = null
         for (let i = 0; i < copies; i++) {
           last = await resolved.printer.driver.printLabel!(label, layout)
           if (!last.success) break
+          copiesPrinted++
         }
-        return last
+        return { ...last, copiesRequested: rawCopies ?? 1, copiesPrinted }
       } catch (err: unknown) {
         reply.status(500)
-        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error', copiesPrinted }
       }
     }
   )
