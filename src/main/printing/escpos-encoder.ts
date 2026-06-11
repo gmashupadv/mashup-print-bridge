@@ -9,13 +9,16 @@ const CP858: Record<string, number> = {
   'à': 0x85, 'è': 0x8a, 'é': 0x82, 'ì': 0x8d, 'ò': 0x95, 'ù': 0x97,
   'À': 0xb7, 'È': 0xd4, 'É': 0x90, 'Ì': 0xde, 'Ò': 0xe3, 'Ù': 0xeb,
   '°': 0xf8, '€': 0xd5, 'ç': 0x87, 'ü': 0x81, 'ö': 0x94, 'ä': 0x84,
+  '£': 0x9c, 'ñ': 0xa4, 'á': 0xa0, 'í': 0xa1, 'ó': 0xa2, 'ú': 0xa3,
 }
 
 export function encodeCp858(s: string): Buffer {
+  s = s.normalize('NFC')
   const bytes: number[] = []
   for (const ch of s) {
     const code = ch.codePointAt(0)!
-    if (code < 0x80) bytes.push(code)
+    if (code < 0x20) bytes.push(0x20)  // replace control chars (incl. ESC/GS) with space
+    else if (code < 0x80) bytes.push(code)
     else bytes.push(CP858[ch] ?? 0x3f)
   }
   return Buffer.from(bytes)
@@ -48,6 +51,10 @@ export interface MonoBitmap {
 
 export function encodeRaster(bmp: MonoBitmap): Buffer {
   const rowBytes = Math.ceil(bmp.widthPx / 8)
+  const expected = rowBytes * bmp.heightPx
+  if (bmp.data.length !== expected) {
+    throw new Error(`encodeRaster: expected ${expected} bytes, got ${bmp.data.length}`)
+  }
   return Buffer.concat([
     Buffer.from([GS, 0x76, 0x30, 0x00, rowBytes & 0xff, rowBytes >> 8, bmp.heightPx & 0xff, bmp.heightPx >> 8]),
     Buffer.from(bmp.data),
