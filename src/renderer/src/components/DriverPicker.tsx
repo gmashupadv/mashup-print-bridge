@@ -1,8 +1,9 @@
 import React from 'react'
 import { Listbox } from '@headlessui/react'
 
-const STUBS = ['ditron-wec', 'escpos-network']
+const STUBS = ['ditron-wec']
 // ditron-streamwec is implemented but command codes need on-site verification
+// escpos-network is now implemented and removed from stubs
 
 interface Props {
   drivers: string[]

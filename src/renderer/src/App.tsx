@@ -7,6 +7,7 @@ function newPrinter(): PrinterConfig {
   return {
     id: `printer-${Date.now()}`,
     label: 'Nuova stampante',
+    role: 'receipt',
     driver: 'escpos-network',
     connection: { ip: '', port: 9100, timeout: 5000 },
     operatorId: '1',

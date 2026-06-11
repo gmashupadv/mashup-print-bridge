@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import type { PaperConfig } from '../../../main/drivers/interface'
 
 interface Connection {
   ip: string
   port: number
   timeout: number
+  deviceName?: string
 }
 
 interface Props {
@@ -11,11 +13,27 @@ interface Props {
   onChange: (v: Connection) => void
   onTest: () => Promise<void>
   showTestButton?: boolean
+  mode?: 'network' | 'system'
+  onPaperDetected?: (paper: Partial<PaperConfig>) => void
 }
 
-export function ConnectionForm({ value, onChange, onTest, showTestButton = true }: Props) {
+export function ConnectionForm({
+  value,
+  onChange,
+  onTest,
+  showTestButton = true,
+  mode = 'network',
+  onPaperDetected,
+}: Props) {
   const [testing, setTesting] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [systemPrinters, setSystemPrinters] = useState<string[]>([])
+
+  useEffect(() => {
+    if (mode === 'system') {
+      window.bridge.listSystemPrinters().then(setSystemPrinters).catch(() => setSystemPrinters([]))
+    }
+  }, [mode])
 
   const handleTest = async () => {
     setTesting(true)
@@ -30,39 +48,84 @@ export function ConnectionForm({ value, onChange, onTest, showTestButton = true 
     }
   }
 
+  const handleDeviceSelect = async (deviceName: string) => {
+    onChange({ ...value, deviceName })
+    if (deviceName && onPaperDetected) {
+      try {
+        const info = await window.bridge.getPaperInfo(deviceName)
+        if (info.defaultPaper && info.defaultPaper.widthMm && info.defaultPaper.heightMm) {
+          onPaperDetected({
+            widthMm: info.defaultPaper.widthMm,
+            heightMm: info.defaultPaper.heightMm,
+          })
+        }
+      } catch {
+        // silenzioso
+      }
+    }
+  }
+
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">Connessione</label>
-      <div className="flex flex-col gap-2 mb-2">
-        <input
-          className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-          placeholder="Indirizzo IP"
-          value={value.ip}
-          onChange={(e) => onChange({ ...value, ip: e.target.value })}
-        />
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label className="block text-xs text-gray-500 mb-0.5">Porta</label>
-            <input
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-              placeholder="80"
-              type="number"
-              value={value.port}
-              onChange={(e) => onChange({ ...value, port: Number(e.target.value) })}
-            />
+
+      {mode === 'system' ? (
+        <div className="flex flex-col gap-2 mb-2">
+          <div>
+            <label className="block text-xs text-gray-500 mb-0.5">Stampante di sistema</label>
+            <select
+              className="w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+              value={value.deviceName ?? ''}
+              onChange={(e) => handleDeviceSelect(e.target.value)}
+            >
+              <option value="">— Seleziona —</option>
+              {systemPrinters.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="flex-1">
-            <label className="block text-xs text-gray-500 mb-0.5">Timeout (ms)</label>
-            <input
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-              placeholder="10000"
-              type="number"
-              value={value.timeout}
-              onChange={(e) => onChange({ ...value, timeout: Number(e.target.value) })}
-            />
+          {systemPrinters.length === 0 && (
+            <p className="text-xs text-amber-600">
+              Nessuna stampante di sistema trovata. Installa il driver del produttore e riapri
+              questa finestra.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 mb-2">
+          <input
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+            placeholder="Indirizzo IP"
+            value={value.ip}
+            onChange={(e) => onChange({ ...value, ip: e.target.value })}
+          />
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 mb-0.5">Porta</label>
+              <input
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                placeholder="80"
+                type="number"
+                value={value.port}
+                onChange={(e) => onChange({ ...value, port: Number(e.target.value) })}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 mb-0.5">Timeout (ms)</label>
+              <input
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                placeholder="10000"
+                type="number"
+                value={value.timeout}
+                onChange={(e) => onChange({ ...value, timeout: Number(e.target.value) })}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
       {showTestButton && (
         <div className="flex items-center gap-2">
           <button
