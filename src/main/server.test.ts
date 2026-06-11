@@ -26,6 +26,7 @@ function makeOpts(driver = makeMockDriver(), deptMapping: Record<string, number>
         config: {
           id: 'fiscal',
           label: 'Test',
+          role: 'fiscal',
           driver: 'mock',
           connection: { ip: '0', port: 0, timeout: 0 },
           operatorId: '1',
@@ -136,5 +137,28 @@ describe('POST /open-drawer', () => {
     const app = buildServer(makeOpts())
     const res = await app.inject({ method: 'POST', url: '/open-drawer', payload: {} })
     expect(res.statusCode).toBe(204)
+  })
+})
+
+describe('GET /printers (capabilities)', () => {
+  it('includes role and capabilities', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'GET', url: '/printers' })
+    const body = res.json()
+    expect(body[0].role).toBe('fiscal')
+    expect(body[0].capabilities).toContain('fiscal-receipt')
+  })
+})
+
+describe('POST /print capability check', () => {
+  it('returns 409 when target printer lacks fiscal-receipt', async () => {
+    const driver = makeMockDriver({ capabilities: ['label'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST', url: '/print',
+      payload: { items: [], discount: 0, payments: [] },
+    })
+    expect(res.statusCode).toBe(409)
+    expect(res.json().error).toMatch(/non supporta|does not support/i)
   })
 })

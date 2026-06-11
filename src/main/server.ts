@@ -1,5 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify'
-import type { PrinterDriver } from './drivers/interface'
+import type { PrinterDriver, Capability } from './drivers/interface'
 import type { PrinterConfig } from './config'
 
 export interface ManagedPrinter {
@@ -15,6 +15,26 @@ export interface ServerOptions {
 function resolvePrinter(printers: ManagedPrinter[], id?: string): ManagedPrinter | null {
   if (id) return printers.find((p) => p.config.id === id) ?? null
   return printers[0] ?? null
+}
+
+function capabilityError(printer: ManagedPrinter, cap: Capability): string {
+  return `La stampante '${printer.config.id}' non supporta l'operazione '${cap}'`
+}
+
+export function resolveByCapability(
+  printers: ManagedPrinter[],
+  cap: Capability,
+  id?: string
+): { printer: ManagedPrinter } | { status: number; error: string } {
+  if (id) {
+    const p = printers.find((x) => x.config.id === id)
+    if (!p) return { status: 404, error: `Printer not found: ${id}` }
+    if (!p.driver.capabilities.includes(cap)) return { status: 409, error: capabilityError(p, cap) }
+    return { printer: p }
+  }
+  const p = printers.find((x) => x.driver.capabilities.includes(cap))
+  if (!p) return { status: 503, error: `Nessuna stampante con capability '${cap}' configurata` }
+  return { printer: p }
 }
 
 export function buildServer(opts: ServerOptions): FastifyInstance {
@@ -55,6 +75,8 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       return {
         id: p.config.id,
         label: p.config.label,
+        role: p.config.role,
+        capabilities: p.driver.capabilities,
         driver: p.driver.name,
         ip: p.config.connection.ip,
         status: settled.status === 'fulfilled' ? settled.value : { online: false, errorMessage: settled.reason?.message ?? 'Error' },
@@ -76,14 +98,17 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
             : 'No printers configured',
         }
       }
+      if (!printer.driver.capabilities.includes('fiscal-receipt')) {
+        reply.status(409)
+        return { success: false, error: capabilityError(printer, 'fiscal-receipt') }
+      }
       try {
         const mapping = printer.config.deptMapping
         const items = req.body.items.map((item) => ({
           ...item,
           department: mapping[Number(item.vatRate).toFixed(2)] ?? item.department ?? 1,
         }))
-        if (!printer.driver.printReceipt) throw new Error('Driver does not support fiscal receipt printing')
-        return await printer.driver.printReceipt({
+        return await printer.driver.printReceipt!({
           items,
           discount: req.body.discount,
           payments: req.body.payments,
@@ -107,10 +132,13 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
           : 'No printers configured',
       }
     }
+    if (!printer.driver.capabilities.includes('daily-close')) {
+      reply.status(409)
+      return { success: false, error: capabilityError(printer, 'daily-close') }
+    }
     try {
       const operatorId = req.body.operatorId ?? printer.config.operatorId ?? '1'
-      if (!printer.driver.dailyClose) throw new Error('Driver does not support daily close')
-      return await printer.driver.dailyClose(operatorId)
+      return await printer.driver.dailyClose!(operatorId)
     } catch (err: unknown) {
       reply.status(500)
       return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
@@ -124,9 +152,12 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       reply.status(req.body.printerId ? 404 : 503)
       return { error: req.body.printerId ? `Printer not found: ${req.body.printerId}` : 'No printers configured' }
     }
+    if (!printer.driver.capabilities.includes('drawer')) {
+      reply.status(409)
+      return { error: capabilityError(printer, 'drawer') }
+    }
     try {
-      if (!printer.driver.openDrawer) throw new Error('Driver does not support drawer')
-      await printer.driver.openDrawer(req.body.operatorId ?? printer.config.operatorId ?? '1')
+      await printer.driver.openDrawer!(req.body.operatorId ?? printer.config.operatorId ?? '1')
       reply.status(204)
       return
     } catch (err: unknown) {
