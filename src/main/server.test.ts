@@ -385,6 +385,57 @@ describe('POST /print-nonfiscal', () => {
   })
 })
 
+describe('POST /print-label', () => {
+  const payload = {
+    label: { name: 'T-shirt', variant: 'M / Nero', price: 19.9, sku: 'TSH-M', barcode: '8001234567897' },
+  }
+
+  it('calls printLabel with label and layout from config', async () => {
+    const driver = makeMockDriver()
+    const opts = makeOpts(driver)
+    const printers = opts.getPrinters()
+    printers[0].config.paper = { widthMm: 62, heightMm: 29 }
+    printers[0].config.template = { preset: 'product-price', showBarcode: true, fontScale: 1 }
+    const app = buildServer({ ...opts, getPrinters: () => printers })
+    const res = await app.inject({ method: 'POST', url: '/print-label', payload })
+    expect(res.statusCode).toBe(200)
+    const [labelArg, layoutArg] = (driver.printLabel as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(labelArg.name).toBe('T-shirt')
+    expect(layoutArg.paper.widthMm).toBe(62)
+    expect(layoutArg.template.showBarcode).toBe(true)
+  })
+
+  it('uses defaults when paper/template missing from config', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    await app.inject({ method: 'POST', url: '/print-label', payload })
+    const [, layoutArg] = (driver.printLabel as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(layoutArg.paper.widthMm).toBeGreaterThan(0)
+    expect(layoutArg.template.preset).toBe('product-price')
+  })
+
+  it('prints N copies', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({ method: 'POST', url: '/print-label', payload: { ...payload, copies: 3 } })
+    expect(res.statusCode).toBe(200)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(3)
+  })
+
+  it('returns 503 when no printer has label capability', async () => {
+    const driver = makeMockDriver({ capabilities: ['fiscal-receipt'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({ method: 'POST', url: '/print-label', payload })
+    expect(res.statusCode).toBe(503)
+  })
+
+  it('returns 400 when label.name or price missing', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'POST', url: '/print-label', payload: { label: { name: 'X' } } })
+    expect(res.statusCode).toBe(400)
+  })
+})
+
 describe('GET /status multi-printer: prefers fiscal-capable printer', () => {
   it('returns status of the fiscal-receipt printer, not the label-only printer', async () => {
     const labelDriver = makeMockDriver({

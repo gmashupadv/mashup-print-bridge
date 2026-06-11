@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify'
-import type { PrinterDriver, Capability, NonFiscalLine } from './drivers/interface'
+import type { PrinterDriver, Capability, NonFiscalLine, LabelData, PrintResult } from './drivers/interface'
 import type { PrinterConfig } from './config'
+import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
 
 export interface ManagedPrinter {
   config: PrinterConfig
@@ -122,6 +123,39 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
           lines: req.body.lines ?? [],
           cut: req.body.cut ?? false,
         })
+      } catch (err: unknown) {
+        reply.status(500)
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    }
+  )
+
+  app.post<{ Body: { label: LabelData; copies?: number; printerId?: string } }>(
+    '/print-label',
+    async (req, reply) => {
+      const { label } = req.body
+      if (!label || typeof label.name !== 'string' || typeof label.price !== 'number') {
+        reply.status(400)
+        return { success: false, error: 'label.name (string) e label.price (number) sono obbligatori' }
+      }
+      const resolved = resolveByCapability(getPrinters(), 'label', req.body.printerId)
+      if ('error' in resolved) {
+        reply.status(resolved.status)
+        return { success: false, error: resolved.error }
+      }
+      const pc = resolved.printer.config
+      const layout = {
+        paper: pc.paper ?? DEFAULT_LABEL_PAPER,
+        template: pc.template ?? DEFAULT_LABEL_TEMPLATE,
+      }
+      const copies = Math.max(1, Math.min(50, Math.trunc(req.body.copies ?? 1)))
+      try {
+        let last: PrintResult | null = null
+        for (let i = 0; i < copies; i++) {
+          last = await resolved.printer.driver.printLabel!(label, layout)
+          if (!last.success) break
+        }
+        return last
       } catch (err: unknown) {
         reply.status(500)
         return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
