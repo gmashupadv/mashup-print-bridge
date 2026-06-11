@@ -302,6 +302,89 @@ describe('POST /daily-close without printerId — no capable printer', () => {
   })
 })
 
+describe('POST /print-nonfiscal', () => {
+  const payload = {
+    lines: [
+      { text: 'PRECONTO', bold: true, size: 'double', align: 'center' },
+      { text: 'TOTALE 13,00', align: 'right' },
+    ],
+    cut: true,
+  }
+
+  it('routes to printNonFiscal with doc', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({ method: 'POST', url: '/print-nonfiscal', payload })
+    expect(res.statusCode).toBe(200)
+    const arg = (driver.printNonFiscal as ReturnType<typeof vi.fn>).mock.calls[0][0]
+    expect(arg.lines[0].text).toBe('PRECONTO')
+    expect(arg.cut).toBe(true)
+  })
+
+  it('falls back to first printer WITH the capability when printerId omitted', async () => {
+    const fiscalDriver = makeMockDriver({ capabilities: ['fiscal-receipt'] })
+    const nonFiscalDriver = makeMockDriver({
+      capabilities: ['non-fiscal'],
+      printNonFiscal: vi.fn().mockResolvedValue({ success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }),
+    })
+    const opts: ServerOptions = {
+      getPrinters: () => [
+        {
+          config: {
+            id: 'fiscal-printer',
+            label: 'Fiscal',
+            role: 'fiscal',
+            driver: 'mock',
+            connection: { ip: '0', port: 0, timeout: 0 },
+            operatorId: '1',
+            deptMapping: {},
+          },
+          driver: fiscalDriver,
+        },
+        {
+          config: {
+            id: 'nonfiscal-printer',
+            label: 'NonFiscal',
+            role: 'receipt',
+            driver: 'mock',
+            connection: { ip: '0', port: 0, timeout: 0 },
+            operatorId: '1',
+            deptMapping: {},
+          },
+          driver: nonFiscalDriver,
+        },
+      ],
+      version: '1.0.0',
+    }
+    const app = buildServer(opts)
+    const res = await app.inject({ method: 'POST', url: '/print-nonfiscal', payload })
+    expect(res.statusCode).toBe(200)
+    expect(nonFiscalDriver.printNonFiscal).toHaveBeenCalledTimes(1)
+    expect(fiscalDriver.printNonFiscal).not.toHaveBeenCalled()
+  })
+
+  it('returns 409 for explicit printerId without capability', async () => {
+    const driver = makeMockDriver({ capabilities: ['fiscal-receipt'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({ method: 'POST', url: '/print-nonfiscal', payload: { ...payload, printerId: 'fiscal' } })
+    expect(res.statusCode).toBe(409)
+  })
+
+  it('returns 404 for unknown printerId', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'POST', url: '/print-nonfiscal', payload: { ...payload, printerId: 'nope' } })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('returns 500 on driver error', async () => {
+    const driver = makeMockDriver({ printNonFiscal: vi.fn().mockRejectedValue(new Error('Paper out')) })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({ method: 'POST', url: '/print-nonfiscal', payload })
+    expect(res.statusCode).toBe(500)
+    expect(res.json().error).toBe('Paper out')
+  })
+})
+
 describe('GET /status multi-printer: prefers fiscal-capable printer', () => {
   it('returns status of the fiscal-receipt printer, not the label-only printer', async () => {
     const labelDriver = makeMockDriver({

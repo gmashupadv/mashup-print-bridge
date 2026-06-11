@@ -1,5 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify'
-import type { PrinterDriver, Capability } from './drivers/interface'
+import type { PrinterDriver, Capability, NonFiscalLine } from './drivers/interface'
 import type { PrinterConfig } from './config'
 
 export interface ManagedPrinter {
@@ -101,6 +101,26 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
           items,
           discount: req.body.discount,
           payments: req.body.payments,
+        })
+      } catch (err: unknown) {
+        reply.status(500)
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    }
+  )
+
+  app.post<{ Body: { lines: NonFiscalLine[]; cut?: boolean; printerId?: string } }>(
+    '/print-nonfiscal',
+    async (req, reply) => {
+      const resolved = resolveByCapability(getPrinters(), 'non-fiscal', req.body.printerId)
+      if ('error' in resolved) {
+        reply.status(resolved.status)
+        return { success: false, error: resolved.error }
+      }
+      try {
+        return await resolved.printer.driver.printNonFiscal!({
+          lines: req.body.lines ?? [],
+          cut: req.body.cut ?? false,
         })
       } catch (err: unknown) {
         reply.status(500)
