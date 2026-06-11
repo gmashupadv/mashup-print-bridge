@@ -2480,6 +2480,7 @@ git commit -m "docs: CLAUDE.md — printing module, label/non-fiscal API, capabi
 - [ ] Su Mac Retina: verificare che il capture offscreen esca a deviceScaleFactor 1.0 (se esce doppio, aggiungere guardia `image.resize`)
 - [ ] Su Windows: verificare che lo spooler rispetti il `pageSize` custom in micron (alcuni driver termici usano il form del driver)
 - [ ] `webContents.print` con deviceName inesistente: confermare callback `(false, reason)` su tutte le piattaforme (il timeout 30s copre il caso silenzioso)
+- [ ] Etichetta landscape su QL-800/etichettatrici: il contratto attuale è dimensioni FINALI + `landscape: false`; se il driver vendor definisce il media in portrait e l'etichetta esce ruotata/clippata, passare a dimensioni swappate + `landscape: true` in os-printer (flag già riservato in SilentPrintOptions)
 - [ ] Non fiscale su Ditron: se risponde `ERRORE DI SINTASSI`, correggere le tre costanti `NONFISCAL_*` in `ditron-streamwec.ts` col comando giusto dal FCR Manager
 - [ ] Non fiscale su Epson FP-Mate (resa di `font="2"`/`font="4"`)
 ```
