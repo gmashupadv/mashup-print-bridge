@@ -1,5 +1,13 @@
 import Fastify, { type FastifyInstance } from 'fastify'
-import type { PrinterDriver, Capability, NonFiscalLine, LabelData, PrintResult } from './drivers/interface'
+import type {
+  PrinterDriver,
+  Capability,
+  NonFiscalLine,
+  LabelData,
+  PrintResult,
+  ReceiptItem,
+  ReceiptPayment,
+} from './drivers/interface'
 import type { PrinterConfig } from './config'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
 
@@ -83,7 +91,12 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
     })
   })
 
-  app.post<{ Body: { items: any[]; discount: number; payments: any[]; printerId?: string } }>(
+  // Incoming items may omit `department` (resolved via deptMapping or defaulted to 1 below)
+  type IncomingReceiptItem = Omit<ReceiptItem, 'department'> & { department?: number }
+
+  app.post<{
+    Body: { items: IncomingReceiptItem[]; discount: number; payments: ReceiptPayment[]; printerId?: string }
+  }>(
     '/print',
     async (req, reply) => {
       const resolved = resolveByCapability(getPrinters(), 'fiscal-receipt', req.body.printerId)

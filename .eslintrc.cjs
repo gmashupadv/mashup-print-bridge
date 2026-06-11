@@ -11,5 +11,7 @@ module.exports = {
   plugins: ['react-refresh'],
   rules: {
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    // Convention: parameters intentionally unused (e.g. interface conformance) are prefixed with _
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },
 }

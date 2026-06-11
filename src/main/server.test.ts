@@ -498,7 +498,7 @@ describe('POST /print-label', () => {
     const driver = makeMockDriver()
     const opts = makeOpts(driver)
     const printers = opts.getPrinters()
-    printers[0].config.paper = { widthMm: 62, heightMm: 29 } as any
+    printers[0].config.paper = { widthMm: 62, heightMm: 29 }
     const app = buildServer({ ...opts, getPrinters: () => printers })
     await app.inject({ method: 'POST', url: '/print-label', payload })
     const [, layoutArg] = (driver.printLabel as ReturnType<typeof vi.fn>).mock.calls[0]
