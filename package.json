@@ -1,7 +1,9 @@
 {
   "name": "mashup-print-bridge",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Local HTTP bridge between Mashup Cashflow and fiscal printers",
+  "author": "Mashup ADV <giuseppe@mashupadv.com>",
   "type": "module",
   "main": "out/main/index.js",
   "scripts": {
