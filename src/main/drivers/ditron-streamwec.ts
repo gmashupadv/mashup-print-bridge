@@ -7,7 +7,7 @@
 // NOTE: some firmware versions respond without HTTP headers (bare WEC text).
 // We use raw tls.connect() so both HTTP-wrapped and bare responses are handled uniformly.
 import tls from 'node:tls'
-import type { DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
+import type { Capability, DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
 
 const TLS_OPTS: tls.ConnectionOptions = { rejectUnauthorized: false }
 
@@ -64,6 +64,7 @@ function parseResult(body: string): PrintResult {
 
 export class DitronStreamWecDriver implements PrinterDriver {
   readonly name = 'ditron-streamwec'
+  readonly capabilities: Capability[] = ['fiscal-receipt', 'daily-close', 'drawer']
   private host = ''
   private port = 443
   private timeout = 15000

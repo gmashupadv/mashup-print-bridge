@@ -1,9 +1,10 @@
-import type { PrinterDriver, DriverConfig, PrinterStatus, ReceiptData, PrintResult } from './interface'
+import type { Capability, PrinterDriver, DriverConfig, PrinterStatus, ReceiptData, PrintResult } from './interface'
 
 const MSG = 'ESC/POS network driver: raw label printing not yet implemented'
 
 export class EscPosNetworkDriver implements PrinterDriver {
   readonly name = 'escpos-network'
+  readonly capabilities: Capability[] = []
   private cfg: DriverConfig | null = null
 
   async connect(config: DriverConfig): Promise<void> {

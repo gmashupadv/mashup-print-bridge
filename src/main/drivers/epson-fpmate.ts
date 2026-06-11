@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser'
-import type { DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
+import type { Capability, DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
 
 const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
 
@@ -33,6 +33,7 @@ function findFirst(obj: unknown, key: string): Record<string, string> | undefine
 
 export class EpsonFpMateDriver implements PrinterDriver {
   readonly name = 'epson-fpmate'
+  readonly capabilities: Capability[] = ['fiscal-receipt', 'daily-close', 'drawer']
   private url = ''
   private timeout = 15000
   private operatorId = '1'

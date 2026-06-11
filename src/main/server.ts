@@ -82,6 +82,7 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
           ...item,
           department: mapping[Number(item.vatRate).toFixed(2)] ?? item.department ?? 1,
         }))
+        if (!printer.driver.printReceipt) throw new Error('Driver does not support fiscal receipt printing')
         return await printer.driver.printReceipt({
           items,
           discount: req.body.discount,
@@ -108,6 +109,7 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
     }
     try {
       const operatorId = req.body.operatorId ?? printer.config.operatorId ?? '1'
+      if (!printer.driver.dailyClose) throw new Error('Driver does not support daily close')
       return await printer.driver.dailyClose(operatorId)
     } catch (err: unknown) {
       reply.status(500)
@@ -123,8 +125,10 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       return { error: req.body.printerId ? `Printer not found: ${req.body.printerId}` : 'No printers configured' }
     }
     try {
+      if (!printer.driver.openDrawer) throw new Error('Driver does not support drawer')
       await printer.driver.openDrawer(req.body.operatorId ?? printer.config.operatorId ?? '1')
       reply.status(204)
+      return
     } catch (err: unknown) {
       reply.status(500)
       return { error: err instanceof Error ? err.message : 'Unknown error' }

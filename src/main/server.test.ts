@@ -6,10 +6,13 @@ import type { PrinterDriver } from './drivers/interface'
 function makeMockDriver(overrides?: Partial<PrinterDriver>): PrinterDriver {
   return {
     name: 'mock',
+    capabilities: ['fiscal-receipt', 'non-fiscal', 'label', 'daily-close', 'drawer', 'cut'],
     connect: vi.fn(),
     disconnect: vi.fn(),
     getStatus: vi.fn().mockResolvedValue({ online: true, paperPresent: true, coverClosed: true, errorMessage: '' }),
     printReceipt: vi.fn().mockResolvedValue({ success: true, receiptNumber: '0001', closureNumber: '001', printerSerial: 'SERIAL', errorMessage: '' }),
+    printNonFiscal: vi.fn().mockResolvedValue({ success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }),
+    printLabel: vi.fn().mockResolvedValue({ success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }),
     dailyClose: vi.fn().mockResolvedValue({ success: true, receiptNumber: '', closureNumber: '005', printerSerial: 'SERIAL', errorMessage: '' }),
     openDrawer: vi.fn().mockResolvedValue(undefined),
     ...overrides,

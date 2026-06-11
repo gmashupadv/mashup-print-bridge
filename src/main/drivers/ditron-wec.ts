@@ -1,10 +1,11 @@
 // src/main/drivers/ditron-wec.ts
-import type { DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
+import type { Capability, DriverConfig, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
 
 const MSG = 'Ditron WEC driver: not implemented — pending Wireshark capture'
 
 export class DitronWecDriver implements PrinterDriver {
   readonly name = 'ditron-wec'
+  readonly capabilities: Capability[] = ['fiscal-receipt', 'daily-close', 'drawer']
 
   async connect(_config: DriverConfig): Promise<void> {
     // Intentionally does not throw — connect is called at startup for the active driver.
