@@ -1,14 +1,27 @@
 import { readFileSync } from 'node:fs'
 import { writeFile, mkdir } from 'node:fs/promises'
 import * as path from 'node:path'
+import type { PaperConfig, LabelTemplate } from './drivers/interface'
+
+export type PrinterRole = 'fiscal' | 'label' | 'receipt'
+
+export interface PrinterConnection {
+  ip: string
+  port: number
+  timeout: number
+  deviceName?: string
+}
 
 export interface PrinterConfig {
   id: string
   label: string
+  role: PrinterRole
   driver: string
-  connection: { ip: string; port: number; timeout: number }
+  connection: PrinterConnection
   operatorId: string
   deptMapping: Record<string, number>
+  paper?: PaperConfig
+  template?: LabelTemplate
 }
 
 export interface AppConfig {
@@ -23,6 +36,7 @@ const DEFAULTS: AppConfig = {
     {
       id: 'fiscal',
       label: 'Stampante fiscale',
+      role: 'fiscal',
       driver: 'epson-fpmate',
       connection: { ip: '192.168.1.10', port: 80, timeout: 10000 },
       operatorId: '1',
@@ -37,7 +51,7 @@ const DEFAULTS: AppConfig = {
 function migrate(raw: Record<string, unknown>): AppConfig {
   // Old format: has top-level `driver` key but no `printers`
   if ('driver' in raw && !('printers' in raw)) {
-    const connection = (raw['connection'] as PrinterConfig['connection']) ?? {
+    const connection = (raw['connection'] as PrinterConnection) ?? {
       ip: '192.168.1.10',
       port: 80,
       timeout: 10000,
@@ -45,6 +59,7 @@ function migrate(raw: Record<string, unknown>): AppConfig {
     const printer: PrinterConfig = {
       id: 'fiscal',
       label: 'Stampante fiscale',
+      role: 'fiscal',
       driver: (raw['driver'] as string) ?? 'epson-fpmate',
       connection,
       operatorId: (raw['operatorId'] as string) ?? '1',
@@ -61,7 +76,9 @@ function migrate(raw: Record<string, unknown>): AppConfig {
       printers: [printer],
     }
   }
-  return { ...DEFAULTS, ...raw } as AppConfig
+  const merged = { ...DEFAULTS, ...raw } as AppConfig
+  merged.printers = merged.printers.map((p) => ({ role: 'fiscal' as PrinterRole, ...p }))
+  return merged
 }
 
 export interface ConfigManager {

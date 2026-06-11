@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { promises as fs } from 'node:fs'
+import { promises as fs, writeFileSync, mkdtempSync } from 'node:fs'
 import * as path from 'node:path'
 import * as os from 'node:os'
 import { createConfigManager } from './config'
+
+function tmpConfigPath(): string {
+  return path.join(mkdtempSync(path.join(os.tmpdir(), 'mpb-')), 'config.json')
+}
 
 let tmpDir: string
 
@@ -97,5 +101,51 @@ describe('createConfigManager', () => {
     ]
     await cfg.save({ printers: updatedPrinters })
     expect(cfg.get().printers[0].operatorId).toBe('5')
+  })
+})
+
+describe('role migration', () => {
+  it('adds role "fiscal" to printers missing it', () => {
+    const fp = tmpConfigPath()
+    writeFileSync(fp, JSON.stringify({
+      printers: [{ id: 'p1', label: 'X', driver: 'epson-fpmate',
+        connection: { ip: '1.2.3.4', port: 80, timeout: 1000 },
+        operatorId: '1', deptMapping: {} }],
+      autostart: true, port: 8765, logLevel: 'info',
+    }))
+    const mgr = createConfigManager(fp)
+    expect(mgr.get().printers[0].role).toBe('fiscal')
+  })
+
+  it('migrates legacy single-printer format with role fiscal', () => {
+    const fp = tmpConfigPath()
+    writeFileSync(fp, JSON.stringify({
+      driver: 'ditron-wec',
+      connection: { ip: '5.6.7.8', port: 12345, timeout: 5000 },
+      operatorId: '2', deptMapping: { '22.00': 1 },
+      autostart: false, port: 8765, logLevel: 'info',
+    }))
+    const mgr = createConfigManager(fp)
+    const p = mgr.get().printers[0]
+    expect(p.role).toBe('fiscal')
+    expect(p.driver).toBe('ditron-wec')
+  })
+
+  it('preserves paper and template fields', () => {
+    const fp = tmpConfigPath()
+    writeFileSync(fp, JSON.stringify({
+      printers: [{ id: 'lab', label: 'Etich', role: 'label', driver: 'os-printer',
+        connection: { ip: '', port: 0, timeout: 10000, deviceName: 'Brother QL-800' },
+        operatorId: '1', deptMapping: {},
+        paper: { widthMm: 62, heightMm: 29, orientation: 'landscape' },
+        template: { preset: 'product-price', showBarcode: true, fontScale: 1 } }],
+      autostart: true, port: 8765, logLevel: 'info',
+    }))
+    const mgr = createConfigManager(fp)
+    const p = mgr.get().printers[0]
+    expect(p.role).toBe('label')
+    expect(p.paper?.widthMm).toBe(62)
+    expect(p.connection.deviceName).toBe('Brother QL-800')
+    expect(p.template?.preset).toBe('product-price')
   })
 })
