@@ -37,6 +37,14 @@ Config file at runtime: `app.getPath('userData')/config.json`.
 Three Electron layers, each compiled by electron-vite into `out/`:
 
 - **`src/main/`** — Node.js main process. Entry `index.ts` owns app lifecycle: tray menu, the config window, the Fastify server, the updater, and a `Map<printerId, PrinterDriver>` of live driver instances. It wires config → drivers → server.
+  - **`printing/`** — shared rendering/encoding helpers used by drivers:
+    - `defaults.ts` — default label paper (50×30 mm), default template, sample label for previews
+    - `barcode.ts` — EAN-13 checksum/normalization and pure-SVG barcode rendering
+    - `label-renderer.ts` — `LabelData + LabelLayout` → self-contained HTML (also non-fiscal docs → HTML)
+    - `escpos-encoder.ts` — ESC/POS byte encoding: CP858 text, formatted non-fiscal lines, raster bitmaps
+    - `html-to-bitmap.ts` — renders HTML to a monochrome bitmap via an offscreen BrowserWindow (for ESC/POS raster)
+    - `silent-print.ts` — silent printing of HTML through the OS driver (hidden BrowserWindow, **no print dialog**) + `listSystemPrinters()`
+    - `paper-info.ts` — per-OS probing of paper sizes for a system printer (`lpoptions` on macOS/Linux, PowerShell on Windows)
 - **`src/preload/index.ts`** — exposes a typed `window.bridge` API to the renderer over `contextBridge` (`getConfig`, `saveConfig`, `testDriver`, `listDrivers`, plus `onLogEvent`/`onUpdateAvailable` subscriptions).
 - **`src/renderer/`** — React + Tailwind config UI (single window). Talks to main **only via `window.bridge` IPC**, never via the HTTP server.
 
@@ -54,41 +62,61 @@ Drivers live in `src/main/drivers/` and implement `PrinterDriver` (`interface.ts
 ```typescript
 interface PrinterDriver {
   readonly name: string
+  readonly capabilities: Capability[]   // 'fiscal-receipt' | 'non-fiscal' | 'label' | 'daily-close' | 'drawer' | 'cut'
   connect(config: DriverConfig): Promise<void>
   disconnect(): Promise<void>
   getStatus(): Promise<PrinterStatus>
-  printReceipt(data: ReceiptData): Promise<PrintResult>
-  dailyClose(operatorId: string): Promise<PrintResult>
-  openDrawer(operatorId: string): Promise<void>
+  // Optional methods: present only when the matching capability is declared
+  printReceipt?(data: ReceiptData): Promise<PrintResult>
+  printNonFiscal?(doc: NonFiscalDoc): Promise<PrintResult>
+  printLabel?(label: LabelData, layout: LabelLayout): Promise<PrintResult>
+  dailyClose?(operatorId: string): Promise<PrintResult>
+  openDrawer?(operatorId: string): Promise<void>
 }
 ```
+
+A driver's `capabilities` array is the contract: the server routes requests only to printers whose driver declares the needed capability, and the optional methods (`printReceipt`/`printNonFiscal`/`printLabel`/`dailyClose`/`openDrawer`) must be implemented iff the matching capability is declared.
 
 `registry.ts` is the single source of truth for available drivers — a name→factory map. **To add a driver: implement the interface, then register it in `registry.ts`.** `listDrivers()` (surfaced to the UI via IPC) and `createDriver(name)` both read from this map.
 
 Registered drivers:
-- `epson-fpmate` — HTTP POST XML to Epson RT printers
-- `ditron-wec` — raw TCP for Ditron
-- `ditron-streamwec` — HTTPS REST (port 1471) for newer Ditron
-- `escpos-network` — network ESC/POS
+- `epson-fpmate` — HTTP POST XML to Epson RT printers; fiscal + non-fiscal (`fiscal-receipt`, `non-fiscal`, `daily-close`, `drawer`)
+- `ditron-wec` — raw TCP for Ditron; **stub** (throws "not implemented — pending Wireshark capture")
+- `ditron-streamwec` — HTTPS REST (port 1471) for newer Ditron; fiscal + non-fiscal — **WEC command constants to be verified on-site**
+- `escpos-network` — raw TCP port 9100 ESC/POS, complete: non-fiscal + label (rendered HTML → raster bitmap) + cut (`non-fiscal`, `label`, `cut`)
+- `os-printer` — prints via the OS printer driver (`connection.deviceName`), silent, no dialog; label + non-fiscal (`label`, `non-fiscal`)
 
-`DriverConfig` is a flattened per-printer shape (`ip`, `port`, `timeout`, `operatorId`, `deptMapping`) built in `index.ts:driverConfigFrom()` from a `PrinterConfig`.
+`DriverConfig` is a flattened per-printer shape (`ip`, `port`, `timeout`, `operatorId`, `deptMapping`, plus optional `deviceName`, `paper`, `template`) built in `index.ts:driverConfigFrom()` from a `PrinterConfig`.
 
 ## Multi-printer model
 
-Config holds a `printers[]` array; each printer has an `id`. The server routes by an optional `printerId` in the request body and falls back to the **first** printer when omitted (`resolvePrinter` in `server.ts`). `index.ts:buildManagedPrinters()` joins config entries with their live driver instances and hands the list to the server via `getPrinters()`.
+Config holds a `printers[]` array; each printer has an `id` and a `role` (`fiscal` | `label` | `receipt`). The server resolves the target printer per request via `resolveByCapability` in `server.ts`:
+
+- explicit `printerId` in the body → that printer, or **404** if the id doesn't exist, **409** if it exists but lacks the needed capability;
+- `printerId` omitted → the **first printer whose driver declares the capability**, or **503** if none does.
+
+`GET /status` is the exception (legacy health check): it targets the first **fiscal** printer (`fiscal-receipt` capability), falling back to `printers[0]`. `index.ts:buildManagedPrinters()` joins config entries with their live driver instances and hands the list to the server via `getPrinters()`.
 
 ## REST API (localhost:8765)
 
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/ping` | Health check: version + active driver + printer list |
-| GET | `/status` | Status of the default (first) printer |
-| GET | `/printers` | Status of all configured printers (settled in parallel) |
+| GET | `/status` | Status of the first fiscal printer (fallback `printers[0]`) |
+| GET | `/printers` | All configured printers with `role`, `capabilities` and live status (settled in parallel) |
 | POST | `/print` | Print fiscal receipt; body `{ items, discount, payments, printerId? }` |
+| POST | `/print-nonfiscal` | Non-fiscal document; body `{ lines: [{ text, bold?, size?, align? }], cut?, printerId? }` |
+| POST | `/print-label` | Product label; body `{ label: { name, price, variant?, sku?, barcode? }, copies?, printerId? }` |
 | POST | `/daily-close` | Z closure; body `{ operatorId?, printerId? }` |
 | POST | `/open-drawer` | Cash drawer open; body `{ operatorId?, printerId? }`; 204 on success |
 
-`/print` remaps each item's `department` via the target printer's `deptMapping` keyed by `vatRate.toFixed(2)`. Missing printer → 404 if `printerId` was given, 503 if none configured.
+Printer resolution for every print route follows the capability rule above (explicit `printerId` → 404/409; omitted → first printer with the capability → 503 if none).
+
+`/print` remaps each item's `department` via the target printer's `deptMapping` keyed by `vatRate.toFixed(2)`.
+
+`/print-label`: `label.name` (string) and `label.price` (number) are mandatory → **400** otherwise. `copies` is clamped to 1–50; the response includes `copiesRequested` and `copiesPrinted` (partial failures return `success: false` with the copies actually printed). The label layout merges the printer's `paper`/`template` config over `DEFAULT_LABEL_PAPER`/`DEFAULT_LABEL_TEMPLATE`.
+
+`/print-nonfiscal` line options: `bold` (boolean), `size` (`normal` | `double`), `align` (`left` | `center` | `right`); `cut` requests a paper cut where supported.
 
 ## Config schema
 
@@ -98,10 +126,22 @@ Config holds a `printers[]` array; each printer has an `id`. The server routes b
     {
       "id": "fiscal",
       "label": "Stampante fiscale",
+      "role": "fiscal",
       "driver": "epson-fpmate",
       "connection": { "ip": "192.168.1.10", "port": 80, "timeout": 10000 },
       "operatorId": "1",
       "deptMapping": { "22.00": 1, "10.00": 2, "5.00": 3, "4.00": 4, "0.00": 5 }
+    },
+    {
+      "id": "labels",
+      "label": "Etichettatrice",
+      "role": "label",
+      "driver": "os-printer",
+      "connection": { "ip": "", "port": 0, "timeout": 10000, "deviceName": "Brother_QL_820NWB" },
+      "operatorId": "1",
+      "deptMapping": {},
+      "paper": { "widthMm": 50, "heightMm": 30, "orientation": "portrait", "marginsMm": { "top": 1, "right": 2, "bottom": 1, "left": 2 } },
+      "template": { "preset": "product-price", "showBarcode": true, "fontScale": 1 }
     }
   ],
   "autostart": true,
@@ -109,6 +149,8 @@ Config holds a `printers[]` array; each printer has an `id`. The server routes b
   "logLevel": "info"
 }
 ```
+
+Per-printer fields: `role` (`fiscal` | `label` | `receipt`, used by the UI; routing uses driver capabilities), `connection.deviceName` (OS printer name, required by `os-printer`), optional `paper` and `template` (label layout overrides; defaults in `printing/defaults.ts`).
 
 `deptMapping` maps VAT-rate strings to printer-specific fiscal department numbers. `config.ts:migrate()` upgrades the **legacy single-printer format** (top-level `driver`/`connection`/`operatorId`/`deptMapping`, no `printers`) into the array form — preserve that migration path when touching config.
 
@@ -127,4 +169,4 @@ The POS uses `PrintBridgeClient` (`src/shared/lib/printBridgeClient.ts` in the P
 ## Notes
 
 - `*.pcapng` / `ditron.html` at the repo root are packet captures / protocol reverse-engineering scratch for the Ditron drivers — not part of the build.
-- Tests use vitest; existing coverage is in `config.test.ts`, `server.test.ts`, `epson-fpmate.test.ts`.
+- Tests use vitest; coverage spans `config`, `server`, the drivers (`epson-fpmate`, `ditron-streamwec`, `escpos-network`, `os-printer`) and the `printing/` helpers (`barcode`, `label-renderer`, `escpos-encoder`, `paper-info`).
