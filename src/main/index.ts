@@ -8,7 +8,11 @@ import { startServer } from './server'
 import type { ManagedPrinter } from './server'
 import { initUpdater } from './updater'
 import type { FastifyInstance } from 'fastify'
-import type { PrinterDriver } from './drivers/interface'
+import type { PrinterDriver, PaperConfig, LabelTemplate, NonFiscalDoc } from './drivers/interface'
+import { listSystemPrinters } from './printing/silent-print'
+import { getPaperInfo } from './printing/paper-info'
+import { renderLabelHtml } from './printing/label-renderer'
+import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE, SAMPLE_LABEL } from './printing/defaults'
 
 const configPath = path.join(app.getPath('userData'), 'config.json')
 const config = createConfigManager(configPath)
@@ -25,6 +29,9 @@ function driverConfigFrom(pc: PrinterConfig) {
     timeout: pc.connection.timeout,
     operatorId: pc.operatorId,
     deptMapping: pc.deptMapping,
+    deviceName: pc.connection.deviceName,
+    paper: pc.paper,
+    template: pc.template,
   }
 }
 
@@ -171,19 +178,56 @@ ipcMain.handle('config:save', async (_e, partial: Partial<ReturnType<typeof conf
   emitLog(`Config salvata — stampanti: ${newPrinters.map((p) => p.driver).join(', ')}`)
 })
 
-ipcMain.handle('driver:test', async (_e, printerId?: string) => {
-  if (printerId) {
-    const driver = drivers.get(printerId)
-    if (!driver) throw new Error(`Driver not found: ${printerId}`)
+ipcMain.handle(
+  'driver:test',
+  async (_e, printerId?: string, kind: 'status' | 'label' | 'nonfiscal' = 'status') => {
+    const driver = printerId ? drivers.get(printerId) : [...drivers.values()][0]
+    if (!driver) throw new Error(printerId ? `Driver not found: ${printerId}` : 'No drivers configured')
+
+    if (kind === 'label') {
+      const pc = config.get().printers.find((p) => p.id === printerId) ?? config.get().printers[0]
+      if (!driver.printLabel) throw new Error('La stampante non supporta le etichette')
+      const result = await driver.printLabel(SAMPLE_LABEL, {
+        paper: { ...DEFAULT_LABEL_PAPER, ...pc?.paper },
+        template: { ...DEFAULT_LABEL_TEMPLATE, ...pc?.template },
+      })
+      if (!result.success) throw new Error(result.errorMessage)
+      emitLog(`Etichetta di prova inviata [${printerId ?? 'default'}]`)
+      return driver.getStatus()
+    }
+
+    if (kind === 'nonfiscal') {
+      if (!driver.printNonFiscal) throw new Error('La stampante non supporta la stampa non fiscale')
+      const doc: NonFiscalDoc = {
+        lines: [
+          { text: 'MASHUP PRINT BRIDGE', bold: true, align: 'center' },
+          { text: 'Stampa di prova', align: 'center' },
+        ],
+        cut: true,
+      }
+      const result = await driver.printNonFiscal(doc)
+      if (!result.success) throw new Error(result.errorMessage)
+      emitLog(`Documento di prova inviato [${printerId ?? 'default'}]`)
+      return driver.getStatus()
+    }
+
     return driver.getStatus()
   }
-  // Default: first driver
-  const first = [...drivers.values()][0]
-  if (!first) throw new Error('No drivers configured')
-  return first.getStatus()
-})
+)
 
 ipcMain.handle('driver:list', () => listDrivers())
+
+ipcMain.handle('printers:system', () => listSystemPrinters())
+
+ipcMain.handle('printers:paper-info', (_e, deviceName: string) => getPaperInfo(deviceName))
+
+// Anteprima etichetta con lo stato (anche non salvato) della UI
+ipcMain.handle('label:preview', (_e, paper?: PaperConfig, template?: LabelTemplate) =>
+  renderLabelHtml(SAMPLE_LABEL, {
+    paper: { ...DEFAULT_LABEL_PAPER, ...paper },
+    template: { ...DEFAULT_LABEL_TEMPLATE, ...template },
+  })
+)
 
 // ------- App lifecycle -------
 
