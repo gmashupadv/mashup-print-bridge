@@ -104,7 +104,7 @@ Aggiunge `role` e `capabilities` a ogni voce, così il gestionale scopre le dest
 }
 ```
 
-- `barcode`: stringa EAN-13/Code128; il rendering grafico (barre + **numero leggibile sotto**) lo fa il bridge.
+- `barcode`: stringa EAN-13 (12/13 cifre; fase 1 — Code128 per codici alfanumerici è follow-up). Barcode non valido → 400 alla rotta. Il rendering grafico (barre + **numero leggibile sotto**, quiet zone GS1) lo fa il bridge.
 - `variant` e `sku` opzionali; se assenti il template compatta il layout.
 - `copies`: N etichette identiche.
 
@@ -130,7 +130,7 @@ Stesso payload per fiscale e termiche; il bridge traduce nel protocollo del driv
 
 ### Risoluzione stampante
 
-`printerId` è opzionale su tutti gli endpoint di stampa: se omesso, il bridge usa la **prima stampante che dichiara la capability richiesta** (non semplicemente la prima in lista — un'etichetta senza `printerId` non deve finire in 409 contro la fiscale). La regola vale anche per le rotte fiscali (`/print`, `/daily-close`, `/open-drawer`): così il client legacy senza `printerId` continua a raggiungere la fiscale anche se non è la prima in lista. Solo `/status` mantiene la risoluzione "prima stampante".
+`printerId` è opzionale su tutti gli endpoint di stampa: se omesso, il bridge usa la **prima stampante che dichiara la capability richiesta** (non semplicemente la prima in lista — un'etichetta senza `printerId` non deve finire in 409 contro la fiscale). La regola vale anche per le rotte fiscali (`/print`, `/daily-close`, `/open-drawer`): così il client legacy senza `printerId` continua a raggiungere la fiscale anche se non è la prima in lista. `/status` (health check legacy) preferisce la prima stampante con capability `fiscal-receipt`, con fallback a `printers[0]` per le installazioni senza fiscale.
 
 ### Errori
 
@@ -176,7 +176,7 @@ Modulo `src/main/printing/label-renderer.ts`: prende `LabelData` + `LabelLayout`
 - **`os-printer`**: HTML → BrowserWindow nascosta → stampa silenziosa.
 - **`escpos-network`**: stesso HTML → capture offscreen a 203dpi → bitmap monocromatica (soglia) → comando raster ESC/POS.
 
-Stessa resa visiva ovunque, un solo posto da modificare per cambiare il layout. Il preset iniziale è `product-price` (nome, variante, prezzo, SKU, barcode EAN/Code128 con testo); altri preset si aggiungono come funzioni pure nello stesso modulo.
+Stessa resa visiva ovunque, un solo posto da modificare per cambiare il layout. Il preset iniziale è `product-price` (nome, variante, prezzo, SKU, barcode EAN-13 con testo); altri preset si aggiungono come funzioni pure nello stesso modulo. Nota rotazione: il renderer produce sempre dimensioni finali (@page = pageSize); `orientation` in config è riservato a un eventuale fallback hardware (vedi checklist piano) e non è esposto nella UI.
 
 Il documento non fiscale invece NON passa dal renderer HTML sui driver ESC/POS e fiscali: lì si traduce direttamente in comandi testo nativi (più nitido e veloce su carta termica a rotolo). Solo `os-printer` lo renderizza come HTML.
 
