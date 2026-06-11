@@ -2,11 +2,13 @@
 import type { PrinterDriver } from './interface'
 import { EpsonFpMateDriver } from './epson-fpmate'
 import { DitronWecDriver } from './ditron-wec'
+import { DitronStreamWecDriver } from './ditron-streamwec'
 import { EscPosNetworkDriver } from './escpos-network'
 
 const DRIVERS: Record<string, () => PrinterDriver> = {
   'epson-fpmate': () => new EpsonFpMateDriver(),
   'ditron-wec': () => new DitronWecDriver(),
+  'ditron-streamwec': () => new DitronStreamWecDriver(),
   'escpos-network': () => new EscPosNetworkDriver(),
 }
 

@@ -2,6 +2,7 @@ import React from 'react'
 import { Listbox } from '@headlessui/react'
 
 const STUBS = ['ditron-wec', 'escpos-network']
+// ditron-streamwec is implemented but command codes need on-site verification
 
 interface Props {
   drivers: string[]
