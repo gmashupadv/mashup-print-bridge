@@ -76,8 +76,15 @@ function migrate(raw: Record<string, unknown>): AppConfig {
       printers: [printer],
     }
   }
+  const VALID_ROLES: PrinterRole[] = ['fiscal', 'label', 'receipt']
   const merged = { ...DEFAULTS, ...raw } as AppConfig
-  merged.printers = merged.printers.map((p) => ({ role: 'fiscal' as PrinterRole, ...p }))
+  if (!Array.isArray(merged.printers) || merged.printers.length === 0) {
+    merged.printers = DEFAULTS.printers.map((p) => ({ ...p }))
+  }
+  merged.printers = merged.printers.map((p) => ({
+    ...p,
+    role: VALID_ROLES.includes(p.role) ? p.role : ('fiscal' as PrinterRole),
+  }))
   return merged
 }
 

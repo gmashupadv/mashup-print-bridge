@@ -131,6 +131,49 @@ describe('role migration', () => {
     expect(p.driver).toBe('ditron-wec')
   })
 
+  it('falls back to fiscal for invalid role values', () => {
+    const fp = tmpConfigPath()
+    writeFileSync(
+      fp,
+      JSON.stringify({
+        printers: [
+          {
+            id: 'p1',
+            label: 'X',
+            role: 'banana',
+            driver: 'epson-fpmate',
+            connection: { ip: '1.2.3.4', port: 80, timeout: 1000 },
+            operatorId: '1',
+            deptMapping: {},
+          },
+        ],
+        autostart: true,
+        port: 8765,
+        logLevel: 'info',
+      })
+    )
+    const mgr = createConfigManager(fp)
+    expect(mgr.get().printers[0].role).toBe('fiscal')
+  })
+
+  it('keeps sibling fields when printers is not an array', () => {
+    const fp = tmpConfigPath()
+    writeFileSync(
+      fp,
+      JSON.stringify({
+        printers: {},
+        autostart: true,
+        port: 9999,
+        logLevel: 'info',
+      })
+    )
+    const mgr = createConfigManager(fp)
+    expect(mgr.get().port).toBe(9999)
+    expect(Array.isArray(mgr.get().printers)).toBe(true)
+    expect(mgr.get().printers.length).toBeGreaterThan(0)
+    expect(mgr.get().printers[0].driver).toBe('epson-fpmate')
+  })
+
   it('preserves paper and template fields', () => {
     const fp = tmpConfigPath()
     writeFileSync(fp, JSON.stringify({
