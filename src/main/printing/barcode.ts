@@ -25,7 +25,7 @@ export function normalizeEan13(code: string): string {
   throw new Error(`Barcode non valido: atteso EAN-13 (12/13 cifre), ricevuto "${code}"`)
 }
 
-function modules(code13: string): string {
+export function ean13Modules(code13: string): string {
   const first = Number(code13[0])
   const parity = PARITY[first]
   let bits = '101'
@@ -51,9 +51,10 @@ export function ean13Svg(code: string, opts: Ean13SvgOptions = {}): string {
   const moduleMm = opts.moduleMm ?? 0.33
   const heightMm = opts.heightMm ?? 10
   const fontMm = opts.fontMm ?? 2.2
-  const quiet = 7 * moduleMm
-  const bits = modules(code13)
-  const widthMm = 95 * moduleMm + 2 * quiet
+  const quietLeft = 11 * moduleMm
+  const quietRight = 7 * moduleMm
+  const bits = ean13Modules(code13)
+  const widthMm = 95 * moduleMm + quietLeft + quietRight
   const totalH = heightMm + fontMm + 0.8
 
   const rects: string[] = []
@@ -64,7 +65,7 @@ export function ean13Svg(code: string, opts: Ean13SvgOptions = {}): string {
       continue
     }
     if (run > 0) {
-      const x = quiet + (i - run) * moduleMm
+      const x = quietLeft + (i - run) * moduleMm
       rects.push(`<rect x="${x.toFixed(3)}" y="0" width="${(run * moduleMm).toFixed(3)}" height="${heightMm}" fill="#000"/>`)
       run = 0
     }
