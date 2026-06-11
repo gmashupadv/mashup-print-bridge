@@ -11,12 +11,16 @@ import { renderLabelHtml } from '../printing/label-renderer'
 
 const DOTS_PER_MM = 8 // 203 dpi
 
+// Area stampabile delle testine 203dpi standard: carta 80mm → 72mm, 58mm → 48mm.
+// Altre larghezze (rotoli etichetta) stampano quasi edge-to-edge: si usa la larghezza carta.
+const PRINTABLE_MM: Record<number, number> = { 80: 72, 58: 48 }
+
 export interface EscPosDeps {
   send(host: string, port: number, timeout: number, data: Buffer): Promise<void>
   rasterize(html: string, widthPx: number): Promise<MonoBitmap>
 }
 
-async function sendTcp(host: string, port: number, timeout: number, data: Buffer): Promise<void> {
+export async function sendTcp(host: string, port: number, timeout: number, data: Buffer): Promise<void> {
   return new Promise((resolve, reject) => {
     const socket = createConnection({ host, port })
     const timer = setTimeout(() => {
@@ -25,6 +29,7 @@ async function sendTcp(host: string, port: number, timeout: number, data: Buffer
     }, timeout)
     socket.on('connect', () => {
       socket.end(data, () => {
+        socket.destroy()
         clearTimeout(timer)
         resolve()
       })
@@ -112,8 +117,10 @@ export class EscPosNetworkDriver implements PrinterDriver {
   async printLabel(label: LabelData, layout: LabelLayout): Promise<PrintResult> {
     const cfg = this.requireCfg()
     try {
-      const widthPx = Math.round(layout.paper.widthMm * DOTS_PER_MM)
-      const html = renderLabelHtml(label, layout)
+      const printableMm = PRINTABLE_MM[layout.paper.widthMm] ?? layout.paper.widthMm
+      const widthPx = Math.round(printableMm * DOTS_PER_MM)
+      const printableLayout = { ...layout, paper: { ...layout.paper, widthMm: printableMm } }
+      const html = renderLabelHtml(label, printableLayout)
       const bitmap = await this.deps.rasterize(html, widthPx)
       const payload = Buffer.concat([
         Buffer.from([0x1b, 0x40]),             // init
