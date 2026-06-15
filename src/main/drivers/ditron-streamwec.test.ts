@@ -1,5 +1,62 @@
 import { describe, it, expect } from 'vitest'
-import { buildNonFiscal, NONFISCAL_OPEN, NONFISCAL_CLOSE } from './ditron-streamwec'
+import { buildNonFiscal, buildReceipt, parseResult, NONFISCAL_OPEN, NONFISCAL_CLOSE } from './ditron-streamwec'
+
+describe('parseResult (risposte WEC da cattura)', () => {
+  it('una o più righe "OK." = successo', () => {
+    const r = parseResult('OK.\nOK.\nOK.\nOK.\nOK.\nOK.\nOK.\n')
+    expect(r.success).toBe(true)
+    expect(r.errorMessage).toBe('')
+  })
+
+  it('riconosce ERRORE anche dopo alcuni OK.', () => {
+    const r = parseResult('OK.\nOK.\nERRORE 1/4 : ERRORE DI SINTASSI 4 : OPERANDO NON TROVATO\n')
+    expect(r.success).toBe(false)
+    expect(r.errorMessage).toMatch(/OPERANDO NON TROVATO/)
+  })
+})
+
+describe('buildReceipt (sintassi WEC da cattura Danea)', () => {
+  const receipt = (over = {}) => ({
+    items: [{ description: 'Prodotto di prova', quantity: 1, unitPrice: 0.01, department: 3, vatRate: 22 }],
+    discount: 0,
+    payments: [{ description: 'Contanti', amount: 0.01, paymentType: 0 }],
+    ...over,
+  })
+
+  it('apre con CLEAR/CHIAVE REG e chiude con SUBT/CHIUS/wecfine', () => {
+    const out = buildReceipt(receipt()).trim().split('\n')
+    expect(out[0]).toBe('CLEAR')
+    expect(out[1]).toBe('CHIAVE REG')
+    expect(out).toContain('SUBT')
+    expect(out[out.length - 1]).toBe('wecfine')
+  })
+
+  it('VEND usa PREZZO= e DES= (scontrino parlante), senza spazi dopo le virgole', () => {
+    const out = buildReceipt(receipt())
+    expect(out).toContain("VEND REP=3,PREZZO=0.01,DES='Prodotto di prova'")
+  })
+
+  it('CHIUS T=1 per contanti, T=5 per carta', () => {
+    expect(buildReceipt(receipt())).toContain('CHIUS T=1')
+    const carta = receipt({ payments: [{ description: 'POS', amount: 0.01, paymentType: 1 }] })
+    expect(buildReceipt(carta)).toContain('CHIUS T=5')
+  })
+
+  it('neutralizza gli apici nella descrizione', () => {
+    const out = buildReceipt(receipt({ items: [{ description: "Po' prova", quantity: 1, unitPrice: 1, department: 3, vatRate: 22 }] }))
+    expect(out).toContain("DES='Po  prova'")
+  })
+
+  it('quantità ≠1: QTY prima di PREZZO (da cattura)', () => {
+    const out = buildReceipt(receipt({ items: [{ description: 'ARTICOLI VARI', quantity: 2, unitPrice: 5, department: 3, vatRate: 22 }] }))
+    expect(out).toContain("VEND REP=3,QTY=2,PREZZO=5.00,DES='ARTICOLI VARI'")
+  })
+
+  it('sconto a valore sul subtotale: "SCONTO VAL=…, SUBTOT"', () => {
+    const out = buildReceipt(receipt({ discount: 9.99 }))
+    expect(out).toContain('SCONTO VAL=9.99, SUBTOT')
+  })
+})
 
 describe('buildNonFiscal', () => {
   it('opens, prints escaped lines, closes', () => {

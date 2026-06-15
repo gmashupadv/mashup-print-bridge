@@ -6,7 +6,7 @@ interface Window {
     saveConfig(partial: Record<string, unknown>): Promise<void>
     testDriver(
       printerId?: string,
-      kind?: 'status' | 'label' | 'nonfiscal'
+      kind?: 'status' | 'label' | 'nonfiscal' | 'fiscal'
     ): Promise<import('../../main/drivers/interface').PrinterStatus>
     listDrivers(): Promise<string[]>
     listSystemPrinters(): Promise<string[]>

@@ -31,7 +31,7 @@ export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
-  const runTest = async (kind: 'status' | 'label' | 'nonfiscal') => {
+  const runTest = async (kind: 'status' | 'label' | 'nonfiscal' | 'fiscal') => {
     setTesting(true)
     setTestResult(null)
     try {
@@ -85,6 +85,22 @@ export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper
               disabled={testing}
             >
               Prova etichetta
+            </button>
+          )}
+          {printer.role === 'fiscal' && (
+            <button
+              className="text-xs px-2 py-0.5 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    'Verrà emesso uno SCONTRINO FISCALE REALE di prova da 0,01 € (contanti). Procedere?'
+                  )
+                )
+                  runTest('fiscal')
+              }}
+              disabled={testing}
+            >
+              Prova scontrino
             </button>
           )}
           {printer.role === 'receipt' && (

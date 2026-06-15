@@ -219,9 +219,25 @@ ipcMain.handle('config:save', async (_e, partial: Partial<ReturnType<typeof conf
 
 ipcMain.handle(
   'driver:test',
-  async (_e, printerId?: string, kind: 'status' | 'label' | 'nonfiscal' = 'status') => {
+  async (_e, printerId?: string, kind: 'status' | 'label' | 'nonfiscal' | 'fiscal' = 'status') => {
     const driver = printerId ? drivers.get(printerId) : [...drivers.values()][0]
     if (!driver) throw new Error(printerId ? `Driver not found: ${printerId}` : 'No drivers configured')
+
+    if (kind === 'fiscal') {
+      if (!driver.printReceipt) throw new Error('La stampante non emette scontrini fiscali')
+      const printers = config.get().printers
+      const pc = printerId ? printers.find((p) => p.id === printerId) : printers[0]
+      // Reparto reale dalla deptMapping (sono i reparti programmati sulla stampante); fallback 1
+      const department = pc ? (Object.values(pc.deptMapping)[0] ?? 1) : 1
+      const result = await driver.printReceipt({
+        items: [{ description: 'PROVA SCONTRINO', quantity: 1, unitPrice: 0.01, department, vatRate: 22 }],
+        discount: 0,
+        payments: [{ description: 'Contanti', amount: 0.01, paymentType: 0 }],
+      })
+      if (!result.success) throw new Error(result.errorMessage || 'Stampa fallita')
+      emitLog(`Scontrino di prova (0,01 €) inviato [${printerId ?? 'default'}]`)
+      return driver.getStatus()
+    }
 
     if (kind === 'label') {
       const printers = config.get().printers

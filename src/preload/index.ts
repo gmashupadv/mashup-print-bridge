@@ -3,7 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('bridge', {
   getConfig: () => ipcRenderer.invoke('config:get'),
   saveConfig: (partial: Record<string, unknown>) => ipcRenderer.invoke('config:save', partial),
-  testDriver: (printerId?: string, kind?: 'status' | 'label' | 'nonfiscal') => ipcRenderer.invoke('driver:test', printerId, kind),
+  testDriver: (printerId?: string, kind?: 'status' | 'label' | 'nonfiscal' | 'fiscal') => ipcRenderer.invoke('driver:test', printerId, kind),
   listDrivers: () => ipcRenderer.invoke('driver:list'),
   listSystemPrinters: () => ipcRenderer.invoke('printers:system'),
   getPaperInfo: (deviceName: string) => ipcRenderer.invoke('printers:paper-info', deviceName),
