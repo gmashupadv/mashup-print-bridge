@@ -159,6 +159,8 @@ Per-printer fields: `role` (`fiscal` | `label` | `receipt`, used by the UI; rout
 
 The Fastify server **must** bind to `127.0.0.1` only — never `0.0.0.0` (see `startServer` in `server.ts`). No auth token is needed since it's loopback-only. Printer credentials stay in the local `config.json` and are never sent to cloud backends.
 
+The POS frontend runs on a public HTTPS origin and calls the bridge in loopback, so the server sends **CORS + Private Network Access** headers (`applyCorsHeaders` in `server.ts`): origin is reflected (no credentials, so no allowlist), preflight `OPTIONS` is handled by a wildcard route returning 204, and `Access-Control-Allow-Private-Network: true` is granted when Chrome's PNA preflight asks for it.
+
 ## Distribution
 
 `electron-builder` (config in `electron-builder.yml`). GitHub Releases is the auto-update server (`owner: gmashupadv`, `repo: mashup-print-bridge`) via `updater.ts`. Autostart uses `app.setLoginItemSettings()`.

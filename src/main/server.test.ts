@@ -591,3 +591,49 @@ describe('GET /status multi-printer: prefers fiscal-capable printer', () => {
     expect(res.json().errorMessage).toBe('fiscal-printer')
   })
 })
+
+describe('CORS / Private Network Access', () => {
+  const ORIGIN = 'https://cashflow.mashupadv.it'
+
+  it('riflette l’origin e i metodi su una GET reale', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'GET', url: '/printers', headers: { origin: ORIGIN } })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['access-control-allow-origin']).toBe(ORIGIN)
+    expect(res.headers['vary']).toContain('Origin')
+    expect(res.headers['access-control-allow-methods']).toContain('POST')
+  })
+
+  it('risponde 204 alla preflight OPTIONS con header CORS', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/print',
+      headers: { origin: ORIGIN, 'access-control-request-method': 'POST' },
+    })
+    expect(res.statusCode).toBe(204)
+    expect(res.headers['access-control-allow-origin']).toBe(ORIGIN)
+    expect(res.headers['access-control-allow-headers']).toContain('Content-Type')
+  })
+
+  it('concede Access-Control-Allow-Private-Network quando richiesto', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/print',
+      headers: {
+        origin: ORIGIN,
+        'access-control-request-method': 'POST',
+        'access-control-request-private-network': 'true',
+      },
+    })
+    expect(res.statusCode).toBe(204)
+    expect(res.headers['access-control-allow-private-network']).toBe('true')
+  })
+
+  it('senza origin usa il wildcard *', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'GET', url: '/ping' })
+    expect(res.headers['access-control-allow-origin']).toBe('*')
+  })
+})

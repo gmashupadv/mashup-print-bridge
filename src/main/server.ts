@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify'
+import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify'
 import type {
   PrinterDriver,
   Capability,
@@ -26,6 +26,21 @@ function capabilityError(printer: ManagedPrinter, cap: Capability): string {
   return `La stampante '${printer.config.id}' non supporta l'operazione '${cap}'`
 }
 
+// CORS + Private Network Access. Il POS gira su origin pubblico HTTPS
+// (es. https://cashflow.mashupadv.it) e chiama il bridge in loopback: il browser
+// pretende sia gli header CORS sia, per la PNA, Access-Control-Allow-Private-Network.
+// Nessun cookie/credenziale in gioco → riflettiamo l'origin (con Vary) senza allowlist.
+function applyCorsHeaders(req: FastifyRequest, reply: FastifyReply): void {
+  const origin = req.headers.origin
+  reply.header('Access-Control-Allow-Origin', origin ?? '*')
+  reply.header('Vary', 'Origin')
+  reply.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  reply.header('Access-Control-Allow-Headers', 'Content-Type')
+  if (req.headers['access-control-request-private-network']) {
+    reply.header('Access-Control-Allow-Private-Network', 'true')
+  }
+}
+
 export function resolveByCapability(
   printers: ManagedPrinter[],
   cap: Capability,
@@ -45,6 +60,18 @@ export function resolveByCapability(
 export function buildServer(opts: ServerOptions): FastifyInstance {
   const app = Fastify({ logger: false })
   const { getPrinters, version } = opts
+
+  // Header CORS/PNA su ogni risposta delle route reali (GET/POST).
+  app.addHook('onRequest', async (req, reply) => {
+    applyCorsHeaders(req, reply)
+  })
+
+  // Preflight: le POST con Content-Type application/json sono "non-simple" → OPTIONS.
+  // Route wildcard esplicita così la preflight matcha sempre (niente 404) e chiude a 204.
+  app.options('/*', async (req, reply) => {
+    applyCorsHeaders(req, reply)
+    reply.code(204).send()
+  })
 
   app.get('/ping', async () => {
     const printers = getPrinters()
