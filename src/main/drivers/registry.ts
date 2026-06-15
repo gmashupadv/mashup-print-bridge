@@ -5,6 +5,7 @@ import { DitronWecDriver } from './ditron-wec'
 import { DitronStreamWecDriver } from './ditron-streamwec'
 import { DitronKeycodeDriver } from './ditron-keycode'
 import { EscPosNetworkDriver } from './escpos-network'
+import { ZplNetworkDriver } from './zpl-network'
 import { OsPrinterDriver } from './os-printer'
 
 const DRIVERS: Record<string, () => PrinterDriver> = {
@@ -13,6 +14,7 @@ const DRIVERS: Record<string, () => PrinterDriver> = {
   'ditron-streamwec': () => new DitronStreamWecDriver(),
   'ditron-keycode': () => new DitronKeycodeDriver(),
   'escpos-network': () => new EscPosNetworkDriver(),
+  'zpl-network': () => new ZplNetworkDriver(),
   'os-printer': () => new OsPrinterDriver(),
 }
 
