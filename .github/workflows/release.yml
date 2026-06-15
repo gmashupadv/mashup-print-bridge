@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*.*.*'
 
+# Il GITHUB_TOKEN deve poter creare la release e caricare gli installer (non read-only)
+permissions:
+  contents: write
+
 jobs:
   build-win:
     runs-on: windows-latest
