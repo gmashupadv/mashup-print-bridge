@@ -1,8 +1,10 @@
 // Ditron StreamWEC REST driver
-// Protocol: HTTP/1.0 POST to /cmd/wec with plain-text WEC commands (porta 80).
-// Trasporto confermato dalla cattura del gestionale (Danea): HTTP semplice, non TLS.
-// La risposta di successo è una riga "OK." per ogni comando inviato.
+// Protocol: HTTP/1.0 POST to /cmd/wec with plain-text WEC commands.
+// Trasporto: la cattura mitmproxy del gestionale (Danea) era HTTPS decifrato → la stampante
+// parla TLS sulla 443 (cert self-signed). Il driver sceglie in base alla porta:
+// 443 → HTTPS, altra porta → HTTP semplice. Risposta di successo: una riga "OK." per comando.
 import net from 'node:net'
+import tls from 'node:tls'
 import type { Capability, DriverConfig, NonFiscalDoc, ReceiptData, PrintResult, PrinterStatus, PrinterDriver } from './interface'
 
 // Mappatura pagamento → CHIUS T=N (chiusura scontrino).
@@ -77,16 +79,21 @@ export function parseResult(body: string): PrintResult {
     const errorMessage = parts.slice(1).join(': ').trim() || errLine.trim()
     return { success: false, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage }
   }
-  // Nessun ERRORE → successo. Il protocollo non restituisce numero scontrino/chiusura/matricola
-  // nelle risposte "OK.", quindi quei campi restano vuoti.
-  return { success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }
+  // Successo SOLO se c'è almeno un "OK." (conferma di esecuzione). Una risposta vuota o
+  // inattesa (porta/trasporto sbagliati, comando non eseguito) NON è un successo:
+  // restituiamo il corpo grezzo così l'errore è diagnosticabile dal POS.
+  if (body.includes('OK.')) {
+    return { success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }
+  }
+  const raw = body.trim().slice(0, 200) || '(risposta vuota)'
+  return { success: false, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: `Risposta inattesa dalla stampante: ${raw}` }
 }
 
 export class DitronStreamWecDriver implements PrinterDriver {
   readonly name = 'ditron-streamwec'
   readonly capabilities: Capability[] = ['fiscal-receipt', 'non-fiscal', 'daily-close', 'drawer']
   private host = ''
-  private port = 80
+  private port = 443
   private timeout = 15000
   private operatorId = '1'
 
@@ -117,10 +124,15 @@ export class DitronStreamWecDriver implements PrinterDriver {
       const httpHeader = headerLines.join('\r\n') + '\r\n\r\n'
 
       let timer: ReturnType<typeof setTimeout> | null = null
-      const socket = net.createConnection({ host: this.host, port: this.port }, () => {
+      // Porta 443 → HTTPS (cert self-signed, rejectUnauthorized: false); altrimenti HTTP semplice.
+      const onConnect = (): void => {
         socket.write(httpHeader)
         if (bodyBuf != null) socket.write(bodyBuf)
-      })
+      }
+      const socket =
+        this.port === 443
+          ? tls.connect({ host: this.host, port: this.port, rejectUnauthorized: false }, onConnect)
+          : net.createConnection({ host: this.host, port: this.port }, onConnect)
 
       timer = setTimeout(() => socket.destroy(new Error('Printer timeout')), this.timeout)
 

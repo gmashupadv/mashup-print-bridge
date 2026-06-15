@@ -13,6 +13,11 @@ describe('parseResult (risposte WEC da cattura)', () => {
     expect(r.success).toBe(false)
     expect(r.errorMessage).toMatch(/OPERANDO NON TROVATO/)
   })
+
+  it('risposta vuota/inattesa NON è successo (niente falso positivo)', () => {
+    expect(parseResult('').success).toBe(false)
+    expect(parseResult('').errorMessage).toMatch(/inattesa|vuota/i)
+  })
 })
 
 describe('buildReceipt (sintassi WEC da cattura Danea)', () => {
