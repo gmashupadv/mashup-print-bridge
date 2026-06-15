@@ -82,7 +82,8 @@ A driver's `capabilities` array is the contract: the server routes requests only
 Registered drivers:
 - `epson-fpmate` — HTTP POST XML to Epson RT printers; fiscal + non-fiscal (`fiscal-receipt`, `non-fiscal`, `daily-close`, `drawer`)
 - `ditron-wec` — raw TCP for Ditron; **stub** (throws "not implemented — pending Wireshark capture")
-- `ditron-streamwec` — HTTPS REST (port 1471) for newer Ditron; fiscal + non-fiscal — **WEC command constants to be verified on-site**
+- `ditron-streamwec` — HTTPS REST (port 1471) for newer Ditron; fiscal + non-fiscal — **on the client unit /cmd/wec returns 200 but silently ignores commands; prefer `ditron-keycode`**
+- `ditron-keycode` — HTTPS POST `/cmd/keycode` emulating the physical keypad (same protocol as Ditron's own FCR Manager web UI); status via GET `/cmd/display` (`fiscal-receipt`, `daily-close`, `drawer`)
 - `escpos-network` — raw TCP port 9100 ESC/POS, complete: non-fiscal + label (rendered HTML → raster bitmap) + cut (`non-fiscal`, `label`, `cut`)
 - `os-printer` — prints via the OS printer driver (`connection.deviceName`), silent, no dialog; label + non-fiscal (`label`, `non-fiscal`)
 
@@ -169,4 +170,4 @@ The POS uses `PrintBridgeClient` (`src/shared/lib/printBridgeClient.ts` in the P
 ## Notes
 
 - `*.pcapng` / `ditron.html` at the repo root are packet captures / protocol reverse-engineering scratch for the Ditron drivers — not part of the build.
-- Tests use vitest; coverage spans `config`, `server`, the drivers (`epson-fpmate`, `ditron-streamwec`, `escpos-network`, `os-printer`) and the `printing/` helpers (`barcode`, `label-renderer`, `escpos-encoder`, `paper-info`).
+- Tests use vitest; coverage spans `config`, `server`, the drivers (`epson-fpmate`, `ditron-streamwec`, `ditron-keycode`, `escpos-network`, `os-printer`) and the `printing/` helpers (`barcode`, `label-renderer`, `escpos-encoder`, `paper-info`).

@@ -13,10 +13,10 @@ const TLS_OPTS: tls.ConnectionOptions = { rejectUnauthorized: false }
 
 // Ditron WEC tender-code mapping (ReceiptPayment.paymentType → TERM=N)
 // paymentType 0 = cash, 1 = credit card, 2+ = other
-// Confirmed at client site: TERM=1 is NOT programmed on this unit.
-// TERM=0 = contanti (cash) — verified REP=3 (5% VAT dept) works.
-// Adjust TERM codes to match the specific printer's programming.
-const TENDER: Record<number, number> = { 0: 0, 1: 2, 2: 0 }
+// TERM = codice funzione subtender = 124 + numero subtender (125…144, manuale WEC Ditron).
+// Subtender programmati su questa unità (da capture Firebird del gestionale):
+// Contanti=1 → TERM=125, POS elettronico=5 → TERM=129.
+const TENDER: Record<number, number> = { 0: 125, 1: 129, 2: 125 }
 
 // Comandi non fiscali WEC — DA VERIFICARE ON-SITE (i pcap in repo sono TLS-cifrati).
 // Il firmware supporta lo scontrino di cortesia (chiavi Ecr_ScontrinoCortesia nel capture):
@@ -54,7 +54,8 @@ function buildReceipt(data: ReceiptData): string {
     lines.push(`DISC TIPO=A, VAL=${eur(data.discount)}`)
   }
   for (const p of data.payments) {
-    lines.push(`INP TERM=${TENDER[p.paymentType] ?? 0}, IMP=${eur(p.amount)}`)
+    // Importo con NUM= (non IMP=); NUM opzionale, omesso = chiusura a saldo
+    lines.push(`INP TERM=${TENDER[p.paymentType] ?? 125}, NUM=${eur(p.amount)}`)
   }
   return lines.join('\n') + '\n'
 }

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } from 'electron'
 import * as path from 'node:path'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import log from 'electron-log'
 import { createConfigManager } from './config'
 import type { PrinterConfig } from './config'
@@ -17,6 +17,10 @@ import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE, SAMPLE_LABEL } from './pri
 // ?asset: electron-vite copia il file in out/ e risolve il percorso anche dentro app.asar.
 // Un path costruito a mano verso resources/ funziona in dev ma non esiste nell'app impacchettata.
 import trayIconAsset from '../../resources/icon.png?asset'
+// Icona "template" monocromatica per la menu bar di macOS: forma nera su sfondo
+// trasparente, ricolorata dal sistema (nera col tema chiaro, bianca col tema scuro).
+import trayTemplateAsset from '../../resources/trayTemplate.png?asset'
+import trayTemplate2xAsset from '../../resources/trayTemplate@2x.png?asset'
 
 const configPath = path.join(app.getPath('userData'), 'config.json')
 // Valutato prima che un salvataggio crei il file: vero solo alla primissima apertura
@@ -51,9 +55,25 @@ function buildManagedPrinters(): ManagedPrinter[] {
 // ------- Tray -------
 
 function createTray(): void {
-  let icon = nativeImage.createFromPath(trayIconAsset)
-  if (!icon.isEmpty()) {
-    icon = icon.resize({ width: 16, height: 16 })
+  let icon: Electron.NativeImage
+  if (process.platform === 'darwin') {
+    // Template image: 16pt + variante @2x per i display Retina. setTemplateImage
+    // dice a macOS di ignorare il colore e usare solo la sagoma (canale alpha).
+    icon = nativeImage.createFromPath(trayTemplateAsset)
+    try {
+      icon.addRepresentation({
+        scaleFactor: 2,
+        dataURL: `data:image/png;base64,${readFileSync(trayTemplate2xAsset).toString('base64')}`
+      })
+    } catch (err) {
+      log.warn(`Tray @2x representation unavailable: ${String(err)}`)
+    }
+    icon.setTemplateImage(true)
+  } else {
+    icon = nativeImage.createFromPath(trayIconAsset)
+    if (!icon.isEmpty()) {
+      icon = icon.resize({ width: 16, height: 16 })
+    }
   }
   tray = new Tray(icon)
   if (icon.isEmpty()) {

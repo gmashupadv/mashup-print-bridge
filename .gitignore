@@ -139,3 +139,9 @@ dist
 dist-electron
 release
 /dist-electron-builder
+.claude/worktrees/agent-a8ffe9a83dbd1ec6a/
+.DS_Store
+capture.pcapng
+cashflow.png
+ditron.html
+DITRON.pcapng
