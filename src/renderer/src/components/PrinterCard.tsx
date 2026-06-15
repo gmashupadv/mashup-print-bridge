@@ -14,7 +14,7 @@ const ROLES: Array<{ value: PrinterRole; label: string }> = [
 
 // Driver sensati per ruolo: la UI filtra, il server resta la vera guardia (409)
 const DRIVERS_BY_ROLE: Record<PrinterRole, string[]> = {
-  fiscal: ['epson-fpmate', 'ditron-wec', 'ditron-streamwec'],
+  fiscal: ['epson-fpmate', 'ditron-keycode', 'ditron-streamwec'],
   label: ['os-printer', 'escpos-network'],
   receipt: ['escpos-network', 'os-printer'],
 }
