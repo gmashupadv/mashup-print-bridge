@@ -10,7 +10,7 @@ import type {
 } from './drivers/interface'
 import type { PrinterConfig } from './config'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
-import { normalizeEan13 } from './printing/barcode'
+import { assertPrintableBarcode } from './printing/barcode'
 
 export interface ManagedPrinter {
   config: PrinterConfig
@@ -180,9 +180,12 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
         return { success: false, error: 'label.name (string) e label.price (number) sono obbligatori' }
       }
 
-      if (label.barcode !== undefined) {
+      if (label.barcode !== undefined && String(label.barcode).trim() !== '') {
+        // Permissivo: EAN-13 se numerico 12/13, altrimenti Code128 (SKU alfanumerici).
+        // Vuoto/spazi = nessun barcode (come il renderer). 400 solo se contiene
+        // caratteri non stampabili in nessuna simbologia.
         try {
-          normalizeEan13(String(label.barcode))
+          assertPrintableBarcode(String(label.barcode))
         } catch (err: unknown) {
           reply.status(400)
           return { success: false, error: err instanceof Error ? err.message : 'Barcode non valido' }

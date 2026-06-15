@@ -3,9 +3,16 @@ const { autoUpdater } = pkg
 import log from 'electron-log'
 import type { BrowserWindow } from 'electron'
 
+// macOS: l'auto-update silenzioso (Squirrel.Mac) richiede la firma con Developer ID
+// Apple (a pagamento). Senza firma l'update si scaricherebbe ma fallirebbe ad applicarsi.
+// Quindi su Mac CONTROLLIAMO solo la versione e notifichiamo (tray + finestra config →
+// "Scarica" apre la pagina release); l'utente installa a mano. Su Windows/Linux resta
+// l'auto-update pieno (download in background + installazione alla chiusura).
+const isMac = process.platform === 'darwin'
+
 autoUpdater.logger = log
-autoUpdater.autoDownload = true
-autoUpdater.autoInstallOnAppQuit = true
+autoUpdater.autoDownload = !isMac
+autoUpdater.autoInstallOnAppQuit = !isMac
 
 interface UpdaterOptions {
   getConfigWindow: () => BrowserWindow | null
@@ -28,6 +35,8 @@ export function initUpdater(opts: UpdaterOptions): void {
   })
 
   setTimeout(() => {
-    autoUpdater.checkForUpdatesAndNotify().catch((err) => log.error('Update check failed:', err))
+    // Mac: solo check (niente download/installazione, non firmati). Win/Linux: check + download + notifica.
+    const check = isMac ? autoUpdater.checkForUpdates() : autoUpdater.checkForUpdatesAndNotify()
+    check.catch((err) => log.error('Update check failed:', err))
   }, 10_000)
 }

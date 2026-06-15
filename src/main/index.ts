@@ -32,6 +32,8 @@ let configWindow: BrowserWindow | null = null
 let server: FastifyInstance | null = null
 let updateVersion: string | null = null
 
+const RELEASES_URL = 'https://github.com/gmashupadv/mashup-print-bridge/releases/latest'
+
 function driverConfigFrom(pc: PrinterConfig) {
   return {
     ip: pc.connection.ip,
@@ -99,8 +101,7 @@ function refreshTrayMenu(online: boolean): void {
   if (updateVersion) {
     items.push({
       label: `Aggiornamento disponibile (${updateVersion})`,
-      click: () =>
-        shell.openExternal('https://github.com/gmashupadv/mashup-print-bridge/releases/latest'),
+      click: () => shell.openExternal(RELEASES_URL),
     })
     items.push({ type: 'separator' })
   }
@@ -259,6 +260,9 @@ ipcMain.handle(
 ipcMain.handle('driver:list', () => listDrivers())
 
 ipcMain.handle('printers:system', () => listSystemPrinters())
+
+// Apre la pagina release per il download manuale (usato dal banner aggiornamento, utile su Mac)
+ipcMain.handle('update:open-releases', () => shell.openExternal(RELEASES_URL))
 
 ipcMain.handle('printers:paper-info', (_e, deviceName: string) => getPaperInfo(deviceName))
 

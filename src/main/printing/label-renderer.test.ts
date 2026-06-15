@@ -39,8 +39,14 @@ describe('renderLabelHtml', () => {
     expect(html).not.toContain('<svg')
   })
 
-  it('throws on invalid barcode', () => {
-    expect(() => renderLabelHtml({ name: 'X', price: 1, barcode: 'NOT-EAN' }, layout)).toThrow(/EAN-13/i)
+  it('renders an alphanumeric SKU as Code128 instead of throwing', () => {
+    const html = renderLabelHtml({ name: 'X', price: 1, barcode: 'E39C2E14' }, layout)
+    expect(html).toContain('E39C2E14')
+    expect(html).toContain('<svg')
+  })
+
+  it('throws only on a barcode with unprintable characters', () => {
+    expect(() => renderLabelHtml({ name: 'X', price: 1, barcode: 'A\x01B' }, layout)).toThrow()
   })
 
   // Fix #1: barcode never sacrificed — .name clamps to 2 lines

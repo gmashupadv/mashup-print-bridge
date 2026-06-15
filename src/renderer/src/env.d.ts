@@ -17,5 +17,6 @@ interface Window {
     ): Promise<string>
     onLogEvent(cb: (msg: string) => void): () => void
     onUpdateAvailable(cb: (version: string) => void): () => void
+    openReleasesPage(): Promise<void>
   }
 }

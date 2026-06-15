@@ -80,3 +80,115 @@ export function ean13Svg(code: string, opts: Ean13SvgOptions = {}): string {
     `</svg>`
   )
 }
+
+// ---------------------------------------------------------------------------
+// Code128 (subset B) — per codici alfanumerici (SKU come "E39C2E14") che non
+// sono EAN-13. Tabella standard: 107 pattern (valori 0-106) espressi come 6
+// larghezze (bar/space alternati, somma 11 moduli); lo Stop ha 7 larghezze (13).
+// ---------------------------------------------------------------------------
+const CODE128_WIDTHS = [
+  '212222','222122','222221','121223','121322','131222','122213','122312','132212','221213',
+  '221312','231212','112232','122132','122231','113222','123122','123221','223211','221132',
+  '221231','213212','223112','312131','311222','321122','321221','312212','322112','322211',
+  '212123','212321','232121','111323','131123','131321','112313','132113','132311','211313',
+  '231113','231311','112133','112331','132131','113123','113321','133121','313121','211331',
+  '231131','213113','213311','213131','311123','311321','331121','312113','312311','332111',
+  '314111','221411','431111','111224','111422','121124','121421','141122','141221','112214',
+  '112412','122114','122411','142112','142211','241211','221114','413111','241112','134111',
+  '111242','121142','121241','114212','124112','124211','411212','421112','421211','212141',
+  '214121','412121','111143','111341','131141','114113','114311','411113','411311','113141',
+  '114131','311141','411131','211412','211214','211232','2331112',
+] as const
+
+const CODE128_START_B = 104
+const CODE128_STOP = 106
+
+function widthsToBits(widths: string): string {
+  let bits = ''
+  for (let i = 0; i < widths.length; i++) {
+    bits += (i % 2 === 0 ? '1' : '0').repeat(Number(widths[i]))
+  }
+  return bits
+}
+
+export function isCode128Encodable(value: string): boolean {
+  if (value.length === 0) return false
+  for (let i = 0; i < value.length; i++) {
+    const c = value.charCodeAt(i)
+    if (c < 32 || c > 126) return false // subset B: ASCII stampabile
+  }
+  return true
+}
+
+// Sequenza di moduli (bit) per l'intero Code128-B: Start B, dati, checksum, Stop.
+export function code128Modules(value: string): string {
+  if (!isCode128Encodable(value)) {
+    throw new Error(`Barcode Code128 non valido: caratteri non stampabili in "${value}"`)
+  }
+  const values = [CODE128_START_B]
+  for (let i = 0; i < value.length; i++) {
+    values.push(value.charCodeAt(i) - 32)
+  }
+  let sum = CODE128_START_B
+  for (let i = 1; i < values.length; i++) {
+    sum += values[i] * i
+  }
+  values.push(sum % 103)
+  values.push(CODE128_STOP)
+  return values.map((v) => widthsToBits(CODE128_WIDTHS[v])).join('')
+}
+
+export function code128Svg(value: string, opts: Ean13SvgOptions = {}): string {
+  const moduleMm = opts.moduleMm ?? 0.33
+  const heightMm = opts.heightMm ?? 10
+  const fontMm = opts.fontMm ?? 2.2
+  const quiet = 10 * moduleMm // quiet zone minima Code128
+  const bits = code128Modules(value)
+  const widthMm = bits.length * moduleMm + quiet * 2
+  const totalH = heightMm + fontMm + 0.8
+
+  const rects: string[] = []
+  let run = 0
+  for (let i = 0; i <= bits.length; i++) {
+    if (i < bits.length && bits[i] === '1') {
+      run++
+      continue
+    }
+    if (run > 0) {
+      const x = quiet + (i - run) * moduleMm
+      rects.push(`<rect x="${x.toFixed(3)}" y="0" width="${(run * moduleMm).toFixed(3)}" height="${heightMm}" fill="#000"/>`)
+      run = 0
+    }
+  }
+
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${widthMm.toFixed(2)}mm" height="${totalH.toFixed(2)}mm" ` +
+    `viewBox="0 0 ${widthMm.toFixed(3)} ${totalH.toFixed(3)}">` +
+    rects.join('') +
+    `<text x="${(widthMm / 2).toFixed(3)}" y="${(heightMm + fontMm).toFixed(3)}" ` +
+    `font-family="monospace" font-size="${fontMm}" text-anchor="middle">${value}</text>` +
+    `</svg>`
+  )
+}
+
+// Auto-rilevamento del tipo: 12/13 cifre con checksum valido → EAN-13,
+// altrimenti Code128. Un 13-cifre con checksum errato ricade su Code128 così
+// stampa comunque (niente più 400 su SKU alfanumerici).
+export function barcodeSvg(value: string, opts: Ean13SvgOptions = {}): string {
+  const v = String(value).trim()
+  if (/^\d{12}$/.test(v)) return ean13Svg(v, opts)
+  if (/^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12))) {
+    return ean13Svg(v, opts)
+  }
+  return code128Svg(v, opts)
+}
+
+// Validazione permissiva usata dal server: lancia solo se il valore non è
+// stampabile in NESSUNA simbologia (es. vuoto o caratteri di controllo).
+export function assertPrintableBarcode(value: string): void {
+  const v = String(value).trim()
+  if (/^\d{12,13}$/.test(v)) return // numerico → EAN-13 o Code128, sempre ok
+  if (!isCode128Encodable(v)) {
+    throw new Error(`Barcode non stampabile: "${value}" contiene caratteri non supportati o è vuoto`)
+  }
+}

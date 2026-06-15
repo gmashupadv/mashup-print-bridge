@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld('bridge', {
     ipcRenderer.on('update:available', handler)
     return () => ipcRenderer.removeListener('update:available', handler)
   },
+  openReleasesPage: () => ipcRenderer.invoke('update:open-releases'),
 })

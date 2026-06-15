@@ -27,14 +27,19 @@ export default function App() {
   const [events, setEvents] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null)
 
   useEffect(() => {
     window.bridge.getConfig().then(setConfig)
     window.bridge.listDrivers().then(setDrivers)
-    const unsub = window.bridge.onLogEvent((msg) =>
+    const unsubLog = window.bridge.onLogEvent((msg) =>
       setEvents((prev) => [...prev.slice(-49), msg])
     )
-    return unsub
+    const unsubUpdate = window.bridge.onUpdateAvailable(setUpdateAvailable)
+    return () => {
+      unsubLog()
+      unsubUpdate()
+    }
   }, [])
 
   const updatePrinter = (updated: PrinterConfig) =>
@@ -68,6 +73,20 @@ export default function App() {
   return (
     <div className="p-4 bg-white h-screen overflow-y-auto text-gray-800 text-sm">
       <h1 className="font-semibold mb-4">Mashup Print Bridge — Configurazione</h1>
+
+      {updateAvailable && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded border border-blue-200 bg-blue-50 px-3 py-2">
+          <span className="text-blue-800">
+            Disponibile aggiornamento <strong>{updateAvailable}</strong>
+          </span>
+          <button
+            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+            onClick={() => window.bridge.openReleasesPage()}
+          >
+            Scarica
+          </button>
+        </div>
+      )}
 
       {config.printers.map((printer) => (
         <PrinterCard

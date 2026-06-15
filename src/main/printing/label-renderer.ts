@@ -4,7 +4,7 @@
 // - os-printer lo stampa direttamente (silent print)
 // - escpos-network lo rasterizza a bitmap (html-to-bitmap.ts)
 import type { LabelData, LabelLayout, NonFiscalDoc } from '../drivers/interface'
-import { ean13Svg } from './barcode'
+import { barcodeSvg } from './barcode'
 import { DEFAULT_LABEL_PAPER } from './defaults'
 
 function esc(s: string): string {
@@ -40,9 +40,9 @@ export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
   const innerW = w - m.left - m.right
   const innerH = h - m.top - m.bottom
 
-  const barcodeSvg =
+  const barcodeMarkup =
     template.showBarcode && label.barcode
-      ? ean13Svg(label.barcode, {
+      ? barcodeSvg(label.barcode, {
           heightMm: Math.min(10, innerH * 0.35),
           // Fix #4: 0.375mm = 3 dot esatti a 203dpi — evita barre anti-aliased nella rasterizzazione ESC/POS
           moduleMm: 0.375,
@@ -57,7 +57,7 @@ export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
       (label.sku ? `<span class="sku">${esc(label.sku)}</span>` : '') +
       `</div>`
   )
-  if (barcodeSvg) parts.push(`<div class="barcode">${barcodeSvg}</div>`)
+  if (barcodeMarkup) parts.push(`<div class="barcode">${barcodeMarkup}</div>`)
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 @page { size: ${w}mm ${h}mm; margin: 0; }
