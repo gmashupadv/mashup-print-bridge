@@ -108,6 +108,7 @@ Config holds a `printers[]` array; each printer has an `id` and a `role` (`fisca
 | GET | `/printers` | All configured printers with `role`, `capabilities` and live status (settled in parallel) |
 | POST | `/print` | Print fiscal receipt; body `{ items, discount, payments, printerId? }` |
 | POST | `/print-nonfiscal` | Non-fiscal document; body `{ lines: [{ text, bold?, size?, align? }], cut?, printerId? }` |
+| POST | `/print-courtesy` | Scontrino di cortesia (non fiscale); body `{ header[], items[], number?, date?, returnPolicy?[], footer?[], printerId? }` |
 | POST | `/print-label` | Product label; body `{ label: { name, price, variant?, sku?, barcode? }, copies?, printerId? }` |
 | POST | `/daily-close` | Z closure; body `{ operatorId?, printerId? }` |
 | POST | `/open-drawer` | Cash drawer open; body `{ operatorId?, printerId? }`; 204 on success |
@@ -119,6 +120,8 @@ Printer resolution for every print route follows the capability rule above (expl
 `/print-label`: `label.name` (string) and `label.price` (number) are mandatory → **400** otherwise. `copies` is clamped to 1–50; the response includes `copiesRequested` and `copiesPrinted` (partial failures return `success: false` with the copies actually printed). The label layout merges the printer's `paper`/`template` config over `DEFAULT_LABEL_PAPER`/`DEFAULT_LABEL_TEMPLATE`.
 
 `/print-nonfiscal` line options: `bold` (boolean), `size` (`normal` | `double`), `align` (`left` | `center` | `right`); `cut` requests a paper cut where supported.
+
+`/print-courtesy`: documento non fiscale strutturato. `header` e `items` (array di stringhe non vuoti) sono obbligatori → **400** altrimenti. Il layout (ordine blocchi, righe vuote, titolo "Scontrino di cortesia N") è prodotto da `printing/courtesy-receipt.ts`; l'invio passa per la capability `non-fiscal` (stessa regola 404/409/503). Lo split payment NON è qui: è già gestito da `/print` via l'array `payments`.
 
 ## Config schema
 

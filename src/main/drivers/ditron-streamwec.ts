@@ -12,22 +12,23 @@ import type { Capability, DriverConfig, NonFiscalDoc, ReceiptData, PrintResult, 
 // paymentType: 0 = contanti, 1 = carta/POS, 2+ = altro (default contanti).
 const TENDER: Record<number, number> = { 0: 1, 1: 5, 2: 1 }
 
-// Comandi non fiscali WEC — DA VERIFICARE ON-SITE (i pcap in repo sono TLS-cifrati).
-// Il firmware supporta lo scontrino di cortesia (chiavi Ecr_ScontrinoCortesia nel capture):
-// confermare la sintassi esatta dal FCR Manager (https://<ip>) o dal manuale WEC Ditron
-// e aggiornare queste tre costanti se diverse.
-export const NONFISCAL_OPEN = 'NFIS APRI'
-export const NONFISCAL_LINE = (text: string): string => `NFIS RIGA='${text}'`
-export const NONFISCAL_CLOSE = 'NFIS CHIUDI'
+// Riga di cortesia stampata in fondo allo scontrino fiscale (CORT R1='…')
+export const COURTESY_FOOTER = 'Grazie e arrivederci'
+
+// Documento non fiscale WEC (= scontrino di cortesia), sintassi confermata da cattura:
+// CLEAR / CHIAVE REG / NOFIS APRI / NOFIS RIGA='…' / NOFIS CHIUDI / wecfine.
+export const NONFISCAL_OPEN = 'NOFIS APRI'
+export const NONFISCAL_LINE = (text: string): string => `NOFIS RIGA='${text}'`
+export const NONFISCAL_CLOSE = 'NOFIS CHIUDI'
 
 export function buildNonFiscal(doc: NonFiscalDoc): string {
-  const lines: string[] = [NONFISCAL_OPEN]
+  const lines: string[] = ['CLEAR', 'CHIAVE REG', NONFISCAL_OPEN]
   for (const l of doc.lines) {
     // bold/size/align/cut non mappabili su WEC testo piano → ignorati.
     // \r\n neutralizzati insieme agli apici: una riga logica = un comando RIGA.
     lines.push(NONFISCAL_LINE(l.text.slice(0, 40).replace(/[\r\n']/g, ' ')))
   }
-  lines.push(NONFISCAL_CLOSE)
+  lines.push(NONFISCAL_CLOSE, 'wecfine')
   return lines.join('\n') + '\n'
 }
 
@@ -55,15 +56,21 @@ export function buildReceipt(data: ReceiptData): string {
       : ''
     lines.push(`VEND REP=${item.department}${qty},PREZZO=${eur(item.unitPrice)}${des}`)
   }
+  // Riga di cortesia nello scontrino fiscale (dopo i VEND, prima di sconto/SUBT — da cattura)
+  lines.push(`CORT R1='${COURTESY_FOOTER}'`)
   if (data.discount > 0) {
     // Sconto a valore sul subtotale (confermato da cattura): "SCONTO VAL=9.99, SUBTOT"
     lines.push(`SCONTO VAL=${eur(data.discount)}, SUBTOT`)
   }
   lines.push('SUBT')
-  // CHIUS chiude a saldo col tender indicato; la cattura mostra un solo CHIUS T=…
-  // (pagamento unico). Per pagamenti multipli usiamo il tender del primo: da estendere se serve.
-  const tender = TENDER[data.payments[0]?.paymentType ?? 0] ?? 1
-  lines.push(`CHIUS T=${tender}`)
+  // Divisione pagamento (da cattura): tutti i pagamenti tranne l'ultimo con IMP=importo;
+  // l'ultimo senza IMP chiude il resto. Es. "CHIUS T=5,IMP=10.00" + "CHIUS T=1".
+  const payments = data.payments.length > 0 ? data.payments : [{ description: '', amount: 0, paymentType: 0 }]
+  payments.forEach((p, i) => {
+    const tender = TENDER[p.paymentType] ?? 1
+    const isLast = i === payments.length - 1
+    lines.push(isLast ? `CHIUS T=${tender}` : `CHIUS T=${tender},IMP=${eur(p.amount)}`)
+  })
   lines.push('wecfine')
   return lines.join('\n') + '\n'
 }

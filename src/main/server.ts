@@ -11,6 +11,7 @@ import type {
 import type { PrinterConfig } from './config'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
 import { assertPrintableBarcode } from './printing/barcode'
+import { buildCourtesyDoc, type CourtesyData } from './printing/courtesy-receipt'
 
 export interface ManagedPrinter {
   config: PrinterConfig
@@ -164,6 +165,51 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
           lines: req.body.lines ?? [],
           cut: req.body.cut ?? false,
         })
+      } catch (err: unknown) {
+        reply.status(500)
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    }
+  )
+
+  app.post<{ Body: CourtesyData & { printerId?: string } }>(
+    '/print-courtesy',
+    async (req, reply) => {
+      const isStrArray = (v: unknown): v is string[] =>
+        Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === 'string')
+      if (!isStrArray(req.body.header)) {
+        reply.status(400)
+        return { success: false, error: 'header (array di stringhe non vuoto) è obbligatorio' }
+      }
+      if (!isStrArray(req.body.items)) {
+        reply.status(400)
+        return { success: false, error: 'items (array di stringhe non vuoto) è obbligatorio' }
+      }
+      const isStrArrayOrEmpty = (v: unknown): v is string[] =>
+        Array.isArray(v) && v.every((x) => typeof x === 'string')
+      if (req.body.number !== undefined && typeof req.body.number !== 'string') {
+        reply.status(400)
+        return { success: false, error: 'number deve essere una stringa' }
+      }
+      if (req.body.date !== undefined && typeof req.body.date !== 'string') {
+        reply.status(400)
+        return { success: false, error: 'date deve essere una stringa' }
+      }
+      if (req.body.returnPolicy !== undefined && !isStrArrayOrEmpty(req.body.returnPolicy)) {
+        reply.status(400)
+        return { success: false, error: 'returnPolicy deve essere un array di stringhe' }
+      }
+      if (req.body.footer !== undefined && !isStrArrayOrEmpty(req.body.footer)) {
+        reply.status(400)
+        return { success: false, error: 'footer deve essere un array di stringhe' }
+      }
+      const resolved = resolveByCapability(getPrinters(), 'non-fiscal', req.body.printerId)
+      if ('error' in resolved) {
+        reply.status(resolved.status)
+        return { success: false, error: resolved.error }
+      }
+      try {
+        return await resolved.printer.driver.printNonFiscal!(buildCourtesyDoc(req.body))
       } catch (err: unknown) {
         reply.status(500)
         return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }

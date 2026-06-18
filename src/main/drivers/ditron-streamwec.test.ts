@@ -61,17 +61,46 @@ describe('buildReceipt (sintassi WEC da cattura Danea)', () => {
     const out = buildReceipt(receipt({ discount: 9.99 }))
     expect(out).toContain('SCONTO VAL=9.99, SUBTOT')
   })
+
+  it("include la riga di cortesia CORT R1='Grazie e arrivederci' dopo i VEND", () => {
+    const out = buildReceipt(receipt()).trim().split('\n')
+    const iVend = out.findIndex((l) => l.startsWith('VEND'))
+    const iCort = out.findIndex((l) => l.startsWith('CORT'))
+    const iSubt = out.indexOf('SUBT')
+    expect(out[iCort]).toBe("CORT R1='Grazie e arrivederci'")
+    expect(iVend).toBeLessThan(iCort)
+    expect(iCort).toBeLessThan(iSubt)
+  })
+
+  it('divisione pagamento: tutti tranne l’ultimo con IMP=, l’ultimo senza (da cattura)', () => {
+    const out = buildReceipt(
+      receipt({
+        payments: [
+          { description: 'POS', amount: 10, paymentType: 1 },
+          { description: 'Contanti', amount: 15, paymentType: 0 },
+        ],
+      })
+    )
+      .trim()
+      .split('\n')
+    expect(out).toContain('CHIUS T=5,IMP=10.00')
+    expect(out).toContain('CHIUS T=1')
+    // l'ultimo CHIUS non ha IMP
+    expect(out[out.length - 2]).toBe('CHIUS T=1')
+  })
 })
 
-describe('buildNonFiscal', () => {
-  it('opens, prints escaped lines, closes', () => {
+describe('buildNonFiscal (scontrino di cortesia, NOFIS da cattura)', () => {
+  it('avvolge NOFIS in CLEAR/CHIAVE REG … wecfine', () => {
     const cmd = buildNonFiscal({ lines: [{ text: "Po' di testo" }, { text: 'riga2' }] })
     const lines = cmd.trim().split('\n')
-    // assert sulle costanti, non sui literal: la correzione on-site tocca un solo file
-    expect(lines[0]).toBe(NONFISCAL_OPEN)
-    expect(lines[1]).toContain('Po  di testo') // apostrofo neutralizzato come nel fiscale
-    expect(lines[2]).toContain('riga2')
-    expect(lines[lines.length - 1]).toBe(NONFISCAL_CLOSE)
+    expect(lines[0]).toBe('CLEAR')
+    expect(lines[1]).toBe('CHIAVE REG')
+    expect(lines[2]).toBe(NONFISCAL_OPEN) // 'NOFIS APRI'
+    expect(cmd).toContain("NOFIS RIGA='Po  di testo'") // apostrofo neutralizzato
+    expect(cmd).toContain("NOFIS RIGA='riga2'")
+    expect(lines).toContain(NONFISCAL_CLOSE) // 'NOFIS CHIUDI'
+    expect(lines[lines.length - 1]).toBe('wecfine')
   })
 
   it('truncates lines to 40 chars', () => {
@@ -79,11 +108,11 @@ describe('buildNonFiscal', () => {
     expect(cmd).toContain(`'${'x'.repeat(40)}'`)
   })
 
-  it('neutralizes embedded newlines: one logical line = one command', () => {
+  it('neutralizes embedded newlines: one logical line = one NOFIS RIGA', () => {
     const cmd = buildNonFiscal({ lines: [{ text: 'a\nb\rc' }] })
-    const lines = cmd.trim().split('\n')
-    expect(lines).toHaveLength(3) // open, una riga, close
-    expect(lines[1]).toContain('a b c')
+    expect(cmd).toContain("NOFIS RIGA='a b c'")
+    // una sola riga di contenuto fra NOFIS APRI e NOFIS CHIUDI
+    expect(cmd.match(/NOFIS RIGA=/g)).toHaveLength(1)
   })
 })
 
