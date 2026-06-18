@@ -603,6 +603,42 @@ describe('GET /status multi-printer: prefers fiscal-capable printer', () => {
   })
 })
 
+describe('POST /print-courtesy', () => {
+  const valid = { header: ['I.P.S. S.R.L.'], items: ['ABITO DONNA'], number: '1329' }
+
+  it('400 se manca header', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'POST', url: '/print-courtesy', payload: { items: ['A'] } })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().success).toBe(false)
+  })
+
+  it('400 se manca items', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'POST', url: '/print-courtesy', payload: { header: ['N'] } })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('200 e invoca printNonFiscal con payload valido', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({ method: 'POST', url: '/print-courtesy', payload: valid })
+    expect(res.statusCode).toBe(200)
+    expect((driver.printNonFiscal as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
+  })
+
+  it('409 se la stampante richiesta non ha capability non-fiscal', async () => {
+    const driver = makeMockDriver({ capabilities: ['fiscal-receipt'] })
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-courtesy',
+      payload: { ...valid, printerId: 'fiscal' },
+    })
+    expect(res.statusCode).toBe(409)
+  })
+})
+
 describe('CORS / Private Network Access', () => {
   const ORIGIN = 'https://cashflow.mashupadv.it'
 

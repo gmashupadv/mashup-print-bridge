@@ -11,6 +11,7 @@ import type {
 import type { PrinterConfig } from './config'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
 import { assertPrintableBarcode } from './printing/barcode'
+import { buildCourtesyDoc, type CourtesyData } from './printing/courtesy-receipt'
 
 export interface ManagedPrinter {
   config: PrinterConfig
@@ -164,6 +165,33 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
           lines: req.body.lines ?? [],
           cut: req.body.cut ?? false,
         })
+      } catch (err: unknown) {
+        reply.status(500)
+        return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+      }
+    }
+  )
+
+  app.post<{ Body: CourtesyData & { printerId?: string } }>(
+    '/print-courtesy',
+    async (req, reply) => {
+      const isStrArray = (v: unknown): v is string[] =>
+        Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === 'string')
+      if (!isStrArray(req.body.header)) {
+        reply.status(400)
+        return { success: false, error: 'header (array di stringhe non vuoto) è obbligatorio' }
+      }
+      if (!isStrArray(req.body.items)) {
+        reply.status(400)
+        return { success: false, error: 'items (array di stringhe non vuoto) è obbligatorio' }
+      }
+      const resolved = resolveByCapability(getPrinters(), 'non-fiscal', req.body.printerId)
+      if ('error' in resolved) {
+        reply.status(resolved.status)
+        return { success: false, error: resolved.error }
+      }
+      try {
+        return await resolved.printer.driver.printNonFiscal!(buildCourtesyDoc(req.body))
       } catch (err: unknown) {
         reply.status(500)
         return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
