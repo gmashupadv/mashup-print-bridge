@@ -637,6 +637,46 @@ describe('POST /print-courtesy', () => {
     })
     expect(res.statusCode).toBe(409)
   })
+
+  it('400 se returnPolicy è una stringa invece di array', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-courtesy',
+      payload: { ...valid, returnPolicy: 'Nessun reso' },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toMatchObject({ success: false, error: expect.stringContaining('returnPolicy') })
+  })
+
+  it('400 se footer non è un array', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-courtesy',
+      payload: { ...valid, footer: 42 },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toMatchObject({ success: false, error: expect.stringContaining('footer') })
+  })
+
+  it('200 con tutti i campi opzionali ben formati', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-courtesy',
+      payload: {
+        ...valid,
+        returnPolicy: ['a'],
+        footer: ['b'],
+        number: '1',
+        date: 'x',
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    expect((driver.printNonFiscal as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
+  })
 })
 
 describe('CORS / Private Network Access', () => {

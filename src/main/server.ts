@@ -185,6 +185,24 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
         reply.status(400)
         return { success: false, error: 'items (array di stringhe non vuoto) è obbligatorio' }
       }
+      const isStrArrayOrEmpty = (v: unknown): v is string[] =>
+        Array.isArray(v) && v.every((x) => typeof x === 'string')
+      if (req.body.number !== undefined && typeof req.body.number !== 'string') {
+        reply.status(400)
+        return { success: false, error: 'number deve essere una stringa' }
+      }
+      if (req.body.date !== undefined && typeof req.body.date !== 'string') {
+        reply.status(400)
+        return { success: false, error: 'date deve essere una stringa' }
+      }
+      if (req.body.returnPolicy !== undefined && !isStrArrayOrEmpty(req.body.returnPolicy)) {
+        reply.status(400)
+        return { success: false, error: 'returnPolicy deve essere un array di stringhe' }
+      }
+      if (req.body.footer !== undefined && !isStrArrayOrEmpty(req.body.footer)) {
+        reply.status(400)
+        return { success: false, error: 'footer deve essere un array di stringhe' }
+      }
       const resolved = resolveByCapability(getPrinters(), 'non-fiscal', req.body.printerId)
       if ('error' in resolved) {
         reply.status(resolved.status)
