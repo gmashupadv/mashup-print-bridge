@@ -1,0 +1,29 @@
+POST /cmd/wec HTTP/1.0
+Content-Length: 634
+Host: 192.168.1.22
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36
+
+CLEAR
+CHIAVE REG
+NOFIS APRI
+NOFIS RIGA='I.P.S. S.R.L.'
+NOFIS RIGA='VIA DOMITIANA KM.34 CIV.550/558'
+NOFIS RIGA='81030  CASTEL VOLTURNO  (CE)'
+NOFIS RIGA='ITALY'
+NOFIS RIGA='P.Iva 02782600619'
+NOFIS RIGA='Tel. 0823.851064 / 3333070629 / 3389956648'
+NOFIS RIGA='www.ipsopenshop.com'
+NOFIS RIGA=''
+NOFIS RIGA='Scontrino di cortesia 1329'
+NOFIS RIGA='del 17/06/2026'
+NOFIS RIGA=''
+NOFIS RIGA='ABITO DONNA VENDITA PROMOZIONAE'
+NOFIS RIGA=''
+NOFIS RIGA='Hai 7 giorni di tempo'
+NOFIS RIGA='per cambiare la merce'
+NOFIS RIGA=''
+NOFIS RIGA='Doc. 1928-0023 del 17/06/2026'
+NOFIS RIGA='RT 2CITP017007'
+NOFIS CHIUDI
+wecfine

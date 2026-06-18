@@ -1,0 +1,37 @@
+POST /cmd/wec HTTP/1.0
+Content-Length: 213
+Host: 192.168.1.22
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36
+
+CLEAR
+CHIAVE REG
+VEND REP=3,PREZZO=10.00,DES='ABITO DONNA VENDITA PROMOZIONAE'
+VEND REP=5,PREZZO=15.00,DES='ESENTE IVA ART. 10'
+
+CORT R1='Grazie e arrivederci'
+SUBT
+CHIUS T=5,IMP=10.00
+CHIUS T=1
+wecfine
+
+
+HTTP/1.0 200 OK
+Server: uHTTP 0.0
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: *
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Private-Network: true
+WWW-Authenticate: Basic
+Content-Type: text/plain; charset=utf-8
+content-length: 45
+
+OK.
+OK.
+OK.
+OK.
+OK.
+OK.
+OK.
+OK.
+OK.
