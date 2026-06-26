@@ -18,7 +18,7 @@ export const SAMPLE_LABEL: LabelData = {
   name: 'Prodotto di prova',
   variant: 'Variante M',
   price: 19.9,
-  comparePrice: 29.9,
+  compareAtPrice: 29.9,
   sku: 'SKU-TEST-01',
   barcode: '8001234567897',
 }

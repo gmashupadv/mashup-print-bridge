@@ -26,18 +26,18 @@ describe('renderLabelHtml', () => {
     expect(html).not.toContain('<svg')
   })
 
-  it('renders comparePrice struck-through when greater than price', () => {
-    const html = renderLabelHtml({ name: 'X', price: 19.9, comparePrice: 29.9 }, layout)
+  it('renders compareAtPrice struck-through when greater than price', () => {
+    const html = renderLabelHtml({ name: 'X', price: 19.9, compareAtPrice: 29.9 }, layout)
     expect(html).toContain('class="compare"')
     expect(html).toContain('29,90')
     expect(html).toContain('line-through')
   })
 
-  it('hides comparePrice when not greater than price', () => {
-    expect(renderLabelHtml({ name: 'X', price: 19.9, comparePrice: 19.9 }, layout)).not.toContain(
+  it('hides compareAtPrice when not greater than price', () => {
+    expect(renderLabelHtml({ name: 'X', price: 19.9, compareAtPrice: 19.9 }, layout)).not.toContain(
       'class="compare"'
     )
-    expect(renderLabelHtml({ name: 'X', price: 19.9, comparePrice: 9.9 }, layout)).not.toContain(
+    expect(renderLabelHtml({ name: 'X', price: 19.9, compareAtPrice: 9.9 }, layout)).not.toContain(
       'class="compare"'
     )
     expect(renderLabelHtml({ name: 'X', price: 19.9 }, layout)).not.toContain('class="compare"')
@@ -67,10 +67,10 @@ describe('renderLabelHtml', () => {
     expect(() => renderLabelHtml({ name: 'X', price: 1, barcode: 'A\x01B' }, layout)).toThrow()
   })
 
-  // Fix #1: barcode never sacrificed — .name clamps to 2 lines
-  it('.name style contains -webkit-line-clamp: 2', () => {
+  // Fix #1: barcode never sacrificed — .name clamps to 3 lines (più spazio ai titoli lunghi)
+  it('.name style contains -webkit-line-clamp: 3', () => {
     const html = renderLabelHtml({ name: 'A', price: 1 }, layout)
-    expect(html).toContain('-webkit-line-clamp: 2')
+    expect(html).toContain('-webkit-line-clamp: 3')
   })
 
   // Fix #1: barcode never sacrificed — .barcode has flex-shrink: 0

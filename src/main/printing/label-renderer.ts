@@ -53,7 +53,7 @@ export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
   parts.push(`<div class="name">${esc(label.name)}</div>`)
   if (label.variant) parts.push(`<div class="variant">${esc(label.variant)}</div>`)
   // Prezzo di confronto barrato: reso solo se è un numero valido e maggiore del prezzo di vendita.
-  const cmp = Number(label.comparePrice)
+  const cmp = Number(label.compareAtPrice)
   const compareMarkup =
     Number.isFinite(cmp) && cmp > label.price
       ? `<span class="compare">${eurIt(cmp)}</span>`
@@ -72,12 +72,12 @@ html, body { width: ${w}mm; height: ${h}mm; }
 body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; color: #000;
   padding: ${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm; overflow: hidden; }
 .inner { width: ${innerW}mm; height: ${innerH}mm; display: flex; flex-direction: column; }
-.name { font-size: ${(3.2 * fs).toFixed(2)}mm; font-weight: 700; line-height: 1.15;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.variant { font-size: ${(2.6 * fs).toFixed(2)}mm; }
+.name { font-size: ${(2.9 * fs).toFixed(2)}mm; font-weight: 700; line-height: 1.1;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.variant { font-size: ${(2.4 * fs).toFixed(2)}mm; }
 .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.5mm; }
 .prices { display: flex; align-items: baseline; gap: 1.2mm; min-width: 0; }
-.price { font-size: ${(4.2 * fs).toFixed(2)}mm; font-weight: 700; white-space: nowrap; }
+.price { font-size: ${(3.4 * fs).toFixed(2)}mm; font-weight: 700; white-space: nowrap; }
 .compare { font-size: ${(2.8 * fs).toFixed(2)}mm; text-decoration: line-through; color: #555; white-space: nowrap; }
 .sku { font-size: ${(2.2 * fs).toFixed(2)}mm; font-family: monospace; }
 .barcode { margin-top: auto; text-align: center; flex-shrink: 0; }

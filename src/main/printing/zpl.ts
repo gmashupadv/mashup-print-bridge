@@ -40,54 +40,67 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
   const widthDots = Math.round(paper.widthMm * dotsPerMm)
   const heightDots = Math.round((paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!) * dotsPerMm)
   const x = Math.round(m.left * dotsPerMm)
+  const top = Math.round(m.top * dotsPerMm)
+  const bottom = Math.round(m.bottom * dotsPerMm)
   const innerW = widthDots - Math.round((m.left + m.right) * dotsPerMm)
-  let y = Math.round(m.top * dotsPerMm)
 
   const lines: string[] = ['^XA', '^CI28', `^PW${widthDots}`, `^LL${heightDots}`, '^LH0,0']
 
-  // Nome prodotto: word-wrap su max 2 righe nella larghezza interna (^FB)
-  const nameH = Math.round(28 * fs)
-  lines.push(`^FO${x},${y}^A0N,${nameH},${nameH}^FB${innerW},2,0,L^FD${zplText(label.name)}^FS`)
-  y += nameH * 2 + 6
+  // --- Barcode ancorato in basso: 7mm di barre (leggibile, non invadente; prima erano 12mm). ---
+  // Riserviamo il blocco in fondo PRIMA di posizionare il resto, così il prezzo gli sta sopra.
+  const hasBarcode = !!(layout.template.showBarcode && label.barcode)
+  const barcodeH = Math.round(7 * dotsPerMm)
+  const barcodeBlock = hasBarcode ? barcodeH + Math.round(3 * dotsPerMm) : 0 // +3mm per la riga cifre HRI
+  const barcodeY = heightDots - bottom - barcodeBlock
+
+  // --- Prezzo (moderato, non gigante: 30 dot vs i 44 di prima), ancorato sopra il barcode. ---
+  // Il prezzo di confronto barrato va IMPILATO sopra il prezzo: niente collisioni orizzontali con lo SKU.
+  const priceH = Math.round(30 * fs)
+  const cmp = Number(label.compareAtPrice)
+  const hasCompare = Number.isFinite(cmp) && cmp > label.price
+  const cmpH = Math.round(18 * fs)
+  const priceBlockH = priceH + (hasCompare ? cmpH + 4 : 0)
+
+  // --- Nome: font compatto (22 dot). Il numero di righe è ADATTIVO allo spazio disponibile
+  //     sopra il blocco prezzo: titoli lunghi prendono fino a 4 righe su etichette grandi,
+  //     meno su quelle piccole — così non sforano mai sul prezzo/barcode. ---
+  const nameH = Math.round(22 * fs)
+  const vH = Math.round(17 * fs)
+  const variantBlock = label.variant ? vH + 4 : 0
+  const priceBlockY = Math.max(top, barcodeY - 6 - priceBlockH)
+  const availForName = priceBlockY - top - variantBlock - 6
+  const nameLines = Math.max(1, Math.min(4, Math.floor(availForName / nameH)))
+
+  let y = top
+  lines.push(`^FO${x},${y}^A0N,${nameH},${nameH}^FB${innerW},${nameLines},0,L^FD${zplText(label.name)}^FS`)
+  y += nameH * nameLines + 6
 
   if (label.variant) {
-    const vH = Math.round(20 * fs)
     lines.push(`^FO${x},${y}^A0N,${vH},${vH}^FD${zplText(label.variant)}^FS`)
     y += vH + 4
   }
 
-  // Prezzo (grande) a sinistra; SKU piccolo allineato a destra sulla stessa riga
-  const priceH = Math.round(44 * fs)
-  lines.push(`^FO${x},${y}^A0N,${priceH},${priceH}^FD${zplText(eurIt(label.price))}^FS`)
-
-  // Prezzo di confronto barrato (solo se > price): piccolo, a destra del prezzo, con linea ^GB sopra.
-  // Larghezze stimate dall'altezza glifo ^A0 (~0.55×H per carattere).
-  const cmp = Number(label.comparePrice)
-  if (Number.isFinite(cmp) && cmp > label.price) {
-    const cmpH = Math.round(22 * fs)
+  let py = priceBlockY
+  if (hasCompare) {
     const cmpStr = eurIt(cmp)
-    const priceW = Math.round(eurIt(label.price).length * priceH * 0.55)
-    const cmpX = x + priceW + Math.round(2 * dotsPerMm)
-    const cmpY = y + priceH - cmpH // allineato in basso al prezzo
-    lines.push(`^FO${cmpX},${cmpY}^A0N,${cmpH},${cmpH}^FD${zplText(cmpStr)}^FS`)
+    lines.push(`^FO${x},${py}^A0N,${cmpH},${cmpH}^FD${zplText(cmpStr)}^FS`)
+    // linea barrata sopra il testo; larghezza stimata (~0.55×H per carattere, font ^A0)
     const cmpW = Math.round(cmpStr.length * cmpH * 0.55)
-    lines.push(`^FO${cmpX},${cmpY + Math.round(cmpH / 2)}^GB${cmpW},2,2^FS`)
+    lines.push(`^FO${x},${py + Math.round(cmpH / 2)}^GB${cmpW},2,2^FS`)
+    py += cmpH + 4
   }
+  lines.push(`^FO${x},${py}^A0N,${priceH},${priceH}^FD${zplText(eurIt(label.price))}^FS`)
 
+  // SKU piccolo, allineato a destra sulla riga del prezzo (come le etichette retail).
   if (label.sku) {
-    const skuH = Math.round(20 * fs)
-    lines.push(`^FO${x},${y}^A0N,${skuH},${skuH}^FB${innerW},1,0,R^FD${zplText(label.sku)}^FS`)
+    const skuH = Math.round(16 * fs)
+    lines.push(`^FO${x},${py + (priceH - skuH)}^A0N,${skuH},${skuH}^FB${innerW},1,0,R^FD${zplText(label.sku)}^FS`)
   }
-  y += priceH + 8
 
-  // Barcode nativo in fondo, se c'è spazio
-  if (layout.template.showBarcode && label.barcode) {
-    const bottom = Math.round(m.bottom * dotsPerMm)
-    const bcH = Math.min(Math.round(12 * dotsPerMm), heightDots - y - bottom - 12)
-    if (bcH > 10) {
-      const bf = barcodeField(String(label.barcode), 2, bcH)
-      lines.push(`^FO${x},${y}${bf.command}^FD${bf.data}^FS`)
-    }
+  // Barcode nativo in fondo.
+  if (hasBarcode) {
+    const bf = barcodeField(String(label.barcode), 2, barcodeH)
+    lines.push(`^FO${x},${barcodeY}${bf.command}^FD${bf.data}^FS`)
   }
 
   lines.push('^XZ')

@@ -30,7 +30,7 @@ export interface LabelData {
   variant?: string
   price: number
   /** Prezzo pieno/di confronto, mostrato barrato accanto al prezzo di vendita. Reso solo se > price. */
-  comparePrice?: number
+  compareAtPrice?: number
   sku?: string
   barcode?: string
 }
