@@ -22,7 +22,25 @@ describe('renderLabelHtml', () => {
     const html = renderLabelHtml({ name: 'X', price: 5 }, layout)
     expect(html).not.toContain('class="variant"')
     expect(html).not.toContain('class="sku"')
+    expect(html).not.toContain('class="compare"')
     expect(html).not.toContain('<svg')
+  })
+
+  it('renders comparePrice struck-through when greater than price', () => {
+    const html = renderLabelHtml({ name: 'X', price: 19.9, comparePrice: 29.9 }, layout)
+    expect(html).toContain('class="compare"')
+    expect(html).toContain('29,90')
+    expect(html).toContain('line-through')
+  })
+
+  it('hides comparePrice when not greater than price', () => {
+    expect(renderLabelHtml({ name: 'X', price: 19.9, comparePrice: 19.9 }, layout)).not.toContain(
+      'class="compare"'
+    )
+    expect(renderLabelHtml({ name: 'X', price: 19.9, comparePrice: 9.9 }, layout)).not.toContain(
+      'class="compare"'
+    )
+    expect(renderLabelHtml({ name: 'X', price: 19.9 }, layout)).not.toContain('class="compare"')
   })
 
   it('escapes HTML in user data', () => {

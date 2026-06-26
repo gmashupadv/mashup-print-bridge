@@ -59,6 +59,21 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
   // Prezzo (grande) a sinistra; SKU piccolo allineato a destra sulla stessa riga
   const priceH = Math.round(44 * fs)
   lines.push(`^FO${x},${y}^A0N,${priceH},${priceH}^FD${zplText(eurIt(label.price))}^FS`)
+
+  // Prezzo di confronto barrato (solo se > price): piccolo, a destra del prezzo, con linea ^GB sopra.
+  // Larghezze stimate dall'altezza glifo ^A0 (~0.55×H per carattere).
+  const cmp = Number(label.comparePrice)
+  if (Number.isFinite(cmp) && cmp > label.price) {
+    const cmpH = Math.round(22 * fs)
+    const cmpStr = eurIt(cmp)
+    const priceW = Math.round(eurIt(label.price).length * priceH * 0.55)
+    const cmpX = x + priceW + Math.round(2 * dotsPerMm)
+    const cmpY = y + priceH - cmpH // allineato in basso al prezzo
+    lines.push(`^FO${cmpX},${cmpY}^A0N,${cmpH},${cmpH}^FD${zplText(cmpStr)}^FS`)
+    const cmpW = Math.round(cmpStr.length * cmpH * 0.55)
+    lines.push(`^FO${cmpX},${cmpY + Math.round(cmpH / 2)}^GB${cmpW},2,2^FS`)
+  }
+
   if (label.sku) {
     const skuH = Math.round(20 * fs)
     lines.push(`^FO${x},${y}^A0N,${skuH},${skuH}^FB${innerW},1,0,R^FD${zplText(label.sku)}^FS`)

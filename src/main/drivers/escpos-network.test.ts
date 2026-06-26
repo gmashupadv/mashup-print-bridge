@@ -91,9 +91,11 @@ describe('EscPosNetworkDriver', () => {
       { paper: { widthMm: 80 }, template: DEFAULT_LABEL_TEMPLATE }
     )
     // The HTML should contain something consistent with 72mm width, not 80mm
-    // (renderLabelHtml embeds widthMm in inline styles)
-    expect(capturedHtml).toContain('72')
-    expect(capturedHtml).not.toContain('80mm')
+    // (renderLabelHtml embeds widthMm in @page size and width). Match the page-width
+    // context specifically so unrelated dimensions like a 2.80mm font-size don't trip it.
+    expect(capturedHtml).toContain('72mm')
+    expect(capturedHtml).not.toContain('size: 80mm')
+    expect(capturedHtml).not.toContain('width: 80mm')
   })
 
   // FIX: rasterize rejection → PrintResult with success:false and errorMessage

@@ -43,7 +43,7 @@ export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
   const barcodeMarkup =
     template.showBarcode && label.barcode
       ? barcodeSvg(label.barcode, {
-          heightMm: Math.min(10, innerH * 0.35),
+          heightMm: Math.min(8, innerH * 0.25),
           // Fix #4: 0.375mm = 3 dot esatti a 203dpi — evita barre anti-aliased nella rasterizzazione ESC/POS
           moduleMm: 0.375,
         })
@@ -52,8 +52,14 @@ export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
   const parts: string[] = []
   parts.push(`<div class="name">${esc(label.name)}</div>`)
   if (label.variant) parts.push(`<div class="variant">${esc(label.variant)}</div>`)
+  // Prezzo di confronto barrato: reso solo se è un numero valido e maggiore del prezzo di vendita.
+  const cmp = Number(label.comparePrice)
+  const compareMarkup =
+    Number.isFinite(cmp) && cmp > label.price
+      ? `<span class="compare">${eurIt(cmp)}</span>`
+      : ''
   parts.push(
-    `<div class="row"><span class="price">${eurIt(label.price)}</span>` +
+    `<div class="row"><span class="prices"><span class="price">${eurIt(label.price)}</span>${compareMarkup}</span>` +
       (label.sku ? `<span class="sku">${esc(label.sku)}</span>` : '') +
       `</div>`
   )
@@ -70,7 +76,9 @@ body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; color: #000;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .variant { font-size: ${(2.6 * fs).toFixed(2)}mm; }
 .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.5mm; }
+.prices { display: flex; align-items: baseline; gap: 1.2mm; min-width: 0; }
 .price { font-size: ${(4.2 * fs).toFixed(2)}mm; font-weight: 700; white-space: nowrap; }
+.compare { font-size: ${(2.8 * fs).toFixed(2)}mm; text-decoration: line-through; color: #555; white-space: nowrap; }
 .sku { font-size: ${(2.2 * fs).toFixed(2)}mm; font-family: monospace; }
 .barcode { margin-top: auto; text-align: center; flex-shrink: 0; }
 .barcode svg { max-width: ${innerW}mm; }

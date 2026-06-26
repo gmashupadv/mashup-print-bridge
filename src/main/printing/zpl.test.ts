@@ -23,6 +23,18 @@ describe('buildLabelZpl', () => {
     expect(zpl).toContain('19,90 €')
   })
 
+  it('stampa il prezzo di confronto barrato (testo + linea ^GB) se maggiore del prezzo', () => {
+    const zpl = buildLabelZpl({ ...base, comparePrice: 29.9 }, layout)
+    expect(zpl).toContain('29,90 €')
+    expect(zpl).toContain('^GB')
+  })
+
+  it('non stampa il prezzo di confronto se non maggiore del prezzo', () => {
+    expect(buildLabelZpl({ ...base, comparePrice: 19.9 }, layout)).not.toContain('^GB')
+    expect(buildLabelZpl({ ...base, comparePrice: 9.9 }, layout)).not.toContain('^GB')
+    expect(buildLabelZpl(base, layout)).not.toContain('^GB')
+  })
+
   it('usa il barcode EAN-13 nativo (^BE) con 12 cifre per i codici numerici', () => {
     const zpl = buildLabelZpl({ ...base, barcode: '8001234567897' }, layout) // checksum valido
     expect(zpl).toContain('^BEN,')
