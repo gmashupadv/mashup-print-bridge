@@ -40,7 +40,9 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
   const widthDots = Math.round(paper.widthMm * dotsPerMm)
   const heightDots = Math.round((paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!) * dotsPerMm)
   const x = Math.round(m.left * dotsPerMm)
-  const top = Math.round(m.top * dotsPerMm)
+  // Respiro extra in alto: ~1.5mm sopra il margine configurato, così la prima riga non resta
+  // incollata/tagliata al bordo superiore (offset tipico di queste etichettatrici termiche).
+  const top = Math.round((m.top + 1.5) * dotsPerMm)
   const bottom = Math.round(m.bottom * dotsPerMm)
   const innerW = widthDots - Math.round((m.left + m.right) * dotsPerMm)
 
@@ -54,12 +56,12 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
   const barcodeY = heightDots - bottom - barcodeBlock
 
   // --- Prezzo (moderato, non gigante: 30 dot vs i 44 di prima), ancorato sopra il barcode. ---
-  // Il prezzo di confronto barrato va IMPILATO sopra il prezzo: niente collisioni orizzontali con lo SKU.
+  // Il prezzo di confronto barrato va IN LINEA, a destra del prezzo: recupera una riga verticale.
   const priceH = Math.round(30 * fs)
   const cmp = Number(label.compareAtPrice)
   const hasCompare = Number.isFinite(cmp) && cmp > label.price
   const cmpH = Math.round(18 * fs)
-  const priceBlockH = priceH + (hasCompare ? cmpH + 4 : 0)
+  const priceBlockH = priceH // compare è in linea, non aggiunge altezza
 
   // --- Nome: font compatto (22 dot). Il numero di righe è ADATTIVO allo spazio disponibile
   //     sopra il blocco prezzo: titoli lunghi prendono fino a 4 righe su etichette grandi,
@@ -80,16 +82,19 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
     y += vH + 4
   }
 
-  let py = priceBlockY
+  const py = priceBlockY
+  lines.push(`^FO${x},${py}^A0N,${priceH},${priceH}^FD${zplText(eurIt(label.price))}^FS`)
+
+  // Prezzo di confronto barrato IN LINEA, a destra del prezzo (allineato in basso alla sua baseline).
   if (hasCompare) {
     const cmpStr = eurIt(cmp)
-    lines.push(`^FO${x},${py}^A0N,${cmpH},${cmpH}^FD${zplText(cmpStr)}^FS`)
-    // linea barrata sopra il testo; larghezza stimata (~0.55×H per carattere, font ^A0)
-    const cmpW = Math.round(cmpStr.length * cmpH * 0.55)
-    lines.push(`^FO${x},${py + Math.round(cmpH / 2)}^GB${cmpW},2,2^FS`)
-    py += cmpH + 4
+    const priceW = Math.round(eurIt(label.price).length * priceH * 0.6)
+    const cmpX = x + priceW + Math.round(2 * dotsPerMm)
+    const cmpY = py + (priceH - cmpH)
+    lines.push(`^FO${cmpX},${cmpY}^A0N,${cmpH},${cmpH}^FD${zplText(cmpStr)}^FS`)
+    const cmpW = Math.round(cmpStr.length * cmpH * 0.6)
+    lines.push(`^FO${cmpX},${cmpY + Math.round(cmpH / 2)}^GB${cmpW},2,2^FS`)
   }
-  lines.push(`^FO${x},${py}^A0N,${priceH},${priceH}^FD${zplText(eurIt(label.price))}^FS`)
 
   // SKU piccolo, allineato a destra sulla riga del prezzo (come le etichette retail).
   if (label.sku) {
