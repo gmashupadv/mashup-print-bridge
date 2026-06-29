@@ -34,10 +34,14 @@ mac:
     # dmg = primo install; zip = file che electron-updater scarica per gli aggiornamenti su macOS
     # (senza zip, latest-mac.yml punterebbe a un file inesistente). La firma Developer ID
     # resta necessaria per l'auto-update silenzioso; senza, l'app fa solo check + download manuale.
+    #
+    # universal = UN solo binario che gira nativo sia su Intel sia su Apple Silicon: niente
+    # Rosetta, niente rischio di scaricare il dmg con l'architettura sbagliata. Pesa ~2× perché
+    # contiene entrambe le architetture, ma per un'app da tray è irrilevante.
     - target: dmg
-      arch: [x64, arm64]
+      arch: [universal]
     - target: zip
-      arch: [x64, arm64]
+      arch: [universal]
   icon: resources/icon.png
   category: public.app-category.utilities
 
