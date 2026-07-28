@@ -4,6 +4,7 @@ import {
   firstTag,
   describeFailure,
   PAPER_OUT_REPLIES,
+  getTag,
 } from './axon-response'
 
 const OK_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
@@ -108,5 +109,94 @@ describe('describeFailure', () => {
 describe('classificazione delle condizioni fisiche', () => {
   it('riconosce il reply code di carta finita', () => {
     expect(PAPER_OUT_REPLIES.has('44')).toBe(true)
+  })
+})
+
+describe('TAG nidificati (nested groups)', () => {
+  const NESTED_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<RESPONSE>
+  <ESITO>OK</ESITO>
+  <REPLY>00</REPLY>
+  <DEVICE_STATUS>00</DEVICE_STATUS>
+  <FISCAL_STATUS>02</FISCAL_STATUS>
+  <CMD_0_IVA_GIORNO>
+    <IVA_1>10.00</IVA_1>
+    <IVA_2>20.00</IVA_2>
+  </CMD_0_IVA_GIORNO>
+  <CMD_0_TOTALE_IVA_GIORNO>30.00</CMD_0_TOTALE_IVA_GIORNO>
+  <CMD_d_DPT_NUMERO>1</CMD_d_DPT_NUMERO>
+  <CMD_d_DPT_DESCRIZIONE>ALIMENTARI</CMD_d_DPT_DESCRIZIONE>
+  <CMD_d_DPT_NUMERO>2</CMD_d_DPT_NUMERO>
+  <CMD_d_DPT_DESCRIZIONE>BEVANDE</CMD_d_DPT_DESCRIZIONE>
+</RESPONSE>`
+
+  it('preserva i valori nidificati sotto un TAG CMD_', () => {
+    const res = parseAxonResponse(NESTED_XML)
+    // I valori nidificati devono essere accessibili con dot notation
+    expect(getTag(res, 'CMD_0_IVA_GIORNO.IVA_1')).toBe('10.00')
+    expect(getTag(res, 'CMD_0_IVA_GIORNO.IVA_2')).toBe('20.00')
+  })
+
+  it('mantiene immutati i TAG ripetuti flat', () => {
+    const res = parseAxonResponse(NESTED_XML)
+    expect(res.tags['CMD_d_DPT_NUMERO']).toEqual(['1', '2'])
+    expect(res.tags['CMD_d_DPT_DESCRIZIONE']).toEqual(['ALIMENTARI', 'BEVANDE'])
+  })
+
+  it('raccoglie il TAG padre CMD_ ai dati flat', () => {
+    const res = parseAxonResponse(NESTED_XML)
+    // Anche il tag flat deve essere presente
+    expect(getTag(res, 'CMD_0_TOTALE_IVA_GIORNO')).toBe('30.00')
+  })
+})
+
+describe('Multiple exception blocks', () => {
+  const MULTI_ERROR_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<RESPONSE>
+  <ESITO>NON OK</ESITO>
+  <REPLY>2D</REPLY>
+  <DEVICE_STATUS>00</DEVICE_STATUS>
+  <FISCAL_STATUS>06</FISCAL_STATUS>
+  <ECCEZIONE>
+    <NUMERO_RIGA_ECCEZIONE>001</NUMERO_RIGA_ECCEZIONE>
+    <COMANDO_ECCEZIONE>3/S/PROVA1</COMANDO_ECCEZIONE>
+    <REPLY_ECCEZIONE>44</REPLY_ECCEZIONE>
+    <DEVICE_STATUS_ECCEZIONE>00</DEVICE_STATUS_ECCEZIONE>
+    <FISCAL_STATUS_ECCEZIONE>06</FISCAL_STATUS_ECCEZIONE>
+    <DESC_ERRORE_ECCEZIONE>Carta Finita</DESC_ERRORE_ECCEZIONE>
+    <AZIONE_ECCEZIONE>4</AZIONE_ECCEZIONE>
+  </ECCEZIONE>
+  <ECCEZIONE>
+    <NUMERO_RIGA_ECCEZIONE>005</NUMERO_RIGA_ECCEZIONE>
+    <COMANDO_ECCEZIONE>3/S/PROVA2</COMANDO_ECCEZIONE>
+    <REPLY_ECCEZIONE>51</REPLY_ECCEZIONE>
+    <DEVICE_STATUS_ECCEZIONE>00</DEVICE_STATUS_ECCEZIONE>
+    <FISCAL_STATUS_ECCEZIONE>06</FISCAL_STATUS_ECCEZIONE>
+    <DESC_ERRORE_ECCEZIONE>Sportello Aperto</DESC_ERRORE_ECCEZIONE>
+    <AZIONE_ECCEZIONE>3</AZIONE_ECCEZIONE>
+  </ECCEZIONE>
+</RESPONSE>`
+
+  it('la proprietà exception rimane il primo blocco ECCEZIONE', () => {
+    const res = parseAxonResponse(MULTI_ERROR_XML)
+    expect(res.exception).not.toBeNull()
+    expect(res.exception?.description).toBe('Carta Finita')
+    expect(res.exception?.command).toBe('3/S/PROVA1')
+  })
+
+  it('exceptions contiene tutti i blocchi ECCEZIONE in ordine', () => {
+    const res = parseAxonResponse(MULTI_ERROR_XML)
+    expect(res.exceptions).toHaveLength(2)
+    expect(res.exceptions[0]?.description).toBe('Carta Finita')
+    expect(res.exceptions[0]?.command).toBe('3/S/PROVA1')
+    expect(res.exceptions[1]?.description).toBe('Sportello Aperto')
+    expect(res.exceptions[1]?.command).toBe('3/S/PROVA2')
+  })
+
+  it('describeFailure menziona gli errori aggiuntivi quando exceptions.length > 1', () => {
+    const res = parseAxonResponse(MULTI_ERROR_XML)
+    const msg = describeFailure(res)
+    expect(msg).toContain('Carta Finita')
+    expect(msg).toContain('e altri')
   })
 })
