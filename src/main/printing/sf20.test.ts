@@ -31,6 +31,39 @@ describe('sanitize', () => {
   it('tronca alla lunghezza massima', () => {
     expect(sanitize('A'.repeat(50), 30)).toHaveLength(30)
   })
+
+  it('esclude i caratteri Cyrillic per evitare iniezione di "/" in codifica latin1', () => {
+    const cleaned = sanitize('Prodotto Я speciale')
+    // Verifica che il risultato non contenga "/" letterale
+    expect(cleaned).not.toContain('/')
+    // Verifica che codificato in latin1, non generi il byte 0x2f
+    const encoded = Buffer.from(cleaned, 'latin1')
+    expect(encoded.indexOf(0x2f)).toBe(-1)
+  })
+
+  it('preserva i caratteri accentati latini usati in italiano', () => {
+    const input = 'Caffè à metà'
+    const cleaned = sanitize(input)
+    expect(cleaned).toContain('è')
+    expect(cleaned).toContain('à')
+  })
+
+  it('rimuove i caratteri di controllo C0/C1', () => {
+    // Inserisce un carattere di controllo (BEL, 0x07)
+    const withControl = 'Test\x07String'
+    const cleaned = sanitize(withControl)
+    expect(cleaned).not.toContain('\x07')
+    // Il risultato dovrebbe essere "Test String" (lo 0x07 diventa spazio)
+    expect(cleaned).toBe('Test String')
+  })
+
+  it('non crea spazi doppi quando rimuove caratteri consecutivi', () => {
+    // Due caratteri di controllo consecutivi
+    const input = 'Word\x07\x08Another'
+    const cleaned = sanitize(input)
+    // Non deve avere spazi doppi
+    expect(cleaned).not.toContain('  ')
+  })
 })
 
 describe('buildCommandFile', () => {

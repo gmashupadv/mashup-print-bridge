@@ -24,12 +24,37 @@ export function amount(value: number): string {
 }
 
 /**
- * Testo libero destinato a un campo comando. La "/" separa i campi del
- * protocollo, quindi va rimossa insieme a newline e tabulazioni.
+ * Testo libero destinato a un campo comando. Il protocollo SF20 usa "/" come
+ * separatore di campi. Inoltre il file di comandi viene scritto su disco con
+ * encoding CP1252/latin1, quindi ogni carattere deve sopravvivere a questa
+ * conversione inalterato. I caratteri Unicode oltre U+00FF (p.es. Cyrilico)
+ * vengono troncati al loro byte basso durante la codifica, creando byte
+ * 0x2F ("/") e 0x0A-0x0D (newline) che corrompono la struttura del comando
+ * fiscale. Inoltre i caratteri di controllo C0/C1 (U+0000-U+001F, U+007F-U+009F)
+ * sono esclusi per evitare effetti indesiderati sul protocollo.
+ *
+ * Questa funzione quindi:
+ * 1. Rimuove tutti i caratteri non-Latin-1 (U+0100-U+FFFF) sostituendoli con spazi.
+ * 2. Rimuove i caratteri di controllo C0/C1 sostituendoli con spazi.
+ * 3. Sostituisce "/" con spazio (separatore SF20).
+ * 4. Collassa i run di spazi bianchi in un singolo spazio.
+ * 5. Tronca alla lunghezza massima.
+ *
+ * I caratteri accentati latini usati in italiano (à è é ì ò ù e maiuscoli),
+ * che sono entro U+00FF, passano inalterati.
  */
 export function sanitize(text: string, maxLength = 30): string {
-  return text
-    .replace(/[/\r\n\t]/g, ' ')
+  let cleaned = ''
+  for (const char of text) {
+    const code = char.charCodeAt(0)
+    // Scarta: C0 (0x00-0x1F), "/" (0x2F), DEL+C1 (0x7F-0x9F), non-Latin-1 (0x0100-0xFFFF)
+    if ((code >= 0x00 && code <= 0x1f) || code === 0x2f || (code >= 0x7f && code <= 0x9f) || code > 0xff) {
+      cleaned += ' '
+    } else {
+      cleaned += char
+    }
+  }
+  return cleaned
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength)
