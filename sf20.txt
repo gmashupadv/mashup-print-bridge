@@ -1,0 +1,745 @@
+# MICRELEC ITALIA - Libretto di Istruzioni modello SF20 "HYDRA"
+Edizione Gennaio 2015
+
+---
+
+## Pag. 1 - Garanzia e Installazione
+
+Egregio cliente, La ringraziamo per la preferenza accordataci.
+Questo prodotto è stato progettato e fabbricato secondo i più alti standard qualitativi e Micrelec Italia si impegna a garantire che il vostro registratore di cassa continui a funzionare per il meglio.
+Le auguriamo di ricevere grandi soddisfazioni dal suo nuovo acquisto.
+
+Il contenuto di questo manuale è strettamente riservato ed è vietata qualsiasi tipo di copia o riproduzione.
+Il presente manuale è soggetto a modifiche ed aggiornamenti periodici così come le specifiche e le caratteristiche dei registratori di cassa.
+
+### GARANZIA LIMITATA
+Questa garanzia limitata è valida per un anno dalla data d'acquisto e non è richiesta la registrazione, tuttavia in caso d'intervento in garanzia l'acquirente è tenuto ad esibire l'originale del documento d'acquisto recante l'indicazione della data.
+
+La garanzia è limitata alla sola riparazione delle apparecchiature. La garanzia non copre i costi di trasporto o nessun altro tipo di costo, né rischi derivanti dalla rimozione, il trasporto e l'installazione dei prodotti.
+La garanzia è valida solo per l'acquirente originario e non è trasferibile.
+
+Questa garanzia è applicabile solo per la presenza di vizi di materiali o di lavorazione al momento dell'acquisto e non è applicabile nei seguenti casi:
+- danni causati da installazione, connessione o imballaggio non corretti;
+- danni causati da un uso inadeguato del prodotto o imputabili alla normale usura, da negligenza, da modifiche o impiego di componenti non fabbricati o autorizzati da Micrelec Italia, e in generale da un uso diverso specificato nel presente manuale;
+- danni causati da apparecchiature ausiliarie difettose o inadatte;
+- danni causati da incidenti, cause naturali o altra causa al di fuori del ragionevole controllo di Micrelec Italia e dei suoi concessionari ufficiali;
+- quando il numero di matricola del prodotto sia stato cancellato, modificato o eliminato;
+- se riparazioni o modifiche sono state eseguite da persone non autorizzate.
+
+Se sono necessarie delle riparazioni in garanzia, seguire le procedure sotto elencate:
+- se l'apparecchiatura è utilizzata nel paese in cui è stata acquistata, contattare il concessionario autorizzato Micrelec Italia da cui è stata acquistata;
+- se l'apparecchiatura non è utilizzata nel paese in cui è stata acquistata, contattare il distributore nazionale Micrelec del paese di residenza, che sarà in grado di fornire i dettagli della ditta incaricata delle riparazioni.
+
+### INSTALLAZIONE E AVVERTENZE
+AVVERTENZA: ai fini della sicurezza leggere con attenzione il capitolo "installazione e avvertenze" e "norme di manutenzione" di questo manuale.
+
+Premesso che il registratore di cassa deve essere installato presso il punto vendita esclusivamente da personale tecnico autorizzato, ricordiamo che per un corretto funzionamento è necessario rispettare le seguenti indicazioni:
+- al momento dell'installazione verificare che la tensione di alimentazione sia quella prevista e dichiarata sulla targhetta dell'apparecchio;
+- al momento dell'installazione verificare che la presa di alimentazione dell'apparato sia installata in prossimità dell'apparecchio e di facile accesso, in quanto il dispositivo di sezionamento dalla rete è la spina di alimentazione;
+- evitare di far funzionare l'apparecchio in luoghi eccessivamente freddi, caldi o esposti ai raggi solari diretti per lungo tempo: il funzionamento corretto è garantito per temperature comprese tra 0° a +45° C;
+- evitare che l'apparecchio venga a contatto con liquidi di qualsiasi genere;
+- evitare di far funzionare l'apparecchio in luoghi molto polverosi;
+- Non smontare, riparare o modificare il prodotto, ma rivolgersi esclusivamente ai tecnici autorizzati da "MICRELEC ITALIA".
+
+AVVERTENZA:
+Questa apparecchiatura è dotata di batterie al litio. Le batterie devono essere sostituite esclusivamente da personale qualificato. Pericolo di esplosione in caso di sostituzione non corretta della batteria. Sostituite la batteria al litio esclusivamente con una batteria dello stesso tipo o di un tipo raccomandato dal produttore. Per lo smaltimento delle batterie vanno osservate le norme locali vigenti. Pericolo di esplosione e pericolo di fuoriuscita di sostanze nocive! Non gettare le batterie al litio nel fuoco, non eseguire brasature sul corpo della cella, non aprire, non cortocircuitare, non invertire i poli, non riscaldare oltre 100°C, smaltire conformemente alle norme e proteggere dall'azione diretta dei raggi solari, dall'umidità e dalla condensa.
+
+---
+
+## Pag. 2 - Norme di Manutenzione
+
+Per un corretto funzionamento è opportuno controllare quanto segue:
+- non esporre il registratore di cassa alla luce diretta del sole;
+- evitare di usare il registratore di cassa oltre le temperature estreme (il funzionamento è garantito per temperature comprese tra 0°C e + 45°C);
+- non usare la stampante in condizioni di estrema umidità o quando la carta o la testina di stampa sono bagnate;
+- usare solo carta termica omologata secondo quanto specificato nel D.M. del Ministero delle Finanze del 30/03/93, all. E e successive modificazioni;
+- premere sempre l'interruttore ON/OFF, a seconda dei casi, prima di inserire o disinserire l'alimentazione e/o qualsiasi altro connettore di eventuali periferiche esterne;
+- evitare di versare acqua o altri liquidi sulla tastiera, sulla stampante o sul display;
+- in caso di presenza di liquidi sull'apparecchio, non usare il registratore di cassa finché non è asciutto.
+
+Avviso: qualora l'apparato non venisse usato secondo le prescrizioni di questo manuale, ogni responsabilità per danni a cose o persone è declinata dal costruttore.
+
+Questo modello di misuratore fiscale è dotato di una stampante per stampa su carta termica, pertanto è obbligatorio utilizzare esclusivamente carta termica omologata, riportante sia gli estremi dell'omologazione che la data di scadenza, secondo quanto specificato nel D.M. del Ministero delle Finanze del 30/03/93, all. E. e successive modificazioni; inoltre l'utilizzatore dovrà conservare i documenti previsti dalla legge in luoghi oscuri con umidità relativa inferiore al 80% e temperatura inferiore a 35° C, evitando il contatto diretto con materiali plastici ed in particolare con il poli-vinilcloruro.
+
+Avviso: conservare il supporto del giornale elettronico (memoria SD flash) in luoghi idonei e per il periodo stabilito dalla normativa vigente. Si raccomanda di identificare la SD flash compilando l'apposita targhetta identificativa che si trova applicata sulla memoria stessa. Non tentare di aprire la memoria SD flash o di alterare in alcun modo i dati in essa memorizzati; utilizzare la memoria SD flash esclusivamente con il registratore di cassa SF20.
+
+AVVISO: Utilizzare esclusivamente memorie SD flash ORIGINALI, per questo verificare la presenza del contrassegno "MICRELEC" (etichetta) sulla memoria SD flash. Utilizzare la memoria SD flash esclusivamente con il misuratore fiscale SF20.
+
+---
+
+## Pag. 3 - Vista dell'Apparecchio
+
+### Dati Tecnici
+Alimentazione: 24VCC 2 A
+Alimentatore esterno: INPUT: 100-240VCA, 50/60Hz 2 A / OUTPUT: 24VCC 2,5A
+
+Avviso: per motivi di sicurezza utilizzare con il modello "SF20" esclusivamente l'alimentatore specificato da MICRELEC ITALIA; i ricambi originali sono forniti esclusivamente per mezzo dei centri di assistenza di Micrelec Italia srl.
+
+Etichetta prodotto: MANUF. MOD.: SF20, POWER RAT.: 24 VCC 2A, OPER. TEMP.: 0°C ~ +45°C, FABBRICANTE: MICRELEC, N° MATRICOLA: TN 91000001, MODELLO: SF20, A.A.E: 2013/5918, DEL: 17/01/2013.
+Alimentatore: AC/DC Adapter, MODEL: GM601-240250, INPUT: 100-240V~50/60Hz 2.0A, OUTPUT: 24V=2.5A, FO SHAN SHUNDE GUANYUDA POWER SUPPLY CO., LTD.
+
+### TASTIERE
+Una delle caratteristiche dell'apparecchio consiste nella possibilità di personalizzazione della tastiera; per eseguire eventuali personalizzazioni rivolgersi esclusivamente al centro di assistenza autorizzato.
+
+---
+
+## Pag. 4 - Tastiere
+
+### TASTIERA STANDARD 30 TASTI
+Una delle caratteristiche principali dell'apparecchio consiste nella possibilità di personalizzare la posizione delle funzioni sulla tastiera; la configurazione standard può essere eventualmente modificata sulla base di particolari esigenze dell'utente, con l'aiuto del centro di assistenza tecnico.
+
+### TASTIERA ESTERNA 30 TASTI (OPZIONE) / TASTIERA ESTERNA 98 TASTI (OPZIONE)
+Per mezzo del dispositivo adattatore "splitter" è possibile collegare una tastiera esterna configurata con 30 tasti oppure con 98 tasti e display operatore di grandi dimensioni.
+
+### TASTIERA ESTERNA PS2 35 TASTI (OPZIONE)
+La tastiera 35 tasti si collega al connettore "TASTIERA PS2". Sono previste le funzioni principali direttamente "SHIFT LEVEL 0" o previa attivazione della funzione "SHIFT LEVEL 1".
+
+Esempio per utilizzare la seconda funzione disponibile su alcuni tasti: tenere premuto il tasto "tastiera alfabetica" e premere una volta sul tasto "subtotale/shift level" per visualizzare sul display "SHIFT LEVEL 1", ora premere solo il tasto desiderato (esempio X/FX) per utilizzare la seconda funzione del tasto (la funzione sottostante la linea bianca è programmabile).
+
+Per digitare annotazioni e nomi (nomi dei reparti, intestazione scontrino) utilizzare il sub livello della tastiera che risulta accessibile mantenendo premuto il tasto TASTIERA ALFABETO e fare riferimento alle lettere alfabetiche stampate sulla parte destra in alto dei tasti.
+
+Il sub livello della tastiera consente inoltre di accedere ad alcune funzioni che sono descritte sulla parte sinistra in alto del tasto.
+
+Alcuni tasti sono programmabili con la funzione desiderata (tasti fx). La funzione descritta sulla parte bassa del tasto risulta accessibile per mezzo della sequenza "tastiera alfabeto-subtotale" e poi premendo da solo il tasto con la seconda funzione desiderata.
+
+---
+
+## Pag. 5-6 - Stampante, Display, Funzioni Principali
+
+### STAMPANTE
+Il gruppo di stampa dispone di una stampante grafica ad alta definizione per la stampa su "carta termica omologata per apparecchi misuratori fiscali".
+La capacità massima di stampa è di 32 caratteri su rotolo di larghezza 57,5 mm o 48 caratteri su rotolo di 80 mm di larghezza.
+La stampante deve essere caricata esclusivamente con rotoli di carta termica omologata per apparecchi misuratori fiscali, del diametro massimo di 80 mm. Un messaggio sul display dell'apparecchio informa l'operatore quando cessa la disponibilità di carta. Si raccomanda di utilizzare esclusivamente rotoli di carta con segnale di preavviso di fine rotolo (la parte terminale del rotolo di carta è stata parzialmente colorata dal fabbricante del rotolo).
+Per sostituire il rotolo: tirare il tasto di apertura dello sportello (1), rimuovere il nucleo del rotolo di carta esaurito, inserire un nuovo rotolo (2) e chiudere lo sportello (3 e 4); se richiesto premere sul tasto CL per riprendere la stampa.
+
+### SELEZIONE DELLA LARGHEZZA DEL ROTOLO DI CARTA
+Avviso, questa selezione non è reversibile.
+Previo comando di programmazione irreversibile, il vostro misuratore fiscale può essere programmato per passare dalla stampa su carta di 57,5 mm di larghezza alla stampa su carta di 80 mm di larghezza. Notare che la selezione inversa non è consentita; per questo motivo si raccomanda di far eseguire la modifica al supporto tecnico:
+- rimuovere la guida di sicurezza in plastica PLM-0377 e inserire un rotolo da 80 mm (vedere anche l'allegato A di questo manuale);
+- eseguire la programmazione del parametro CP48, in seguito alla quale il misuratore fiscale potrà usare esclusivamente rotoli da 80 mm.
+
+Qualora il misuratore fiscale sia già stato attivato per funzionare con carta di larghezza 80 mm, la conversione alla stampa su carta di larghezza 57,5 mm non è più consentita.
+
+### DISPLAY
+L'apparecchio è dotato di due visori (display): un visore è rivolto verso l'operatore e il secondo visore è rivolto verso il cliente; quest'ultimo può eventualmente essere installato su un apposito piedistallo o su un simile supporto. Il misuratore fiscale prevede un sensore di controllo per impedire il funzionamento dell'apparecchio quando i visori non sono connessi al misuratore fiscale. In tal caso il messaggio "*** RICOLLEGARE IL DISPLAY LCD ***" stampato sulla carta notifica la condizione all'operatore.
+
+### FUNZIONI PRINCIPALI
+I registratori di cassa della serie SF20 sono stati progettati per facilitare l'auto apprendimento delle funzioni operative e per favorire il miglior utilizzo del prodotto. Sui display vengono visualizzati opportuni messaggi e descrizioni, la definizione dei modi operativi con i relativi sottoinsiemi di funzioni. I menu sono organizzati al fine di ridurre la necessità di ricorrere al manuale di istruzioni.
+
+Caratteristiche principali:
+- collegabile a sistemi gestionali tramite protocollo di comunicazione proprietario o standard;
+- memoria per articoli (PLU) con 20 o 30 caratteri di descrizione e diverse selezioni funzionali disponibili per ogni articolo:
+  - numero progressivo statico per garantire la massima velocità in programmazione;
+  - codice alfanumerico da 15 caratteri;
+  - possibilità di stampa del numero di codice a barre;
+  - riconoscimento dei bar code standard generati da strumenti di pesatura;
+  - collegamento a un reparto merceologico;
+  - possibilità di stampare la descrizione del reparto merceologico a cui è stato collegato l'articolo;
+  - possibilità di evidenziare l'articolo per mezzo del font di stampa (stampa dei caratteri a doppia altezza);
+  - possibilità di impostazione libera del prezzo;
+  - definizione del valore massimo di vendita;
+  - possibilità di conclusione automatica della singola vendita con contanti;
+  - gestione della quantità di magazzino;
+  - gestione promozioni, sconto per quantità;
+- stampante grafica ad alta definizione, dotata del sistema veloce di cambio rotolo "super easy load";
+- usa carta termica di tipo omologato per misuratori fiscali, 57,5 o 80 mm di larghezza per 80 mm di diametro;
+- memoria del giornale su supporto elettronico (Dispositivo Giornale Fiscale Elettronico) di tipo SD flash per misuratori fiscali della serie SF20;
+- tastiera integrata programmabile tipo standard per registratore di cassa;
+- 60 reparti, programmabili con 20 caratteri di descrizione e diverse funzioni sono disponibili per i reparti:
+  - numero del reparto;
+  - descrizione del reparto;
+  - possibilità di impostazione libera o prefissata del prezzo;
+  - definizione del valore massimo di vendita;
+  - possibilità di conclusione automatica sul totale contanti;
+  - stampa evidenziata per mezzo del font di stampa (stampa dei caratteri a doppia altezza);
+  - codice di collegamento all'aliquota IVA A,B,C,D oppure E;
+  - collegamento ad una categoria merceologica;
+- memoria per operatori programmabili;
+- 10 tasti di pagamento programmabili;
+- 10 tasti di sconto/maggiorazione programmabili;
+- 5 aliquote IVA programmabili;
+- stampa statistica quantità articoli;
+- statistiche per articolo/reparto;
+- statistica per vendite su base oraria, giornaliera, settimanale e mensile;
+- stampa del logo grafico, programmabile;
+- display operatore e cliente 32 caratteri alfanumerici con possibilità di visualizzazione temporizzata di un eventuale messaggio pubblicitario o dell'informazione "DATA/ORA";
+- interfacce di tipo RS232, USB ed ETHERNET, per il collegamento con sistemi gestionali;
+- una porta dedicata per il collegamento di un cassetto;
+- funzione CF per l'inserimento del CODICE FISCALE del cliente (scontrino parlante);
+- funzione di stampa Fattura;
+- funzione di stampa scontrino, per pratica di reso;
+- programma integrato per la gestione del passaggio dall'ora legale all'ora solare e viceversa;
+- alimentazione: vedere la targhetta sulla macchina, l'apparecchio utilizza un alimentatore esterno fornito in dotazione.
+
+---
+
+## Pag. 7-8 - Modalità Operative / Vendite
+
+Il registratore di cassa SF20 prevede diverse modalità operative: VENDITE, EMISSIONE RICEVUTA, STATISTICHE, PROGRAMMAZIONE, AZZERAMENTO-Z1, AZZ.STATISTICHE, STAT.GIORN.EL. e CASSA CHIUSA.
+
+Per selezionare una qualsiasi modalità operativa premere in sequenza sul tasto "CHIAVE" e confermare con il tasto "CONTANTI" quando sul display l'indicatore ">" indica la modalità operativa desiderata.
+
+Le modalità operative disponibili sono le seguenti:
+- VENDITE
+- EMISSIONE RICEVUTA (la tastiera è protetta, accetta comandi di vendita solo via PC)
+- STATISTICHE
+- PROGRAMMAZIONE
+- AZZERAMENTO-Z1
+- AZZ.STATISTICHE
+- STAT.GIORN.EL
+- CASSA CHIUSA (la cassa è protetta per mezzo di password/operatori)
+
+Usare i tasti "FRECCIA" per visualizzare le funzioni disponibili; per selezionare la funzione desiderata premere il tasto "CONTANTI". Per ritornare al menu principale premere il tasto "CL".
+
+### VENDITE
+Vendite è la modalità operativa per l'emissione di scontrini fiscali, fatture e "note di credito per pratica di reso".
+
+Al fine di selezionare la modalità VENDITE eseguire una delle seguenti operazioni:
+- dal menu principale premere il tasto "CHIAVE" finché sul display apparirà la definizione [>VENDITE], quindi confermare con il tasto "CONTANTI";
+- con il messaggio [EMISSIONE RICEVUTA] sul display confermare con il tasto "CONTANTI".
+
+Sul display appare [0.00]; a questo punto l'apparecchio è pronto per operare in modalità VENDITE.
+
+Avviso: se la gestione "OPERATORI" risulta attiva, si dovrà inserire un codice operatore valido per poter accedere alle funzioni dell'apparecchio; in caso di messaggio CASSA CHIUSA sul display, premere in sequenza i tasti "SHIFT" e "OPERATORE" (1), sul display appare [COD.OPER.: *], digitare sulla tastiera un codice operatore valido "[1]" (2) e confermare con "CONTANTI".
+
+Esempio di sequenza di accesso: [SHIFT][OPERATORE][1][CONTANTI] — la selezione dell'operatore è confermata con il messaggio di "INIZIO OPERATORE – DATA e ORA".
+
+(1) Nota: in caso di tastiera PS2 "non è necessario premere sul tasto SHIFT" per inserire il codice operatore.
+(2) Nota: i codici operatori sono prefissati dal n.1 al n.10, ma sono anche programmabili con password di accesso personali.
+
+Quando l'apparecchio è nella modalità VENDITE il display visualizza sulla destra l'importo corrispondente al valore di vendita e sulla sinistra la descrizione del prodotto venduto.
+
+La chiusura di una transazione con l'emissione (stampa) di uno scontrino fiscale avviene con il comando corrispondente alla pressione di uno dei tasti di pagamento: premere sul tasto "CONTANTI" oppure sul tasto "CREDITI" in caso di corrispettivo non riscosso. È comunque possibile usare altri tasti di chiusura in base a specifiche esigenze (es. i tasti "TOT-4" e "TOT-5") previa programmazione del nome per pagamenti con carta di credito, bancomat, assegni o altri ancora. In tutto i tasti con funzione di pagamento sono dieci.
+
+### Tabella #1 – Elenco delle funzioni di pagamento
+
+| N. | Descrizione | Resto | Tipo di pagamento |
+|---|---|---|---|
+| 1 | Contante – programmabile | – | Corrispettivo Riscosso |
+| 2 | Crediti (corrispettivo non riscosso) | non consentito | Corrispettivo Non Riscosso |
+| 3 | Ticket (corrispettivo non riscosso) | non consentito | Corrispettivo Non Riscosso |
+| 4 | Bancomat – programmabile | – | Corrispettivo Riscosso |
+| 5 | Carta di credito – programmabile | – | Corrispettivo Riscosso |
+| 6 | Corrisp.pagato – programmabile | – | Corrispettivo Riscosso |
+| 7 | Corrisp.pagato – programmabile | – | Corrispettivo Riscosso |
+| 8 | Corrisp.pagato – programmabile | – | Corrispettivo Riscosso |
+| 9 | Corrisp.pagato – programmabile | – | Corrispettivo Riscosso |
+| 10 | Corrisp.pagato – programmabile | – | Corrispettivo Riscosso |
+
+È possibile uscire dal modo operativo VENDITE premendo sul tasto "CHIAVE".
+
+Nota: non è possibile uscire dal modo operativo VENDITE durante l'emissione di scontrini fiscali o fatture: in caso di errore -11 "scontrino aperto", concludere o annullare l'operazione in corso prima di cambiare modo operativo.
+
+---
+
+## Pag. 9 - Operazioni di Registrazione
+
+### REGISTRAZIONE VENDITE
+(SE RICHIESTO INSERIRE IL CODICE FISCALE DEL CLIENTE, CON IL TASTO "CF 11" O "CF 16")
+Nota: il programma accetta solo codici validi, verificandone il codice di controllo.
+DIGITARE L'IMPORTO, "REPARTO 1"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA, es.: "CONTANTI"
+
+### REGISTRAZIONE DI ENTRATE DI CASSA "ENTRATE"
+PREMERE IL TASTO "ENTRATE"
+DIGITARE L'IMPORTO E "CONTANTI"
+CONCLUDERE L'OPERAZIONE CON "CONTANTI"
+
+---
+
+## Pag. 10 - Deduzioni e Maggiorazioni
+
+### DEDUZIONI
+DIGITARE L'IMPORTO
+PREMERE IL REPARTO INTERESSATO ES. "REPARTO 2"
+DIGITARE L'IMPORTO DELLA DEDUZIONE
+PREMERE IL TASTO DEDUZIONE, "DEDUZIONE"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA "CONTANTI"
+
+### MAGGIORAZIONI
+DIGITARE L'IMPORTO E IL REPARTO
+DIGITARE L'IMPORTO DELLA MAGGIORAZIONE
+PREMERE IL TASTO MAGGIORAZIONI, "MAGGIORAZIONE"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA "CONTANTI"
+
+---
+
+## Pag. 11 - Moltiplicazione e Ripetizione Vendite
+
+### MOLTIPLICAZIONE
+DIGITARE LA QUANTITÀ COMPRESI I DECIMALI
+PREMERE IL TASTO [X] (MOLTIPLICAZIONE)
+DIGITARE L'IMPORTO
+PREMERE IL REPARTO INTERESSATO, "REPARTO 1"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA, ES.: "CONTANTI"
+
+### RIPETIZIONE VENDITE
+DIGITARE L'IMPORTO E UN "REPARTO"
+PREMERE PIÙ VOLTE IL REPARTO PER RIPETERE LA VENDITA
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA ES.: "CONTANTI"
+
+---
+
+## Pag. 12 - Storno e Annullo Ultima Operazione
+
+### STORNO
+DIGITARE IL PRIMO IMPORTO E "REPARTO 3"
+DIGITARE IL SECONDO IMPORTO E "REPARTO 2"
+PREMERE IL TASTO "STORNO"
+DIGITARE L'IMPORTO E PREMERE IL "REPARTO 3"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA, "CONTANTI"
+
+### ANNULLO ULTIMA OPERAZIONE
+DIGITARE IL PRIMO IMPORTO E UN "REPARTO"
+DIGITARE UN ALTRO IMPORTO E UN "REPARTO"
+DIGITARE IL TASTO "ANNULLO"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA, ES: "CONTANTI"
+
+---
+
+## Pag. 13 - Annullo Scontrino e Sconto Percentuale
+
+### ANNULLO SCONTRINO
+ESEGUIRE QUALSIASI REGISTRAZIONE PREVISTA DAL REGISTRATORE DI CASSA
+PREMERE IL TASTO "ANNULLO-SCONTRINO"
+
+### REGISTRAZIONI CON SCONTO PERCENTUALE
+DIGITARE L'IMPORTO, UN "REPARTO"
+DIGITARE L'IMPORTO DELLO SCONTO, COMPRESI I DECIMALI E IL TASTO "DEDUZIONE %"
+CHIUDERE CON UNO DEI TOTALI DI CHIUSURA, ES.: "CONTANTI"
+
+---
+
+## Pag. 14 - Reso Merce
+
+DIGITARE IL PRIMO IMPORTO E UN "REPARTO"
+PREMERE IL TASTO "RESO-MERCE"
+DIGITARE L'IMPORTO E UN "REPARTO"
+CHIUDERE L'OPERAZIONE CON UNO DEI TOTALI DI CHIUSURA, ES.: "CONTANTI"
+
+---
+
+## Pag. 15 - Registrazione Vendite con Documento Fattura
+
+- premere il tasto FATTURA, eseguire le operazioni di vendita e chiudere con un tasto di pagamento;
+- il messaggio "CODICE CLIENT:" sul display invita ad inserire il codice cliente Partita IVA del destinatario della fattura;
+- digitare il codice P.I. e confermare con il tasto "CONTANTI";
+- procedere alla compilazione dei dati del cliente: al messaggio "C.F.-11" digitare la P.IVA e confermare con "CONTANTI" e scrivere i dati del cliente nelle 9 righe disponibili (da ANNOTAZ-0 fino ad ANNOTAZ-8), quindi confermare con "CONTANTI" o CL, per concludere e stampare la fattura. Prima della stampa è possibile scorrere ed eventualmente programmare le righe già programmate con la sequenza di tasti SHIFT-X.
+
+Avviso: quando previsto dalla normativa cogente, provvedere alla programmazione del numero iniziale dei documenti fattura (vedere il capitolo PARAMETRI DI VENDITA).
+
+Avviso: la carta termica deve essere opportunamente conservata, secondo le specifiche della normativa cogente. A tal riguardo leggere le avvertenze di questo libretto di istruzioni.
+
+---
+
+## Pag. 16 - Registrazione Nota di Credito
+
+- premere il tasto "NOTA DI CREDITO", eseguire le operazioni di RESO, digitare i riferimenti della "pratica di reso" e concludere con il tasto "CONTANTI".
+
+---
+
+## Pag. 17-19 - Statistiche
+
+In modalità "STATISTICHE" è possibile selezionare la stampa dei dati accumulati durante le vendite per periodo orario, giornaliero e mensile. Inoltre sono disponibili gli elenchi delle programmazioni e la stampa dei dati registrati nella memoria fiscale.
+
+Per selezionare il modo operativo "STATISTICHE":
+- da qualsiasi posizione funzionale dell'apparecchio premere il tasto "CHIAVE" finché sul display apparirà la descrizione ">STATISTICHE";
+- confermare la selezione con il tasto "CONTANTI";
+- selezionare la funzione desiderata usando il tasto "freccia destra" o "freccia sinistra" o in alternativa il numero progressivo della funzione e infine confermare con il tasto "CONTANTI".
+
+Qualora fosse necessario interrompere una stampa prima della sua conclusione, premere il tasto CL e seguire le indicazioni visualizzate sul display. Per uscire dal modo operativo "STATISTICHE" premere il tasto "CHIAVE".
+
+### Elenco delle stampe statistiche disponibili
+- 01 >totale giornaliero-x — totali giornalieri e suddivisione IVA
+- 02 >cassa giornaliero — totale giornaliero cassa, pagamenti
+- 03 >vendite articoli — vendite della giornata per articolo (PLU)
+- 04 >vendite reparto giornaliero — totali giornalieri dei reparti
+- 05 >vendite reparto totale — totali periodici dei reparti
+- 06 >operatori — vendite per operatore
+- 07 >Parametri
+  - 01 >lista articoli
+  - 02 >lista reparti
+  - 03 >lista pagamenti
+  - 04 >lista sconti e maggiorazioni
+  - 05 >lista operatori
+  - 06 >lista clienti
+  - 07 >lista bonus
+  - 08 >lista parametri
+- 08 >totali periodo — totali di pagamento per periodo
+- 09 >periodico da z a z (lettura della memoria fiscale) — Lettura della memoria fiscale per numero di azzeramento in dettaglio o abbreviata (somma da .. a..)
+- 10 >periodico da data a data (lettura della memoria fiscale) — Lettura della memoria fiscale per data di azzeramento in dettaglio o abbreviata (somma da ... a ...)
+- 11 >gruppi reparti (categorie) — vendite giornaliere e periodiche per gruppi di reparti
+- 12 >statistiche movimento — Stampa delle statistiche di vendita su base oraria, giornaliera e mensile
+- 13 >sconti/aumenti — Stampa dell'elenco delle funzioni di sconto/maggiorazione
+- 14 >lettura intestazioni — Stampa dell'elenco delle intestazioni programmate
+
+Avviso: per interrompere la stampa di un report, premere in successione il tasto CL per due volte.
+
+---
+
+## Pag. 20-36 - Programmazione
+
+Nella modalità PROGRAMMAZIONE sono disponibili le funzioni di personalizzazione dell'apparecchio.
+
+Nota: per accedere ad alcune operazioni di programmazione è necessario effettuare l'azzeramento fiscale e/o l'azzeramento periodico e accedere con un operatore tipo ADMIN. Si raccomanda di avvalersi del centro di assistenza per eventuali chiarimenti e assistenza.
+
+Per selezionare il modo operativo "PROGRAMMAZIONE":
+- da qualsiasi posizione funzionale dell'apparecchio premere il tasto "CHIAVE", finché sul display appare la descrizione ">PROGRAMMAZIONE";
+- confermare la selezione per mezzo del tasto "CONTANTI";
+- per selezionare una funzione nel sotto-menu utilizzare il tasto "freccia destra" o "freccia sinistra" e confermare con il tasto "CONTANTI".
+
+### Elenco delle funzioni disponibili (nell'ordine del menu)
+1. Articoli
+2. Reparti
+3. Parametri di vendita
+4. Parametri statistiche
+5. Parametri periferica
+6. Parametri gen.
+7. Ethernet
+8. Email configur.
+9. FTP server
+10. Web server
+11. Operatori
+12. Clienti
+13. Cancel. clienti
+14. Bonus
+15. Pagamenti
+16. Sconti/aumenti
+17. Categoria
+18. Intestazione scontrino
+19. Messaggio di cortesia
+20. Aliquota IVA
+21. Ora/data
+22. Icone
+23. Programmazione messaggi
+24. Programmazione tasti
+
+### ARTICOLI
+Parte della memoria è dedicata agli articoli (PLU), che possono essere richiamati con la sequenza [CODICE][TASTO PLU] e "CONTANTI", oppure per mezzo di un lettore di codici a barre. Alcuni PLU possono essere associati ad uno o più tasti della tastiera (PLU diretti).
+
+Funzioni programmabili: codice articoli, descrizione art. (20/30 caratteri), prezzo di vendita (prezzo 1 e prezzo 2), reparto associato, prezzo vendita massimo, stock articolo, prezzo libero, prezzo diretto, attivo/disattivo, vend.peso/pacchi, conclusione automatica scontrino, altezza doppia, stampa reparto, attivo promozione, cancella articolo, conferma modifiche.
+
+### REPARTI
+Selezione reparto (n. 1-60), descrizione reparto (fino a 20/30 caratteri), aliquota IVA (codice 1-5: 1=IVA-A, 2=IVA-B, 3=IVA-C, 4=IVA-D, 5=IVA-E).
+
+Avviso: dopo la fiscalizzazione è attiva la programmazione di fabbrica con IVA A 4%, IVA B 10%, IVA C 22%, IVA D 0%, IVA E 0%; se necessario modificare dal menu PROGRAMMAZIONE e ALIQUOTE IVA.
+
+Altre funzioni: prezzo vendita 1/2, prezzo vendita massimo, prezzo libero, prezzo diretto, attivo/disattivo, vend.peso/pacchi, fine scontrino, altezza doppia, categoria (associazione a una delle 20 categorie disponibili).
+
+### PARAMETRI DI VENDITA
+Valore vendita massimo, quantità vendita massimo, valore ricevuta massimo, controllo giornaliero vendita massima, stampa articoli venduti, stampa barcode, stampa aliquote, numero cassa, descrizione cassa, controllo saldo, controllo B/C (lettura codici bilancia), analisi IVA ricevuta, operatori attivi (0=singolo operatore, 1=più operatori, 2=più operatori con codice obbligatorio), apertura cassetto, tasto CRED-SEL, tipo stampa pagamento (BOLD o doppia altezza), ricerca articolo, numero fattura (con avviso: non è ammessa la programmazione di un numero precedente durante lo stesso anno solare), prefisso fattura, suffisso fattura, modalità LCD vendite, programmazione promozioni (fino a 10 tipologie, es. "3x2"), check ricevuta totale, CMD VOID MODE (storno su articoli o su subtotale).
+
+### PARAMETRI STATISTICHE
+Reparto in X, azzeramento articoli Z, vendite dopo azzeramento, reparti in Z, IVA in Z, controllo cassa in Z, sconti/aumenti in Z, allarme orario (messaggio di avviso per la chiusura giornaliera).
+
+### PARAMETRI PERIFERICA (riservato al tecnico installatore)
+Set serial port (porta USB V.COM, driver CP210, baud rate 2400-230400, default 115200 CMD PROTOCOL); porta seriale COM1 (default 9600, BARCODE); tastiera esterna (30 o 98 tasti); display esterno (MAT o ESC.POS).
+
+### PARAMETRI GEN. (riservato al tecnico installatore)
+Contrasto stampa (1-10, default 3); unità vendita (virgola automatica o manuale); parametri iniziali (ripristino di fabbrica, riservato al tecnico); attivazione memoria fiscale (riservato al tecnico); linee stampa protocollo (1-80, raccomandato 30); training mode (modalità autoapprendimento per prove tecniche); verifica scadenza (data di scadenza verificazione periodica, preavviso 30 giorni); Xon Xoff protocollo; spazio interlinea (4-10, default 6); printer CLP (cambio irreversibile larghezza carta, CP32=57,5mm / CP48=80mm, riservato al tecnico).
+
+### ETHERNET (riservato al tecnico installatore)
+DHCP, protocollo di rete (UDP/TCP, default UDP), indirizzo IP, IP remoto, porta di comunicazione (default 9101), gateway, DNS primario/secondario, subnet mask, timeout inattività, timeout fine ricevuta, timeout errore TCP, stampa impostazioni.
+
+### EMAIL CONFIGUR. (riservato al tecnico installatore)
+Server posta SMTP, porta, nome utente, indirizzi destinatari (fino a 2), autenticazione (password), orario invio giornaliero report, selezione report da inviare.
+
+### FTP SERVER (riservato al tecnico installatore)
+Attivazione FTP, nome utente, password, timeout disconnessione.
+
+### WEB SERVER (riservato al tecnico installatore)
+Attivazione web server, nome utente, password, IP remoto (default 0.0.0.0), porta websocket (default 9102).
+
+### OPERATORI
+Password di fabbrica operatori: 1-10 (tipo op.1 = ADMIN, op.2-10 = USER). Programmazione nome operatore, codice di accesso (password), tipo operatore (USER, SUPER USER o ADMIN), autorizzazioni programmazione (articoli, reparti, aliquote IVA, intestazione, sconti/maggiorazioni, pagamenti), autorizzazione Z, autorizzazione X, autorizzazione correzioni, autorizzazione reso merce, autorizzazione note di credito, autorizzazione sconto/maggiorazione, autorizzazione entrate/prelievi, accesso a tutte le funzioni, accesso menu programmazione/statistiche/vendite.
+
+### GESTIONE CLIENTI (anagrafica fattura e opzione fidelity)
+Codice cliente, nome cliente (C.F./P.IVA o ragione sociale), black list, credito (fidelity con pagamento non riscosso), sconti/maggiorazioni su PLU, link a bonus, limite massimo saldo/credito, saldo Euro, saldo punti, commenti (6 righe), verifica stato cliente, salva cliente, cancella cliente.
+
+Nota: alcune funzioni cliente sono disponibili solo con applicazioni software opzionali a pagamento.
+
+### CANCELLAZIONE CLIENTI
+Codice di accesso, cancellazione totale, cancellazione per singolo cliente, controllo status cliente label-BC.
+
+### BONUS (funzione utilizzabile solo con applicazione software specifica)
+Numero bonus (1-20), sconto status (percentuale condizionato dal subtotale), sconto periodo, bonus status (punti per euro speso), bonus periodo, attiva bonus, verifica programmazione bonus, salva bonus, cancella bonus.
+
+### PAGAMENTI
+Codice pagamento (fino a 10 tipi), descrizione pagamento (15 caratteri), abbreviazione, pagamento attivo, commenti (20 caratteri), autorizzazione resto, totale parziale (stampa automatica), obbligo calcolo resto, sconto/aumento automatico collegato al pagamento, selezione pagamento nel menu (tasto "CREDITI"), tipo credito (corrispettivo non riscosso), fidelity (opzione).
+
+### SCONTI/AUMENTI
+Codice sconto/maggiorazione (fino a 10), descrizione, tipo (sconto o maggiorazione), calcolo (importo o percentuale), applicazione (su totale parziale o su articolo), attivo/disattivo, valore automatico, importo massimo, percentuale massima.
+
+### CATEGORIA
+Utilizzata per raggruppare le vendite eseguite sui reparti. Codice categoria (fino a 20), descrizione categoria.
+
+### INTESTAZIONE SCONTRINO
+Eseguire la chiusura giornaliera per modificare l'intestazione scontrino (avviso: max 100 cambiamenti disponibili). Linee attive (fino a 8), programmazione di ogni riga (max 32/48 caratteri, o 16/24 se font allargato), tipo font (1=normale, 2=doppia altezza, 3=allargato, 4=allargato e doppia altezza, 5=grassetto), allineamento (centro, sinistra, destra), controllo firma (stampa di prova), memorizzazione firma in memoria fiscale.
+
+### MESSAGGIO DI CORTESIA
+Linee attive (fino a 6), programmazione riga (max 32/48 caratteri), tipo font, allineamento, controllo sottotitoli (stampa di prova).
+
+### ALIQUOTA IVA
+Avviso: verificare ed eventualmente modificare le aliquote IVA dopo la fiscalizzazione, sono ammessi fino a 50 cambiamenti.
+Programmazione fino a 5 aliquote (IVA A-E); di fabbrica dopo la fiscalizzazione: IVA A 4%, IVA B 10%, IVA C 22%, IVA D 0%, IVA E 0%. Memorizzazione IVA.
+
+### ORA/DATA
+Programmazione ora (solo dopo chiusura giornaliera); il passaggio ora legale/ora solare avviene automaticamente con stampa di notifica all'accensione. Programmazione data (si raccomanda il centro assistenza). Modalità data: "GG/MM/AA" (numerica) o "ANALISI" (stile dettagliato con giorno della settimana e mese in lettere).
+
+### ICONE (rivolgersi al centro di assistenza)
+Fino a 9 icone; selezione icona (1 o 2), doppia altezza (scala 1:1 o 2:1), attivo/disattivo, posizione di stampa (in testa o in fondo allo scontrino). Prova icona: stampa di controllo.
+
+### PROGRAMMAZIONE MESSAGGI
+Messaggio pubblicitario sul display (max 70 caratteri, a scorrimento, oppure visualizzazione data/ora). Programmazione annotazioni (fino a 9 righe da 48 caratteri, con 5 tipi di font), da stampare in fondo allo scontrino.
+
+### PROGRAMMAZIONE TASTI
+Consente di modificare la configurazione di fabbrica della tastiera, sostituendo una o più funzioni con altre. Selezione tipo tastiera (Serial o P/S2) e livello (1 = diretto, 2 = previa pressione SHIFT). Selezione del tasto destinatario e nuovo codice funzione (vedere tabella codici funzione).
+
+#### Tabella Codici Funzione Tasti (estratto)
+| Tasto | Cod. Funzione |
+|---|---|
+| CL (non programmabile) | 15 |
+| Shift (non programmabile) | 32 |
+| Chiave (non programmabile) | 11 |
+| Zero | 1 |
+| Uno | 2 |
+| Due | 3 |
+| Tre | 4 |
+| Quattro | 5 |
+| Cinque | 6 |
+| Sei | 7 |
+| Sette | 8 |
+| Otto | 9 |
+| Nove | 10 |
+| Doppio zero | 31 |
+| Virgola | 40 |
+| Moltiplicazione | 29 |
+| Avanzamento carta | 12 |
+| Visualizza data e ora | 13 |
+| Apre il cassetto | 14 |
+| Apre nuovo documento tipo fattura | 47 |
+| Apre nuovo scontrino nota di credito (reso) | 45 |
+| Annullo ultima vendita | 16 |
+| Storno vendita precedente | 17 |
+| Reso merce | 18 |
+| Annullo scontrino | 19 |
+| Entrate | 20 |
+| Prelievi | 21 |
+| Sub totale stampato | 22 |
+| Sub totale visualizzato | 54 |
+| Codice articolo (PLU) | 23 |
+| Codice reparto | 24 |
+| Codice sconto/maggiorazione | 25 |
+| Codice pagamento | 26 |
+| Tasto operatore / cassa chiusa | 27 |
+| Muove a destra | 33 |
+| Muove a sinistra | 34 |
+| Annulla contenuto riga (programmazione) | 36 |
+| Annulla un carattere (programmazione) | 37 |
+| Chiusura giornaliera | 42 |
+| Lettura totali della giornata | 43 |
+| Stampa statistiche di vendita | 44 |
+| Cambio maiuscole/minuscole (programmazione) | 46 |
+| Stampa riga di commento (max 32/48 caratteri) | 52 |
+| Stampa fino a 6 righe di commento | 53 |
+| Lettura giornale elettronico (scontrino giornata) | 55 |
+| Lettura giornale elettronico (ultimi 10 scontrini) | 60 |
+| Ritorna configurazione tasti al default | 61 |
+| Vendita con listino n.2 | 57 |
+| Interrogazione del prezzo | 58 |
+| Rimozione una tantum limite prezzo prefissato | 59 |
+| Inserimento C.F. da 11 cifre | 40 |
+| Inserimento C.F. da 16 caratteri | 39 |
+| Codici di pagamento | 100-109 |
+| Codici di sconto/maggiorazione | 120-129 |
+| Codici dei reparti | 151-210 |
+| Codici dei PLU diretti | 2001-52000 |
+
+### PULSANTI DI SERVIZIO (accessibili sulla stampante)
+- Accensione: premere per un istante e attendere almeno 6 secondi prima di operare.
+- Spegnimento: premere per almeno 3 secondi.
+- Avanzamento carta.
+- CLEAR correttore "CL".
+- Enter (corrisponde al tasto "contanti").
+
+---
+
+## Pag. 37-38 - Azzeramento-Z1
+
+La modalità AZZERAMENTO-Z1 permette di chiudere la giornata azzerando i dati giornalieri: l'operazione di azzeramento Z1 è obbligatoria alla chiusura di ogni singola giornata lavorativa.
+
+Lo scontrino fiscale di chiusura giornaliera deve essere conservato secondo le modalità e per il periodo imposto dalla normativa fiscale vigente.
+
+Procedura:
+- accedere alla modalità ">AZZERAMENTO-Z1";
+- premere il tasto "CONTANTI" per due volte;
+- controllare il documento fiscale di chiusura giornaliera.
+
+Esempio passo per passo: da qualsiasi posizione funzionale premere "CHIAVE" finché sul display appare ">AZZERAMENTO-Z1" e confermare con "CONTANTI"; apparirà la richiesta di ulteriore conferma "AZZERAMENTO?"; premere ancora "CONTANTI" per confermare.
+
+Note:
+- È possibile uscire dal modo operativo "AZZERAMENTO-Z1" premendo il tasto "CL".
+- Non è possibile selezionare il menu "AZZERAMENTO-Z1" quando ci sono documenti in corso (scontrini, fatture, pratiche di reso).
+- Un controllo software avvisa con un messaggio sul display "EMIS.AZZ.A 0?" quando l'operazione di chiusura giornaliera viene richiesta e durante la giornata non sono stati emessi documenti fiscali; è comunque possibile eseguire l'azzeramento premendo sul tasto [CONTANTI].
+
+---
+
+## Pag. 39 - Azz. Statistiche
+
+La modalità "AZZ.STATISTICHE" permette l'azzeramento di resoconti periodici, relativi agli importi e alle quantità memorizzati nella memoria dei contatori gestionali.
+
+Si consiglia di prestare molta attenzione alle indicazioni che appaiono sul display, al fine di evitare erronei ed indesiderati azzeramenti.
+
+- AZZ.TO ARTICOLI — azzeramento gestionale con possibilità di stampa dei movimenti
+- AZZ.TO REPARTI — azzeramento gestionale con possibilità di stampa dei movimenti
+- AZZ.TO PAGAMEN. — azzeramento gestionale con possibilità di stampa dei movimenti
+- AZZ.TO OPERAT. — azzeramento gestionale con possibilità di stampa dei movimenti
+- AZZ.TO STAT.Z2. — azzeramento gestionale con possibilità di stampa dei movimenti
+- ANNULLA TUTTO — annulla tutto senza possibilità di stampa
+
+Nota: è possibile limitare l'accesso al menu AZZ.STATISTICHE tramite la funzione OPERATORI.
+
+## Giornale di Fondo Elettronico (DFGE)
+
+La modalità STAT.GIORN.EL. è dedicata alla consultazione (stampa o trasmissione alla porta seriale RS232) del contenuto del Giornale Elettronico (DGFE). Il supporto utilizzato dal misuratore fiscale SF20 è una memoria di tipo SD flash. L'inserimento della memoria SD flash è necessario anche se la memoria fiscale non è ancora stata attivata.
+
+Struttura del menu "LEGGI G.E.":
+- SCONTRINO GIOR.
+- DA Z A Z
+- DA DATA A DATA
+- FAT. DA Z A Z
+- FAT. DA DATA-DATA
+- NOTA DI CR. Z-Z
+- NOTA DI CR. DATA-DATA
+- CHECK G.E. (funzione riservata al centro di assistenza)
+- INS.VALORI G.E. (funzione riservata al centro di assistenza)
+- RICALC.FIR.G.E. (funzione riservata al centro di assistenza)
+
+### Lettura Giornale di Fondo Elettronico
+- SCONTRINO GIOR.: stampa tutti gli scontrini fiscali con possibilità di limitare la selezione da n. a n. per il giorno corrente.
+- DA Z A Z: stampa tutti gli scontrini fiscali nell'intervallo di azzeramenti definiti.
+- DA DATA A DATA: stampa tutti gli scontrini fiscali nell'intervallo di date definite.
+- FATTURE DA Z A Z: stampa tutte le fatture nell'intervallo di azzeramenti definiti.
+- FATTURE DA A DATA: stampa tutte le fatture nell'intervallo di date definite.
+- NOTE DI CREDITO DA Z A Z: stampa tutte le note di credito emesse nell'intervallo di azzeramenti definiti.
+- NOTE DI CREDITO DA A DATA: stampa tutte le note di credito emesse nell'intervallo di date definite.
+
+### Trasferimento dei dati dal DGFE al computer
+Tramite un programma di comunicazione standard di acquisizione via seriale, collegare la porta seriale definita VC PORT alla porta USB di un PC e avviare l'acquisizione dei dati.
+
+Parametri di impostazione:
+- porta RS232 definita VC PORT
+- velocità di trasferimento: 115200 bps (default)
+- controlli di lunghezza, parità e stop bit: 8, N, 1
+
+Nota: per il collegamento è necessario utilizzare il cavo USB fornito di serie con il misuratore fiscale SF20.
+
+Istruzioni per l'acquisizione tramite hyperterminal o equivalente:
+- connettere il cavo ad una porta USB standard del PC e confermare l'installazione del driver CP210 per l'interfaccia VC PORT;
+- aprire il programma hyperterminal o equivalente;
+- selezionare la porta com in uso del PC;
+- impostare hyperterminal con parametri bps 115200, parità NO, stop bit 1, controllo di flusso NESSUNO;
+- aprire "trasferimento" per la "cattura di testo" e impostare il nome del file, esempio "ge_dwnl.txt";
+- avviare;
+- sul misuratore fiscale, selezionare la lettura dal giornale elettronico del periodo desiderato e confermare selezionando "invia al PC" invece di "invia alla stampante";
+- attendere il termine della trasmissione;
+- chiudere il file "ge_dwnl.txt", dal menu "cattura testo" selezionare "termina".
+
+### Sostituzione del Giornale di Fondo Elettronico (DFGE)
+Questa funzione permette di formattare (identificare, numerare progressivamente e rendere operativa) una nuova SD flash (giornale elettronico) sul misuratore fiscale. Non è necessario esaurire la precedente SD flash.
+
+Attenzione: è necessario effettuare la chiusura giornaliera (AZZERAMENTO Z-1) per attivare una nuova memoria SD flash.
+
+Inserire una nuova memoria SD di ricambio e confermare il messaggio "INIT.NUOVO GE?" per mezzo del tasto "CONTANTI"; l'apparecchio conferma la registrazione del nuovo GE stampando un messaggio di conferma che riporta la data, l'ora e il numero progressivo del nuovo GE.
+
+Avviso: conservare il supporto "giornale elettronico" (memoria SD flash) in luoghi idonei e per il periodo stabilito dalla normativa vigente. Si raccomanda di identificare il supporto compilando l'apposita targhetta identificativa. Non tentare di aprire la memoria SD flash o alterare in alcun modo i dati in essa memorizzati; utilizzare la memoria SD flash esclusivamente con il misuratore fiscale modello SF20 (Hydra) di Micrelec Italia srl. Eventuali giornali elettronici che siano stati scritti su carta da 80 mm non possono essere stampati tramite altri misuratori fiscali modello SF20 programmati per la stampa su carta da 57,5 mm.
+
+### Check Giornale di Fondo Elettronico
+Questa funzione permette di controllare lo stato di utilizzo del giornale elettronico (Memoria SD); viene stampato un report che riporta il numero progressivo del giornale elettronico e la matricola del misuratore fiscale, e la capacità ancora disponibile nel DGFE.
+
+### Ins.Valori G.E.
+Funzione di controllo riservata al tecnico.
+
+### Ricalcolo Firma Elettronica
+Funzione di controllo per la verifica della firma elettronica (sigillo fiscale) di uno specifico azzeramento. Il ricalcolo permette di verificare il buon funzionamento del dispositivo DGFE consentendo il controllo incrociato del contenuto del DGFE con l'azzeramento già emesso.
+
+---
+
+## Pag. 42-43 - Messaggi di Errore
+
+| Codice | Definizione |
+|---|---|
+| ERR-0 | LA QUANTITÀ È MAGGIORE DI QUELLA CONSENTITA |
+| ERR-1 | IL PREZZO È MAGGIORE DI QUELLO CONSENTITO |
+| ERR-2 | IL TOTALE DELLO SCONTRINO È MAGGIORE DI QUELLO CONSENTITO |
+| ERR-3 | OPERAZIONE CONSENTITA SOLO DOPO LA CHIUSURA GIORNALIERA |
+| ERR-4 | CODICE PAGAMENTO NON CONSENTITO |
+| ERR-5 | CODICE REPARTO NON CONSENTITO |
+| ERR-6 | CODICE ARTICOLO NON CONSENTITO |
+| ERR-7 | IL CODICE REPARTO NON ESISTE |
+| ERR-8 | INSERIRE LA QUANTITÀ |
+| ERR-9 | VALORE OLTRE IL LIMITE CONSENTITO |
+| ERR-10 | NON CI SONO REGISTRAZIONI |
+| ERR-11 | C'È UNO SCONTRINO APERTO |
+| ERR-12 | CHIUSURA SCONTRINO CON TOTALE IN NEGATIVO NON CONSENTITA |
+| ERR-13 | SCONTRINO APERTO IN FASE DI PAGAMENTO |
+| ERR-14 | MAGGIORAZIONE NON CONSENTITA |
+| ERR-15 | SCONTO NON CONSENTITO |
+| ERR-16 | IL VALORE DELLO STORNO NON CORRISPONDE AL VALORE DELLA VENDITA DA STORNARE |
+| ERR-17 | RESO MERCE NON CONSENTITO |
+| ERR-18 | OPERAZIONE NON AMMESSA CON DOCUMENTO APERTO |
+| ERR-19 | PAGAMENTO NON ATTIVO |
+| ERR-20 | REPARTO NON ATTIVO |
+| ERR-21 | SCONTO NON AMMESSO, ECCEDE IL LIMITE PREFISSATO |
+| ERR-22 | MAGGIORAZIONE NON AMMESSA, ECCEDE IL LIMITE PREFISSATO |
+| ERR-23 | MAGGIORAZIONE CON VALORE ZERO NON CONSENTITA |
+| ERR-24 | SCONTO CON VALORE ZERO NON CONSENTITA |
+| ERR-25 | L'OPERATORE NON HA I DIRITTI DI ACCESSO A QUESTO MENU O OPERAZIONE |
+| ERR-26 | ARTICOLO NON ATTIVO |
+| ERR-27 | L'ARTICOLO HA RAGGIUNTO IL LIMITE DI STOCK |
+| ERR-28 | IL PREZZO ECCEDE IL LIMITE PREFISSATO |
+| ERR-29 | CODICE DI SCONTO/MAGGIORAZIONE NON ATTIVO |
+| ERR-30 | È STATO RAGGIUNTO IL MASSIMO NUMERO DI RIGHE CONSENTITO PER UN SOLO SCONTRINO |
+| ERR-31 | NON SONO CONSENTITE ULTERIORI MODIFICHE ALLA TABELLA IVA |
+| ERR-32 | CAMBIO NON CONSENTITO, LA PROGRAMMAZIONE UGUALE A QUELLA CORRENTE |
+| ERR-33 | NON SONO CONSENTITE ULTERIORI MODIFICHE ALL'INTESTAZIONE |
+| ERR-34 | LA MEMORIA FISCALE È STATA RIEMPITA FINO AL LIMITE |
+| ERR-35 | LA MEMORIA FISCALE NON È COLLEGATA |
+| ERR-36 | CARTA ESAURITA |
+| ERR-37 | STAMPANTE NON COLLEGATA |
+| ERR-38 | LO SPORTELLO È APERTO |
+| ERR-39 | DATA NON CONSENTITA |
+| ERR-40 | ORA NON CONSENTITA |
+| ERR-41 | CODICE CLIENTE INESISTENTE |
+| ERR-42 | ACCESSO RISERVATO PER LE ATTIVITÀ DI ASSISTENZA |
+| ERR-43 | ERRORE DI SCRITTURA IN MEMORIA FISCALE |
+| ERR-44 | NON CI SONO REGISTRAZIONI NELLA MEMORIA FLASH |
+| ERR-45 | GIORNALE ELETTRONICO COMPLETATO |
+| ERR-46 | GIORNALE ELETTRONICO NON CONNESSO |
+| ERR-47 | GIORNALE ELETTRONICO PRECEDENTE A QUELLO CORRENTE |
+| ERR-48 | DATA E ORA ERRATE, AVVISARE IL SERVIZIO DI ASSISTENZA TECNICA |
+| ERR-49 | DESCRIZIONE MANCANTE |
+| ERR-50 | RAGGIUNTO IL LIMITE MASSIMO DI ARTICOLI PROGRAMMABILI IN MEMORIA |
+| ERR-51 | CODICE A BARRE NON CORRETTO |
+| ERR-52 | LA PROGRAMMAZIONE DELLA PRIMA RIGA DI INTESTAZIONE È OBBLIGATORIA |
+| ERR-53 | CODICE SCONTO/MAGGIORAZIONE NON ATTIVO |
+| ERR-54 | OPERATORE NON ATTIVATO |
+| ERR-55 | CODICE CLIENTE NON ESISTE |
+| ERR-56 | LA SEQUENZA TOTALE NON È AMMESSA IN FASE DI PROGRAMMAZIONE |
+| ERR-57 | LA MEMORIA SD INSERITA NON È VALIDA |
+| ERR-58 | IL CONTROLLO ENABLE/DISABLE DELLO SCANNER È ATTIVATO |
+| ERR-59 | RESTO NON PERMESSO PER IL PAGAMENTO SELEZIONATO |
+| ERR-60 | OBBLIGATORIO CALCOLARE IL RESTO, INSERIRE IL VALORE DEL PAGAMENTO IN CORSO |
+| ERR-61 | L'INTESTAZIONE SCONTRINO È UGUALE A QUELLA GIÀ PROGRAMMATA |
+| RICOLLEGARE IL DISPLAY LCD | MESSAGGIO STAMPATO, CONTROLLARE LA CONNESSIONE DEL DISPLAY ESTERNO AL DISPOSITIVO ADATTATORE E/O AL DISPOSITIVO DI ALIMENTAZIONE |
+
+---
+
+## Pag. 45-46 - Colophon
+
+Con riserva di modifica senza preavviso.
+MANUALE DI ISTRUZIONI HYDRA MODELLO SF20 ED GENNAIO 2015
+
+MICRELEC ITALIA S.R.L.
+Sede Centrale Logistica ed Amministrazione
+Via P.S. Mattarella, 32 - 30037 - Gardigiano di Scorzè (VE) ITALY
