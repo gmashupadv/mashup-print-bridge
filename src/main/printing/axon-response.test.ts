@@ -1,11 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  parseAxonResponse,
-  firstTag,
-  describeFailure,
-  PAPER_OUT_REPLIES,
-  getTag,
-} from './axon-response'
+import { parseAxonResponse, firstTag, describeFailure } from './axon-response'
 
 const OK_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <RESPONSE>
@@ -106,12 +100,6 @@ describe('describeFailure', () => {
   })
 })
 
-describe('classificazione delle condizioni fisiche', () => {
-  it('riconosce il reply code di carta finita', () => {
-    expect(PAPER_OUT_REPLIES.has('44')).toBe(true)
-  })
-})
-
 describe('TAG nidificati (nested groups)', () => {
   const NESTED_XML = `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <RESPONSE>
@@ -133,8 +121,8 @@ describe('TAG nidificati (nested groups)', () => {
   it('preserva i valori nidificati sotto un TAG CMD_', () => {
     const res = parseAxonResponse(NESTED_XML)
     // I valori nidificati devono essere accessibili con dot notation
-    expect(getTag(res, 'CMD_0_IVA_GIORNO.IVA_1')).toBe('10.00')
-    expect(getTag(res, 'CMD_0_IVA_GIORNO.IVA_2')).toBe('20.00')
+    expect(firstTag(res, 'CMD_0_IVA_GIORNO.IVA_1')).toBe('10.00')
+    expect(firstTag(res, 'CMD_0_IVA_GIORNO.IVA_2')).toBe('20.00')
   })
 
   it('mantiene immutati i TAG ripetuti flat', () => {
@@ -146,7 +134,7 @@ describe('TAG nidificati (nested groups)', () => {
   it('raccoglie il TAG padre CMD_ ai dati flat', () => {
     const res = parseAxonResponse(NESTED_XML)
     // Anche il tag flat deve essere presente
-    expect(getTag(res, 'CMD_0_TOTALE_IVA_GIORNO')).toBe('30.00')
+    expect(firstTag(res, 'CMD_0_TOTALE_IVA_GIORNO')).toBe('30.00')
   })
 })
 

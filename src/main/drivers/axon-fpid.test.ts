@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtemp, mkdir, rm, readdir, readFile, writeFile, unlink } from 'node:fs/promises'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mkdtemp, mkdir, rm, readdir, readFile, writeFile, unlink, chmod } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import * as path from 'node:path'
 import { AxonFpidDriver } from './axon-fpid'
+
+// chmod 000 non impedisce la lettura al processo root: i test che simulano un
+// file "non ancora leggibile" (EACCES/EBUSY) non sono significativi in quel
+// caso e vanno saltati, non falliti.
+const isRoot = typeof process.getuid === 'function' && process.getuid() === 0
 
 let root = ''
 let spoolDir = ''
@@ -210,6 +215,110 @@ describe('trasporto su cartella di ascolto', () => {
     await served
     expect(res.ok).toBe(true)
   })
+
+  it.skipIf(isRoot)(
+    'attende se la Response esiste ma non è ancora leggibile (EACCES/EBUSY), poi la restituisce (finding 1)',
+    async () => {
+      const driver = await connect()
+      let responsePath = ''
+      const served = (async () => {
+        for (let i = 0; i < 200; i++) {
+          const entries = await readdir(spoolDir)
+          const job = entries.find((e) => e.endsWith('.txt'))
+          if (job) {
+            const jobPath = path.join(spoolDir, job)
+            await unlink(jobPath)
+            const base = job.replace(/\.txt$/, '')
+            responsePath = path.join(logDir, `Response_${base}.xml`)
+            await writeFile(responsePath, OK_RESPONSE, 'latin1')
+            // Simula axonFPiD che tiene il file aperto in scrittura su Windows:
+            // qui, permessi che rendono il file temporaneamente illeggibile.
+            // Senza il fix, readFile qui dentro rigetterebbe con un errno
+            // grezzo (EACCES) che risalirebbe fino a driver.submit(), invece
+            // di essere trattato come "non ancora pronto".
+            await chmod(responsePath, 0o000)
+            await new Promise((r) => setTimeout(r, 300))
+            await chmod(responsePath, 0o644)
+            return
+          }
+          await new Promise((r) => setTimeout(r, 10))
+        }
+        throw new Error('nessun file comparso nello spool')
+      })()
+      const res = await driver.submit(['v/'])
+      await served
+      expect(res.ok).toBe(true)
+      expect(res.reply).toBe('00')
+    }
+  )
+
+  it('una Response_<job>.xml parziale non maschera una Response_<job>.txt.xml già completa (finding 6)', async () => {
+    const driver = await connect()
+    const served = (async () => {
+      for (let i = 0; i < 200; i++) {
+        const entries = await readdir(spoolDir)
+        const job = entries.find((e) => e.endsWith('.txt'))
+        if (job) {
+          const jobPath = path.join(spoolDir, job)
+          await unlink(jobPath)
+          const base = job.replace(/\.txt$/, '')
+          // Candidato #1 (Response_<job>.xml): presente ma troncato.
+          await writeFile(path.join(logDir, `Response_${base}.xml`), '<RESPONSE><ESITO>O', 'latin1')
+          // Candidato #2 (Response_<job>.txt.xml): completo. Senza il fix,
+          // il candidato troncato farebbe uscire tryReadResponse con `null`
+          // prima di arrivare a controllare questo.
+          await writeFile(path.join(logDir, `Response_${job}.xml`), OK_RESPONSE, 'latin1')
+          return
+        }
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      throw new Error('nessun file comparso nello spool')
+    })()
+    const res = await driver.submit(['v/'])
+    await served
+    expect(res.ok).toBe(true)
+    expect(res.reply).toBe('00')
+  })
+})
+
+describe('unicità del nome di job fra istanze diverse (finding 4)', () => {
+  it('due driver sullo stesso spool, nello stesso millisecondo, producono job distinti', async () => {
+    const driverA = await connect()
+    const driverB = await connect()
+
+    // Forza la collisione temporale che ha causato il bug: due istanze,
+    // ciascuna al proprio primo invio (seq=1), nello stesso Date.now().
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000)
+    try {
+      const submitA = driverA.submit(['v/'])
+      const submitB = driverB.submit(['a/'])
+
+      // Prima di servire nulla, verifichiamo che compaiano DUE file .txt
+      // distinti: col bug (nome = mashup-<Date.now()>-<seq>), il secondo
+      // rename avrebbe sovrascritto il primo e ne sarebbe comparso uno solo.
+      let jobs: string[] = []
+      for (let i = 0; i < 200; i++) {
+        jobs = (await readdir(spoolDir)).filter((e) => e.endsWith('.txt'))
+        if (jobs.length >= 2) break
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      expect(jobs).toHaveLength(2)
+      expect(jobs[0]).not.toBe(jobs[1])
+
+      for (const job of jobs) {
+        const jobPath = path.join(spoolDir, job)
+        await unlink(jobPath)
+        const base = job.replace(/\.txt$/, '')
+        await writeFile(path.join(logDir, `Response_${base}.xml`), OK_RESPONSE, 'latin1')
+      }
+
+      const [resA, resB] = await Promise.all([submitA, submitB])
+      expect(resA.ok).toBe(true)
+      expect(resB.ok).toBe(true)
+    } finally {
+      nowSpy.mockRestore()
+    }
+  })
 })
 
 describe('getStatus', () => {
@@ -272,6 +381,122 @@ describe('getStatus', () => {
     const served2 = serveOnce(() => OK_RESPONSE)
     await driver.getStatus()
     await served2
+  })
+})
+
+describe('timeout indipendente per la sonda di liveness (finding 2)', () => {
+  it(
+    'getStatus() su uno spool morto risponde in una frazione del timeout di stampa configurato',
+    async () => {
+      // Timeout di stampa volutamente grande: senza il fix, getStatus()
+      // aspetterebbe l'intero timeout (20s) prima di rispondere.
+      const driver = await connect(20_000)
+      const start = Date.now()
+      const status = await driver.getStatus()
+      const elapsed = Date.now() - start
+      expect(status.online).toBe(false)
+      expect(elapsed).toBeLessThan(10_000)
+    },
+    15_000
+  )
+
+  it('submit() (percorso di stampa) continua a usare il timeout pieno configurato', async () => {
+    const driver = await connect(1200)
+    const start = Date.now()
+    await expect(driver.submit(['v/'])).rejects.toThrow(/Server di Stampa/)
+    const elapsed = Date.now() - start
+    // Deve aver atteso vicino al timeout di STAMPA (1200ms), non essere
+    // stato tagliato alla sola deadline breve della sonda di liveness.
+    expect(elapsed).toBeGreaterThanOrEqual(1000)
+  })
+})
+
+describe('sonda in volo attraverso una connect() a cartelle diverse (finding 3)', () => {
+  it('il risultato riflette le cartelle nuove; il messaggio della sonda obsoleta nomina quella vecchia', async () => {
+    const spoolA = path.join(root, 'spoolA')
+    const logA = path.join(root, 'logA')
+    const spoolB = path.join(root, 'spoolB')
+    const logB = path.join(root, 'logB')
+    await mkdir(spoolA, { recursive: true })
+    await mkdir(logA, { recursive: true })
+    await mkdir(spoolB, { recursive: true })
+    await mkdir(logB, { recursive: true })
+
+    const driver = new AxonFpidDriver()
+    await driver.connect({
+      ip: '',
+      port: 0,
+      timeout: 600,
+      operatorId: '1',
+      deptMapping: {},
+      spoolDir: spoolA,
+      logDir: logA,
+    })
+
+    // Sonda su A: nessuno la servirà mai, andrà in timeout.
+    const p1 = driver.getStatus()
+
+    // Aspetta che la sonda su A abbia davvero scritto il job (sia cioè
+    // entrata nel proprio ciclo di polling) prima di cambiare le cartelle:
+    // il bug riguarda una connect() che muta le cartelle A METÀ di un
+    // submitNow già in corso, non solo l'ordine di una coda interna.
+    for (let i = 0; i < 200; i++) {
+      const entries = await readdir(spoolA)
+      if (entries.some((e) => e.endsWith('.txt'))) break
+      await new Promise((r) => setTimeout(r, 5))
+    }
+
+    // Ora, a sonda in volo, l'installatore corregge le cartelle.
+    await driver.connect({
+      ip: '',
+      port: 0,
+      timeout: 2000,
+      operatorId: '1',
+      deptMapping: {},
+      spoolDir: spoolB,
+      logDir: logB,
+    })
+    // Flag "carta finita" SOLO in B, per distinguere osservabilmente una
+    // risposta relativa a B da una (mai arrivata) relativa ad A.
+    await writeFile(path.join(logB, 'Fine_Carta.log'), 'fine carta', 'latin1')
+
+    const serveB = (async () => {
+      for (let i = 0; i < 200; i++) {
+        const entries = await readdir(spoolB)
+        const job = entries.find((e) => e.endsWith('.txt'))
+        if (job) {
+          const jobPath = path.join(spoolB, job)
+          await unlink(jobPath)
+          const base = job.replace(/\.txt$/, '')
+          await writeFile(path.join(logB, `Response_${base}.xml`), OK_RESPONSE, 'latin1')
+          return
+        }
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      throw new Error('nessun file comparso in spoolB')
+    })()
+
+    // Nuova sonda, dopo la connect(): deve riflettere le cartelle B.
+    const p2 = driver.getStatus()
+    await serveB
+    const status2 = await p2
+    expect(status2.online).toBe(true)
+    expect(status2.paperPresent).toBe(false)
+
+    // La sonda su A, ormai obsoleta, si conclude in errore nominando la
+    // cartella che ha DAVVERO sondato (A) — non quella corrente dopo la
+    // connect() (B), che non è mai stata toccata da questa sonda.
+    const status1 = await p1
+    expect(status1.online).toBe(false)
+    expect(status1.errorMessage).toContain(spoolA)
+    expect(status1.errorMessage).not.toContain(spoolB)
+
+    // La sonda obsoleta non deve aver invalidato la cache scritta dalla
+    // sonda corrente: una getStatus() successiva entro il TTL non deve
+    // accodare un nuovo job in spoolB.
+    const status3 = await driver.getStatus()
+    expect(status3).toEqual(status2)
+    expect(await readdir(spoolB)).toEqual([])
   })
 })
 

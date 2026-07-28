@@ -100,7 +100,23 @@ Codici di pagamento programmati di fabbrica sull'SF20 (`sf20.txt`):
    `Sf20CommandUnavailableError`, e aggiungere i test corrispondenti in
    `src/main/printing/sf20.test.ts`.
 
-## 6. Collaudo
+## 6. Attenzione con più stampanti fiscali configurate
+
+Il driver `axon-fpid` dichiara la capability `fiscal-receipt` fin da subito,
+anche prima di aver completato il passo 5. Se in `printers[]` è presente
+anche una stampante Epson (o un'altra fiscale) funzionante, ma posizionata
+**dopo** quella axon-fpid nell'array, `resolveByCapability` (`server.ts`)
+sceglie comunque axon-fpid per ogni `/print`, `/daily-close` o `/open-drawer`
+che arriva **senza** `printerId` esplicito — la prima stampante con la
+capability richiesta, in ordine di configurazione. Il risultato è un
+`Sf20CommandUnavailableError` invece dello scontrino atteso dalla Epson.
+
+Finché i comandi SF20 di vendita non sono stati ricavati (passo 5), tenere
+axon-fpid come **unica** stampante fiscale configurata, oppure far sì che il
+POS invii sempre un `printerId` esplicito quando vuole raggiungere l'altra
+fiscale.
+
+## 7. Collaudo
 
 - Verifica accenti: stampare una descrizione con `à è ì ò ù`. Il bridge scrive i
   file in CP1252; se i caratteri risultano errati, cambiare l'encoding in

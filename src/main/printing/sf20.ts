@@ -91,7 +91,7 @@ export function buildProbe(departmentCount = 60): string[] {
 // Unico indizio: il manuale axonFPiD mostra "3/S/xxxxxx..." come esempio di
 // COMANDO_ECCEZIONE, quindi la forma e' quella dei campi separati da "/".
 //
-// Procedura per ricavarla: docs/axon-fpid-setup.md, passo 7.
+// Procedura per ricavarla: docs/axon-fpid-setup.md, sezione 5.
 // ---------------------------------------------------------------------------
 
 export class Sf20CommandUnavailableError extends Error {

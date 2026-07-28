@@ -21,10 +21,6 @@ export const POST_ACTIONS: Record<string, string> = {
   '9': 'errore grave, invio comandi interrotto',
 }
 
-/** Reply Code che segnalano una condizione fisica, non un errore di comando. */
-export const PAPER_OUT_REPLIES = new Set(['44'])
-export const COVER_OPEN_REPLIES = new Set(['51'])
-
 export interface AxonException {
   lineNumber: string
   command: string
@@ -126,12 +122,8 @@ export function parseAxonResponse(xml: string): AxonResponse {
   }
 }
 
-export function firstTag(res: AxonResponse, name: string): string {
-  return res.tags[name]?.[0] ?? ''
-}
-
 /** Accede a un TAG per nome, inclusi quelli nidificati (con dot notation). */
-export function getTag(res: AxonResponse, name: string): string {
+export function firstTag(res: AxonResponse, name: string): string {
   return res.tags[name]?.[0] ?? ''
 }
 

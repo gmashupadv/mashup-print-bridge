@@ -1,7 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mkdtemp, mkdir, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import * as path from 'node:path'
 import { buildServer } from './server'
-import type { ServerOptions } from './server'
+import type { ServerOptions, ManagedPrinter } from './server'
 import type { PrinterDriver } from './drivers/interface'
+import type { PrinterConfig } from './config'
+import { AxonFpidDriver } from './drivers/axon-fpid'
 
 function makeMockDriver(overrides?: Partial<PrinterDriver>): PrinterDriver {
   return {
@@ -722,5 +727,119 @@ describe('CORS / Private Network Access', () => {
     const app = buildServer(makeOpts())
     const res = await app.inject({ method: 'GET', url: '/ping' })
     expect(res.headers['access-control-allow-origin']).toBe('*')
+  })
+})
+
+// Integrazione: axon-fpid attraverso il livello HTTP (server.ts), non solo il
+// driver isolato. Copre le regressioni finali: uno spool axon-fpid morto non
+// deve bloccare GET /printers (finding 2), e /print deve restituire il
+// messaggio italiano descrittivo di Sf20CommandUnavailableError, non un
+// errore generico, finché i comandi SF20 di vendita non sono stati ricavati.
+describe('integrazione axon-fpid via HTTP', () => {
+  let root = ''
+  let spoolDir = ''
+  let logDir = ''
+
+  beforeEach(async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'axon-server-'))
+    spoolDir = path.join(root, 'spool')
+    logDir = path.join(root, 'log')
+    await mkdir(spoolDir, { recursive: true })
+    await mkdir(logDir, { recursive: true })
+  })
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true })
+  })
+
+  function axonPrinterConfig(): PrinterConfig {
+    return {
+      id: 'axon',
+      label: 'Fiscale axon',
+      role: 'fiscal',
+      driver: 'axon-fpid',
+      // Timeout di stampa volutamente grande: la regressione (finding 2) è
+      // che GET /printers restava bloccata per l'intero timeout quando
+      // axonFPiD non è in esecuzione (nessuno serve mai lo spool in questo test).
+      connection: { ip: '', port: 0, timeout: 20_000, spoolDir, logDir },
+      operatorId: '1',
+      deptMapping: {},
+    }
+  }
+
+  async function connectedAxonDriver(): Promise<AxonFpidDriver> {
+    const driver = new AxonFpidDriver()
+    await driver.connect({
+      ip: '',
+      port: 0,
+      timeout: 20_000,
+      operatorId: '1',
+      deptMapping: {},
+      spoolDir,
+      logDir,
+    })
+    return driver
+  }
+
+  it(
+    'GET /printers non resta bloccata quando axon-fpid è irraggiungibile (finding 2)',
+    async () => {
+      const axonDriver = await connectedAxonDriver()
+      const labelDriver = makeMockDriver({ name: 'os-printer', capabilities: ['label'] })
+      const printers: ManagedPrinter[] = [
+        { config: axonPrinterConfig(), driver: axonDriver },
+        {
+          config: {
+            id: 'labels',
+            label: 'Etichette',
+            role: 'label',
+            driver: 'os-printer',
+            connection: { ip: '', port: 0, timeout: 5000 },
+            operatorId: '1',
+            deptMapping: {},
+          },
+          driver: labelDriver,
+        },
+      ]
+      const app = buildServer({ getPrinters: () => printers, version: '1.0.0' })
+
+      const start = Date.now()
+      const res = await app.inject({ method: 'GET', url: '/printers' })
+      const elapsed = Date.now() - start
+
+      expect(res.statusCode).toBe(200)
+      // Ben sotto i 20s di timeout di stampa configurati sulla fiscale axon-fpid.
+      expect(elapsed).toBeLessThan(10_000)
+
+      const body = res.json() as Array<{ id: string; status: { online: boolean } }>
+      const axonEntry = body.find((p) => p.id === 'axon')
+      const labelEntry = body.find((p) => p.id === 'labels')
+      expect(axonEntry?.status.online).toBe(false)
+      // La stampante etichette non deve restare ostaggio del timeout altrui.
+      expect(labelEntry?.status.online).toBe(true)
+    },
+    15_000
+  )
+
+  it('POST /print senza altra fiscale configurata risponde 500 col messaggio italiano di Sf20CommandUnavailableError', async () => {
+    const axonDriver = await connectedAxonDriver()
+    const printers: ManagedPrinter[] = [{ config: axonPrinterConfig(), driver: axonDriver }]
+    const app = buildServer({ getPrinters: () => printers, version: '1.0.0' })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print',
+      payload: {
+        items: [{ description: 'Prodotto test', quantity: 1, unitPrice: 1, vatRate: 22 }],
+        discount: 0,
+        payments: [{ description: 'Contanti', amount: 1, paymentType: 1 }],
+      },
+    })
+
+    expect(res.statusCode).toBe(500)
+    const body = res.json()
+    expect(body.success).toBe(false)
+    expect(body.error).toContain('Comando SF20')
+    expect(body.error).toContain('Scontrini di test')
   })
 })
