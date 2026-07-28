@@ -19,6 +19,13 @@ import type {
 import { parseAxonResponse, describeFailure, firstTag } from '../printing/axon-response'
 import type { AxonResponse } from '../printing/axon-response'
 import * as sf20 from '../printing/sf20'
+// Tipi e funzione pura riesportati da qui per compatibilità: definiti in un
+// modulo separato perché il pannello React del renderer li importa come
+// valore/tipo, e questo file trascina node:fs/promises e node:path (non
+// bundlabile lato browser).
+export { deptMappingFromProbe } from '../printing/axon-probe'
+export type { AxonProbe, AxonDepartment } from '../printing/axon-probe'
+import type { AxonProbe } from '../printing/axon-probe'
 
 const POLL_INTERVAL_MS = 250
 const STATUS_CACHE_MS = 10_000
@@ -32,22 +39,6 @@ const FLAG_DISPLAY = 'Display_Non_OK.log'
 
 const VAT_LETTERS = ['A', 'B', 'C', 'D', 'E'] as const
 
-export interface AxonDepartment {
-  number: string
-  description: string
-  vatCode: string
-}
-
-export interface AxonProbe {
-  firmware: string
-  serial: string
-  model: string
-  lastReceiptNumber: string
-  /** Lettera aliquota → percentuale, come programmata sulla stampante. */
-  vatTable: Record<string, string>
-  departments: AxonDepartment[]
-}
-
 async function exists(target: string): Promise<boolean> {
   try {
     await access(target)
@@ -59,30 +50,6 @@ async function exists(target: string): Promise<boolean> {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-/**
- * deptMapping = aliquota IVA (due decimali) → primo reparto che la usa.
- * Il codice IVA del reparto è 1..5 e punta alle lettere A..E della tabella.
- */
-export function deptMappingFromProbe(probe: AxonProbe): Record<string, number> {
-  const mapping: Record<string, number> = {}
-  for (const dept of probe.departments) {
-    const letter = VAT_LETTERS[Number(dept.vatCode) - 1]
-    if (!letter) continue
-    const rate = probe.vatTable[letter]
-    if (rate == null || rate === '') continue
-    // L'aliquota programmata in stampante è testo libero (es. "22,00" con la
-    // virgola italiana, o "ESENTE"): senza questo controllo un'aliquota non
-    // numerica produrrebbe una chiave "NaN" in deptMapping.
-    const parsedRate = Number(rate)
-    if (!Number.isFinite(parsedRate)) continue
-    const number = Number(dept.number)
-    if (!Number.isFinite(number) || number <= 0) continue
-    const key = parsedRate.toFixed(2)
-    if (!(key in mapping)) mapping[key] = number
-  }
-  return mapping
 }
 
 function toPrintResult(res: AxonResponse): PrintResult {

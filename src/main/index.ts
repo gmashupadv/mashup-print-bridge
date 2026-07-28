@@ -298,6 +298,20 @@ ipcMain.handle('dialog:pick-folder', async () => {
   return result.canceled ? null : (result.filePaths[0] ?? null)
 })
 
+// Sonda di configurazione: canale separato da driver:test, che restituisce
+// sempre un PrinterStatus mentre qui la struttura di ritorno è diversa.
+ipcMain.handle('driver:probe', async (_e, printerId: string) => {
+  const driver = drivers.get(printerId)
+  if (!driver) throw new Error(`Driver not found: ${printerId}`)
+  const probe = (driver as { probeConfig?: () => Promise<unknown> }).probeConfig
+  if (typeof probe !== 'function') {
+    throw new Error('Questo driver non supporta la sonda di configurazione')
+  }
+  const result = await probe.call(driver)
+  emitLog(`Sonda di configurazione eseguita [${printerId}]`)
+  return result
+})
+
 // ------- App lifecycle -------
 
 // Una sola istanza: rilanciare l'app (doppio click sull'icona installata) non deve

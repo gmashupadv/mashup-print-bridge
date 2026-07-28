@@ -16,6 +16,7 @@ interface Window {
       template?: import('../../main/drivers/interface').LabelTemplate
     ): Promise<string>
     pickFolder(): Promise<string | null>
+    probePrinter(printerId: string): Promise<import('../../main/printing/axon-probe').AxonProbe>
     onLogEvent(cb: (msg: string) => void): () => void
     onUpdateAvailable(cb: (version: string) => void): () => void
     openReleasesPage(): Promise<void>

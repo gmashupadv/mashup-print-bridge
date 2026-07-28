@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { DriverPicker } from './DriverPicker'
 import { ConnectionForm } from './ConnectionForm'
 import { DeptMapping } from './DeptMapping'
+import { AxonProbePanel } from './AxonProbePanel'
 import { LabelTemplatePanel } from './LabelTemplatePanel'
 import type { PrinterConfig, PrinterRole } from '../../../main/config'
 import type { PaperConfig } from '../../../main/drivers/interface'
@@ -167,6 +168,13 @@ export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper
         }
         onPaperDetected={onPatchPaper}
       />
+
+      {printer.driver === 'axon-fpid' && (
+        <AxonProbePanel
+          printerId={printer.id}
+          onApplyDeptMapping={(deptMapping) => onChange({ ...printer, deptMapping })}
+        />
+      )}
 
       {printer.role === 'fiscal' && (
         <DeptMapping
