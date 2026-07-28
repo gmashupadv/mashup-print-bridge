@@ -58,7 +58,7 @@ Tre moduli, con la stessa separazione protocollo/trasporto già usata per
 | File | Natura | Responsabilità |
 |---|---|---|
 | `src/main/printing/sf20.ts` | puro | costruzione delle righe comando SF20, formattazione importi, sanitizzazione descrizioni |
-| `src/main/printing/axon-response.ts` | puro | parsing del Response XML; tabella dei 93 Reply Code (descrizione + Post Action) |
+| `src/main/printing/axon-response.ts` | puro | parsing del Response XML; legenda delle 6 Post Action |
 | `src/main/drivers/axon-fpid.ts` | I/O | spool su filesystem, coda seriale, polling, mappatura su `PrinterDriver` |
 
 Registrazione in `registry.ts` con chiave `axon-fpid`.
@@ -234,16 +234,38 @@ Limite noto e accettato: se axonFPiD non è in esecuzione i file flag restano
 fermi all'ultimo stato noto. La sonda `,/10/` è ciò che rileva davvero il
 processo morto — va in timeout e riporta la diagnosi corrispondente.
 
-I 93 Reply Code servono **solo** a tradurre l'esito in un messaggio leggibile in
-`PrintResult.errorMessage`. La Post Action associata è già stata eseguita da
-axonFPiD prima di scrivere la Response.
+### Reply Code: nessuna tabella replicata
+
+Il manuale elenca i Reply Code da 0 a 176, con descrizioni che variano per
+modello (Hydra ha una colonna propria) e testo affetto da artefatti di
+estrazione. **Non li replichiamo.**
+
+Il Response XML porta già, dentro `<ECCEZIONE>`, sia la descrizione dell'errore
+(`DESC_ERRORE_ECCEZIONE`) sia la Post Action che axonFPiD ha intrapreso
+(`AZIONE_ECCEZIONE`). Trascrivere la tabella significherebbe mantenere una copia
+rumorosa di dati che il file ci consegna già risolti.
+
+Il driver conserva quindi solo:
+
+- la **legenda delle 6 Post Action** (1, 2, 3, 4, 5, 9), che è breve, stabile e
+  serve a rendere il messaggio comprensibile — es. "9 = errore grave, invio
+  comandi interrotto";
+- i pochi Reply Code che classificano una **condizione fisica** (44 carta
+  finita, 51 sportello aperto), utili a `PrinterStatus`.
+
+`PrintResult.errorMessage` si compone da `DESC_ERRORE_ECCEZIONE` + comando in
+errore + descrizione della Post Action.
 
 ## Sonda di configurazione
 
-Nuovo `kind: 'probe'` sull'IPC `driver:test` esistente, servito da un metodo
-opzionale del driver. `index.ts` lo individua con un check strutturale
+Canale IPC dedicato `driver:probe`, servito da un metodo opzionale del driver.
+`index.ts` lo individua con un check strutturale
 (`typeof d.probeConfig === 'function'`): nessuna modifica all'interfaccia
 `PrinterDriver`, nessun accoppiamento via `instanceof`.
+
+Canale separato e non un `kind` in più su `driver:test`, perché `driver:test`
+restituisce sempre un `PrinterStatus` mentre la sonda restituisce una struttura
+diversa: sovraccaricarlo ne romperebbe la firma.
 
 La sonda scrive un unico file di sole interrogazioni:
 
