@@ -10,6 +10,10 @@ export interface PrinterConnection {
   port: number
   timeout: number
   deviceName?: string
+  /** axon-fpid: cartella di ascolto del Server di Stampa di axonFPiD_Pro_v7. */
+  spoolDir?: string
+  /** axon-fpid: cartella "LOG e file di risposta" di axonFPiD. Default: spoolDir. */
+  logDir?: string
 }
 
 export interface PrinterConfig {

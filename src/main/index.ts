@@ -42,6 +42,8 @@ function driverConfigFrom(pc: PrinterConfig) {
     operatorId: pc.operatorId,
     deptMapping: pc.deptMapping,
     deviceName: pc.connection.deviceName,
+    spoolDir: pc.connection.spoolDir,
+    logDir: pc.connection.logDir,
     paper: pc.paper,
     template: pc.template,
   }
