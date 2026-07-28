@@ -15,6 +15,7 @@ interface Window {
       paper?: import('../../main/drivers/interface').PaperConfig,
       template?: import('../../main/drivers/interface').LabelTemplate
     ): Promise<string>
+    pickFolder(): Promise<string | null>
     onLogEvent(cb: (msg: string) => void): () => void
     onUpdateAvailable(cb: (version: string) => void): () => void
     openReleasesPage(): Promise<void>

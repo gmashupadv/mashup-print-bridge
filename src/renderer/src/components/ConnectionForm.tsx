@@ -6,6 +6,8 @@ interface Connection {
   port: number
   timeout: number
   deviceName?: string
+  spoolDir?: string
+  logDir?: string
 }
 
 interface Props {
@@ -13,7 +15,7 @@ interface Props {
   onChange: (v: Connection) => void
   onTest: () => Promise<void>
   showTestButton?: boolean
-  mode?: 'network' | 'system'
+  mode?: 'network' | 'system' | 'spool'
   onPaperDetected?: (paper: Partial<PaperConfig>) => void
 }
 
@@ -71,11 +73,70 @@ export function ConnectionForm({
     }
   }
 
+  const pickInto = async (field: 'spoolDir' | 'logDir') => {
+    const folder = await window.bridge.pickFolder()
+    if (folder) onChange({ ...value, [field]: folder })
+  }
+
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">Connessione</label>
 
-      {mode === 'system' ? (
+      {mode === 'spool' ? (
+        <div className="flex flex-col gap-2 mb-2">
+          <div>
+            <label className="block text-xs text-gray-500 mb-0.5">
+              Cartella di ascolto (Server di Stampa)
+            </label>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                placeholder="C:\axonFPiD_Pro_v7\Spool"
+                value={value.spoolDir ?? ''}
+                onChange={(e) => onChange({ ...value, spoolDir: e.target.value })}
+              />
+              <button
+                className="text-sm px-2 py-1 border border-gray-300 rounded hover:bg-gray-50"
+                onClick={() => pickInto('spoolDir')}
+              >
+                Sfoglia
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-0.5">
+              Cartella LOG e file di risposta
+            </label>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                placeholder="C:\axonFPiD_Pro_v7\Log"
+                value={value.logDir ?? ''}
+                onChange={(e) => onChange({ ...value, logDir: e.target.value })}
+              />
+              <button
+                className="text-sm px-2 py-1 border border-gray-300 rounded hover:bg-gray-50"
+                onClick={() => pickInto('logDir')}
+              >
+                Sfoglia
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Se vuota si usa la cartella di ascolto. Deve avere RESPONSE XML attivo in axonFPiD.
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-0.5">Timeout (ms)</label>
+            <input
+              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+              placeholder="30000"
+              type="number"
+              value={value.timeout}
+              onChange={(e) => onChange({ ...value, timeout: Number(e.target.value) })}
+            />
+          </div>
+        </div>
+      ) : mode === 'system' ? (
         <div className="flex flex-col gap-2 mb-2">
           <div>
             <label className="block text-xs text-gray-500 mb-0.5">Stampante di sistema</label>

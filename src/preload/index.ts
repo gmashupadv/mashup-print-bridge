@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('bridge', {
   listSystemPrinters: () => ipcRenderer.invoke('printers:system'),
   getPaperInfo: (deviceName: string) => ipcRenderer.invoke('printers:paper-info', deviceName),
   previewLabel: (paper?: unknown, template?: unknown) => ipcRenderer.invoke('label:preview', paper, template),
+  pickFolder: () => ipcRenderer.invoke('dialog:pick-folder'),
   onLogEvent: (cb: (msg: string) => void) => {
     const handler = (_e: Electron.IpcRendererEvent, msg: string) => cb(msg)
     ipcRenderer.on('log:event', handler)

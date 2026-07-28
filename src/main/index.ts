@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, dialog } from 'electron'
 import * as path from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import log from 'electron-log'
@@ -291,6 +291,12 @@ ipcMain.handle('label:preview', (_e, paper?: PaperConfig, template?: LabelTempla
     template: { ...DEFAULT_LABEL_TEMPLATE, ...template },
   })
 )
+
+// Selettore di cartella per il driver axon-fpid (cartella di ascolto e LOG)
+ipcMain.handle('dialog:pick-folder', async () => {
+  const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+  return result.canceled ? null : (result.filePaths[0] ?? null)
+})
 
 // ------- App lifecycle -------
 
