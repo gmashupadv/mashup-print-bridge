@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
-import { deptMappingFromProbe } from '../../../main/printing/axon-probe'
+import { deptMappingFromProbe, mergeDeptMapping, usableDepartments } from '../../../main/printing/axon-probe'
 import type { AxonProbe } from '../../../main/printing/axon-probe'
 
 interface Props {
   printerId: string
+  existingDeptMapping: Record<string, number>
   onApplyDeptMapping: (mapping: Record<string, number>) => void
 }
 
-export function AxonProbePanel({ printerId, onApplyDeptMapping }: Props) {
+export function AxonProbePanel({ printerId, existingDeptMapping, onApplyDeptMapping }: Props) {
   const [running, setRunning] = useState(false)
   const [probe, setProbe] = useState<AxonProbe | null>(null)
   const [error, setError] = useState('')
@@ -25,7 +26,33 @@ export function AxonProbePanel({ printerId, onApplyDeptMapping }: Props) {
     }
   }
 
-  const configured = probe?.departments.filter((d) => d.description.trim() !== '') ?? []
+  // Reparti che concorrono davvero alla mappatura, non il conteggio basato
+  // sulla sola descrizione: un reparto con descrizione ma aliquota IVA non
+  // risolvibile è comunque escluso da deptMappingFromProbe.
+  const usable = probe ? usableDepartments(probe) : []
+  const probeMapping = probe ? deptMappingFromProbe(probe) : {}
+  const canApply = Object.keys(probeMapping).length > 0
+
+  const apply = () => {
+    if (!probe) return
+    const setRates = Object.keys(probeMapping).sort()
+    const preservedRates = Object.keys(existingDeptMapping)
+      .filter((rate) => !(rate in probeMapping))
+      .sort()
+
+    const setLines = setRates.map((rate) => `  • IVA ${rate}% → reparto ${probeMapping[rate]}`).join('\n')
+    const preservedText =
+      preservedRates.length > 0
+        ? `\n\nAliquote già configurate ma non lette dalla sonda (mantenute invariate): ${preservedRates.join(', ')}%.`
+        : ''
+    const message =
+      `La sonda imposterà ${setRates.length} aliquot${setRates.length === 1 ? 'a' : 'e'} IVA nella mappatura reparti:\n` +
+      `${setLines}${preservedText}\n\nProcedere?`
+
+    if (window.confirm(message)) {
+      onApplyDeptMapping(mergeDeptMapping(existingDeptMapping, probeMapping))
+    }
+  }
 
   return (
     <div className="mb-4 border-t border-gray-100 pt-3">
@@ -58,23 +85,29 @@ export function AxonProbePanel({ printerId, onApplyDeptMapping }: Props) {
               .join('  ')}
           </p>
 
-          <p className="mt-2">Reparti programmati: {configured.length}</p>
-          {configured.length > 0 && (
+          <p className="mt-2">Reparti con aliquota IVA utilizzabile: {usable.length}</p>
+          {usable.length > 0 && (
             <ul className="mt-1 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
-              {configured.map((d) => (
+              {usable.map((d) => (
                 <li key={d.number}>
-                  {d.number} — {d.description} (IVA {d.vatCode})
+                  {d.number} — {d.description || '(senza descrizione)'} (IVA {d.vatCode})
                 </li>
               ))}
             </ul>
           )}
 
           <button
-            className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => onApplyDeptMapping(deptMappingFromProbe(probe))}
+            className="mt-2 text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={apply}
+            disabled={!canApply}
           >
             Applica a mappatura reparti
           </button>
+          {!canApply && (
+            <p className="mt-1 text-xs text-gray-500">
+              Nessun reparto ha un'aliquota IVA utilizzabile programmata: non c'è nulla da applicare.
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -22,9 +22,11 @@ import * as sf20 from '../printing/sf20'
 // Tipi e funzione pura riesportati da qui per compatibilità: definiti in un
 // modulo separato perché il pannello React del renderer li importa come
 // valore/tipo, e questo file trascina node:fs/promises e node:path (non
-// bundlabile lato browser).
+// bundlabile lato browser). La dipendenza è a senso unico, quindi VAT_LETTERS
+// vive solo in axon-probe.ts ed è importata qui anziché duplicata.
 export { deptMappingFromProbe } from '../printing/axon-probe'
 export type { AxonProbe, AxonDepartment } from '../printing/axon-probe'
+import { VAT_LETTERS } from '../printing/axon-probe'
 import type { AxonProbe } from '../printing/axon-probe'
 
 const POLL_INTERVAL_MS = 250
@@ -36,8 +38,6 @@ const FLAG_PAPER_OUT = ['Fine_Carta.log', 'Quasi_Fine_Carta.log']
 const FLAG_COVER_OPEN = 'Sportello_Aperto.log'
 const FLAG_FATAL = 'Errore_Grave.log'
 const FLAG_DISPLAY = 'Display_Non_OK.log'
-
-const VAT_LETTERS = ['A', 'B', 'C', 'D', 'E'] as const
 
 async function exists(target: string): Promise<boolean> {
   try {

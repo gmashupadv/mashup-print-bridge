@@ -172,6 +172,7 @@ export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper
       {printer.driver === 'axon-fpid' && (
         <AxonProbePanel
           printerId={printer.id}
+          existingDeptMapping={printer.deptMapping}
           onApplyDeptMapping={(deptMapping) => onChange({ ...printer, deptMapping })}
         />
       )}
