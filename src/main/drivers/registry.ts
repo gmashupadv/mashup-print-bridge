@@ -7,6 +7,7 @@ import { DitronKeycodeDriver } from './ditron-keycode'
 import { EscPosNetworkDriver } from './escpos-network'
 import { ZplNetworkDriver } from './zpl-network'
 import { OsPrinterDriver } from './os-printer'
+import { AxonFpidDriver } from './axon-fpid'
 
 const DRIVERS: Record<string, () => PrinterDriver> = {
   'epson-fpmate': () => new EpsonFpMateDriver(),
@@ -16,6 +17,7 @@ const DRIVERS: Record<string, () => PrinterDriver> = {
   'escpos-network': () => new EscPosNetworkDriver(),
   'zpl-network': () => new ZplNetworkDriver(),
   'os-printer': () => new OsPrinterDriver(),
+  'axon-fpid': () => new AxonFpidDriver(),
 }
 
 export function listDrivers(): string[] {
