@@ -72,9 +72,14 @@ export function deptMappingFromProbe(probe: AxonProbe): Record<string, number> {
     if (!letter) continue
     const rate = probe.vatTable[letter]
     if (rate == null || rate === '') continue
+    // L'aliquota programmata in stampante è testo libero (es. "22,00" con la
+    // virgola italiana, o "ESENTE"): senza questo controllo un'aliquota non
+    // numerica produrrebbe una chiave "NaN" in deptMapping.
+    const parsedRate = Number(rate)
+    if (!Number.isFinite(parsedRate)) continue
     const number = Number(dept.number)
     if (!Number.isFinite(number) || number <= 0) continue
-    const key = Number(rate).toFixed(2)
+    const key = parsedRate.toFixed(2)
     if (!(key in mapping)) mapping[key] = number
   }
   return mapping
@@ -101,6 +106,7 @@ export class AxonFpidDriver implements PrinterDriver {
   private seq = 0
   private queue: Promise<unknown> = Promise.resolve()
   private statusCache: { at: number; status: PrinterStatus } | null = null
+  private statusInFlight: Promise<PrinterStatus> | null = null
 
   async connect(config: DriverConfig): Promise<void> {
     if (!config.spoolDir) {
@@ -111,6 +117,7 @@ export class AxonFpidDriver implements PrinterDriver {
     this.timeout = config.timeout > 0 ? config.timeout : DEFAULT_TIMEOUT_MS
     this.operatorId = config.operatorId
     this.statusCache = null
+    this.statusInFlight = null
   }
 
   async disconnect(): Promise<void> {}
@@ -127,6 +134,26 @@ export class AxonFpidDriver implements PrinterDriver {
 
   async submit(commands: string[]): Promise<AxonResponse> {
     return this.enqueue(() => this.submitNow(commands))
+  }
+
+  /**
+   * Legge una Response candidata solo se completa. axonFPiD non la scrive con
+   * una singola write atomica: un file già creato ma ancora privo del tag di
+   * chiusura è un ESITO troncato che verrebbe interpretato come stampa
+   * fallita — il falso negativo che questo controllo esiste per evitare, dato
+   * che il documento fiscale può invece essere stato emesso correttamente.
+   * Un candidato incompleto NON viene cancellato: si continua a pollare finché
+   * non lo è.
+   */
+  private async tryReadResponse(candidates: string[]): Promise<AxonResponse | null> {
+    for (const candidate of candidates) {
+      if (!(await exists(candidate))) continue
+      const xml = await readFile(candidate, 'latin1')
+      if (!xml.includes('</RESPONSE>')) return null
+      await unlink(candidate).catch(() => undefined)
+      return parseAxonResponse(xml)
+    }
+    return null
   }
 
   private async submitNow(commands: string[]): Promise<AxonResponse> {
@@ -151,16 +178,18 @@ export class AxonFpidDriver implements PrinterDriver {
     let pickedUp = false
 
     while (Date.now() < deadline) {
-      for (const candidate of candidates) {
-        if (await exists(candidate)) {
-          const xml = await readFile(candidate, 'latin1')
-          await unlink(candidate).catch(() => undefined)
-          return parseAxonResponse(xml)
-        }
-      }
+      const res = await this.tryReadResponse(candidates)
+      if (res) return res
       if (!pickedUp && !(await exists(jobPath))) pickedUp = true
       await delay(POLL_INTERVAL_MS)
     }
+
+    // Un'ultima lettura dopo la scadenza: il loop verifica i candidati solo
+    // all'inizio di ogni iterazione, quindi una Response scritta nell'ultimo
+    // intervallo di polling (prima della deadline ma dopo l'ultimo controllo)
+    // non deve essere scartata come se non fosse mai arrivata.
+    const finalRes = await this.tryReadResponse(candidates)
+    if (finalRes) return finalRes
 
     if (!pickedUp && (await exists(jobPath))) {
       await unlink(jobPath).catch(() => undefined)
@@ -205,13 +234,30 @@ export class AxonFpidDriver implements PrinterDriver {
    * Liveness reale (sonda ,/10/) piu` granularità dai file flag, con cache:
    * senza cache ogni GET /status del POS accoderebbe un job nella coda della
    * fiscale, finendo dietro a un eventuale scontrino in corso.
+   *
+   * La cache da sola non basta: viene scritta solo a sonda conclusa, quindi
+   * chiamate concorrenti la mancherebbero tutte e accoderebbero un job ciascuna
+   * (specialmente grave sul percorso di errore, dove ognuna aspetterebbe
+   * l'intero timeout in serie). Anche la sonda in corso va quindi memoizzata.
    */
   async getStatus(): Promise<PrinterStatus> {
     const cached = this.statusCache
     if (cached && Date.now() - cached.at < STATUS_CACHE_MS) return cached.status
-    const status = await this.readStatus()
-    this.statusCache = { at: Date.now(), status }
-    return status
+    if (this.statusInFlight) return this.statusInFlight
+
+    const inFlight = this.readStatus().then(
+      (status) => {
+        this.statusCache = { at: Date.now(), status }
+        this.statusInFlight = null
+        return status
+      },
+      (err: unknown) => {
+        this.statusInFlight = null
+        throw err
+      }
+    )
+    this.statusInFlight = inFlight
+    return inFlight
   }
 
   private async readStatus(): Promise<PrinterStatus> {

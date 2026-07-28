@@ -105,15 +105,111 @@ describe('trasporto su cartella di ascolto', () => {
     await consume
   })
 
-  it('serializza i job: il secondo file compare solo dopo il primo', async () => {
+  it('serializza i job: mai più di un .txt nello spool nello stesso istante', async () => {
     const driver = await connect()
     const seen: string[] = []
+    let maxTxtSeen = 0
+    let watching = true
+    const watcher = (async () => {
+      while (watching) {
+        const entries = await readdir(spoolDir)
+        const count = entries.filter((e) => e.endsWith('.txt')).length
+        if (count > maxTxtSeen) maxTxtSeen = count
+        await new Promise((r) => setTimeout(r, 5))
+      }
+    })()
     const server = (async () => {
       for (let n = 0; n < 2; n++) seen.push(await serveOnce(() => OK_RESPONSE))
     })()
     await Promise.all([driver.submit(['v/']), driver.submit(['a/'])])
     await server
+    watching = false
+    await watcher
+    // L'ordine conferma che i comandi non si sono mescolati; il conteggio
+    // massimo è l'invariante che conta davvero: senza serializzazione due job
+    // potrebbero coesistere nello spool anche se serveOnce (che legge una
+    // directory non ordinata) li consumasse comunque nell'ordine giusto.
     expect(seen).toEqual(['v/\r\n', 'a/\r\n'])
+    expect(maxTxtSeen).toBeLessThanOrEqual(1)
+  })
+
+  it('accetta la Response anche scritta in più passi (file incompleto poi completato)', async () => {
+    const driver = await connect()
+    const served = (async () => {
+      for (let i = 0; i < 200; i++) {
+        const entries = await readdir(spoolDir)
+        const job = entries.find((e) => e.endsWith('.txt'))
+        if (job) {
+          const jobPath = path.join(spoolDir, job)
+          await unlink(jobPath)
+          const base = job.replace(/\.txt$/, '')
+          const responsePath = path.join(logDir, `Response_${base}.xml`)
+          // axonFPiD non scrive la Response con una singola write atomica:
+          // simuliamo un file creato ma non ancora completo. Il file resta
+          // incompleto oltre un ciclo di polling del driver (250ms), cosicché
+          // un controllo di completezza mancante lo leggerebbe a metà.
+          await writeFile(responsePath, '<RESPONSE><ESITO>O', 'latin1')
+          await new Promise((r) => setTimeout(r, 300))
+          await writeFile(responsePath, OK_RESPONSE, 'latin1')
+          return
+        }
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      throw new Error('nessun file comparso nello spool')
+    })()
+    const res = await driver.submit(['v/'])
+    await served
+    expect(res.ok).toBe(true)
+    expect(res.reply).toBe('00')
+  })
+
+  it('legge una Response scritta nell\'ultimo intervallo di polling, prima del timeout', async () => {
+    const driver = await connect(600)
+    const served = (async () => {
+      // Il job è già nello spool dall'inizio: attendiamo a ridosso della
+      // scadenza prima di consumarlo, per verificare che il driver non scarti
+      // una Response arrivata dopo l'ultimo controllo del loop ma prima della
+      // deadline complessiva.
+      await new Promise((r) => setTimeout(r, 560))
+      for (let i = 0; i < 200; i++) {
+        const entries = await readdir(spoolDir)
+        const job = entries.find((e) => e.endsWith('.txt'))
+        if (job) {
+          const jobPath = path.join(spoolDir, job)
+          await unlink(jobPath)
+          const base = job.replace(/\.txt$/, '')
+          await writeFile(path.join(logDir, `Response_${base}.xml`), OK_RESPONSE, 'latin1')
+          return
+        }
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      throw new Error('nessun file comparso nello spool')
+    })()
+    const res = await driver.submit(['v/'])
+    await served
+    expect(res.ok).toBe(true)
+  })
+
+  it('accetta anche la forma Response_<job>.txt.xml', async () => {
+    const driver = await connect()
+    const served = (async () => {
+      for (let i = 0; i < 200; i++) {
+        const entries = await readdir(spoolDir)
+        const job = entries.find((e) => e.endsWith('.txt'))
+        if (job) {
+          const jobPath = path.join(spoolDir, job)
+          await unlink(jobPath)
+          // Nome comprensivo dell'estensione originale: Response_<job>.txt.xml
+          await writeFile(path.join(logDir, `Response_${job}.xml`), OK_RESPONSE, 'latin1')
+          return
+        }
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      throw new Error('nessun file comparso nello spool')
+    })()
+    const res = await driver.submit(['v/'])
+    await served
+    expect(res.ok).toBe(true)
   })
 })
 
@@ -134,6 +230,49 @@ describe('getStatus', () => {
     const status = await driver.getStatus()
     expect(status.online).toBe(false)
     expect(status.errorMessage).not.toBe('')
+  })
+
+  it('due chiamate concorrenti condividono la stessa sonda: un solo job nello spool', async () => {
+    const driver = await connect()
+    const served = serveOnce(() => OK_RESPONSE)
+    const [s1, s2] = await Promise.all([driver.getStatus(), driver.getStatus()])
+    await served
+    expect(s1).toEqual(s2)
+    expect(await readdir(spoolDir)).toEqual([])
+  })
+
+  it('una seconda chiamata entro il TTL non genera un secondo job', async () => {
+    const driver = await connect()
+    const served = serveOnce(() => OK_RESPONSE)
+    const first = await driver.getStatus()
+    await served
+    const second = await driver.getStatus()
+    expect(second).toEqual(first)
+    expect(await readdir(spoolDir)).toEqual([])
+  })
+
+  it('connect() invalida la cache di stato', async () => {
+    const driver = await connect()
+    const served1 = serveOnce(() => OK_RESPONSE)
+    await driver.getStatus()
+    await served1
+
+    await driver.connect({
+      ip: '',
+      port: 0,
+      timeout: 2000,
+      operatorId: '1',
+      deptMapping: {},
+      spoolDir,
+      logDir,
+    })
+
+    // Se la cache non fosse stata invalidata, questa getStatus() risponderebbe
+    // dalla cache senza inviare un secondo job: serveOnce (che si arrende dopo
+    // ~2s) fallirebbe il test invece di restare bloccato indefinitamente.
+    const served2 = serveOnce(() => OK_RESPONSE)
+    await driver.getStatus()
+    await served2
   })
 })
 
@@ -195,6 +334,24 @@ describe('deptMappingFromProbe', () => {
       ],
     }
     expect(deptMappingFromProbe(probe)).toEqual({ '4.00': 2 })
+  })
+
+  it('non genera una chiave "NaN" per un\'aliquota non numerica (virgola italiana o testo)', () => {
+    const probe: AxonProbe = {
+      firmware: '',
+      serial: '',
+      model: '',
+      lastReceiptNumber: '',
+      vatTable: { A: '22,00', B: 'ESENTE', C: '10', D: '', E: '' },
+      departments: [
+        { number: '1', description: 'X', vatCode: '1' },
+        { number: '2', description: 'Y', vatCode: '2' },
+        { number: '3', description: 'Z', vatCode: '3' },
+      ],
+    }
+    const mapping = deptMappingFromProbe(probe)
+    expect(mapping).not.toHaveProperty('NaN')
+    expect(mapping).toEqual({ '10.00': 3 })
   })
 })
 
