@@ -8,6 +8,7 @@ import {
   buildReceipt,
   buildDailyClose,
   buildOpenDrawer,
+  quantity,
   Sf20CommandUnavailableError,
 } from './sf20'
 
@@ -83,18 +84,144 @@ describe('buildProbe', () => {
   })
 })
 
-describe('comandi di vendita non ancora determinati', () => {
-  const data = {
-    items: [{ description: 'PROVA', quantity: 1, unitPrice: 1, department: 1, vatRate: 22 }],
-    discount: 0,
-    payments: [{ description: 'Contanti', amount: 1, paymentType: 0 }],
-  }
+describe('buildReceipt', () => {
+  const cash = { description: 'Contanti', amount: 0.01, paymentType: 0 }
 
-  it('buildReceipt lancia un errore che indirizza alla procedura', () => {
-    expect(() => buildReceipt(data, '1')).toThrow(Sf20CommandUnavailableError)
-    expect(() => buildReceipt(data, '1')).toThrow(/Scontrini di test/)
+  it('riproduce la sequenza validata sulla RT30 il 29/07/2026', () => {
+    // Questo e' esattamente il file inviato alla stampante della cliente dal
+    // Pannello del Tecnico: ha risposto REPLY 00 ed emesso lo scontrino.
+    expect(
+      buildReceipt(
+        {
+          items: [
+            { description: 'PROVA', quantity: 1, unitPrice: 0.01, department: 1, vatRate: 22 },
+          ],
+          discount: 0,
+          payments: [cash],
+        },
+        '1'
+      )
+    ).toEqual(['3/S/PROVA//1/0.01/1/22///0/', 'U/', '5/1/0////PC//'])
   })
 
+  it('riporta quantita` e prezzo di ogni riga', () => {
+    const [line] = buildReceipt(
+      {
+        items: [
+          { description: 'Maglietta', quantity: 3, unitPrice: 19.9, department: 4, vatRate: 22 },
+        ],
+        discount: 0,
+        payments: [cash],
+      },
+      '1'
+    )
+    expect(line).toBe('3/S/Maglietta//3/19.90/4/22///0/')
+  })
+
+  it('sanifica la descrizione: la barra separa i campi del protocollo', () => {
+    const [line] = buildReceipt(
+      {
+        items: [
+          { description: 'Pane 1/2 kg', quantity: 1, unitPrice: 2, department: 1, vatRate: 22 },
+        ],
+        discount: 0,
+        payments: [cash],
+      },
+      '1'
+    )
+    expect(line).toBe('3/S/Pane 1 2 kg//1/2.00/1/22///0/')
+    // La riga deve avere esattamente i campi previsti, non uno in piu`
+    expect(line.split('/')).toHaveLength(12)
+  })
+
+  it('mette il subtotale dopo le righe e prima dei pagamenti', () => {
+    const commands = buildReceipt(
+      {
+        items: [
+          { description: 'A', quantity: 1, unitPrice: 1, department: 1, vatRate: 22 },
+          { description: 'B', quantity: 1, unitPrice: 2, department: 1, vatRate: 22 },
+        ],
+        discount: 0,
+        payments: [cash],
+      },
+      '1'
+    )
+    expect(commands.indexOf('U/')).toBe(2)
+    expect(commands).toHaveLength(4)
+  })
+
+  it('divide il pagamento: importo esplicito tranne l`ultimo, che salda il residuo', () => {
+    const commands = buildReceipt(
+      {
+        items: [{ description: 'A', quantity: 1, unitPrice: 30, department: 1, vatRate: 22 }],
+        discount: 0,
+        payments: [
+          { description: 'Bancomat', amount: 20, paymentType: 1 },
+          { description: 'Contanti', amount: 10, paymentType: 0 },
+        ],
+      },
+      '1'
+    )
+    expect(commands.slice(-2)).toEqual(['5/4/20.00////PE//', '5/1/0////PC//'])
+  })
+
+  it('senza pagamenti chiude in contanti', () => {
+    const commands = buildReceipt(
+      {
+        items: [{ description: 'A', quantity: 1, unitPrice: 1, department: 1, vatRate: 22 }],
+        discount: 0,
+        payments: [],
+      },
+      '1'
+    )
+    expect(commands.at(-1)).toBe('5/1/0////PC//')
+  })
+
+  it('rifiuta lo sconto sul totale: sintassi non verificata sulla stampante', () => {
+    expect(() =>
+      buildReceipt(
+        {
+          items: [{ description: 'A', quantity: 1, unitPrice: 10, department: 1, vatRate: 22 }],
+          discount: 5,
+          payments: [cash],
+        },
+        '1'
+      )
+    ).toThrow(/sconto di RIGA/)
+  })
+
+  it('rifiuta una riga con IVA 0% senza natura di esenzione', () => {
+    expect(() =>
+      buildReceipt(
+        {
+          items: [{ description: 'Esente', quantity: 1, unitPrice: 10, department: 8, vatRate: 0 }],
+          discount: 0,
+          payments: [cash],
+        },
+        '1'
+      )
+    ).toThrow(/natura di esenzione/)
+  })
+
+  it('rifiuta uno scontrino senza righe', () => {
+    expect(() => buildReceipt({ items: [], discount: 0, payments: [cash] }, '1')).toThrow(
+      /senza righe/
+    )
+  })
+})
+
+describe('quantity', () => {
+  it('non mette decimali sulle quantita` intere, come negli esempi', () => {
+    expect(quantity(1)).toBe('1')
+    expect(quantity(5)).toBe('5')
+  })
+
+  it('usa tre decimali sulle quantita` frazionarie (vendita a peso)', () => {
+    expect(quantity(0.35)).toBe('0.350')
+  })
+})
+
+describe('comandi non ancora determinati', () => {
   it('buildDailyClose lancia', () => {
     expect(() => buildDailyClose('1')).toThrow(Sf20CommandUnavailableError)
   })

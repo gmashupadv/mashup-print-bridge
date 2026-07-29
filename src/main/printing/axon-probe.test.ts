@@ -2,6 +2,70 @@ import { describe, it, expect } from 'vitest'
 import { deptMappingFromProbe, mergeDeptMapping, usableDepartments } from './axon-probe'
 import type { AxonProbe } from './axon-probe'
 
+/** Tabella IVA e reparti letti davvero dalla RT30 della cliente il 29/07/2026. */
+const RT30_G100: AxonProbe = {
+  firmware: 'V2 R1 B7 G100.137',
+  serial: '8AIGE013756',
+  model: 'RT30',
+  lastReceiptNumber: '',
+  vatTable: {
+    '1': '4',
+    '2': '10',
+    '3': '22',
+    '4': '22',
+    '5': '22',
+    '6': '22',
+    '7': '22',
+    '8': '22',
+    '9': '22',
+    '10': '22',
+    '11': '22',
+    '12': '22',
+  },
+  departments: [
+    { number: '1', description: 'REPAR-1', vatCode: '3' },
+    { number: '9', description: 'REPAR-9', vatCode: '9' },
+    { number: '10', description: 'REPAR-10', vatCode: '10' },
+    { number: '11', description: 'REPAR-11', vatCode: '1' },
+    { number: '12', description: 'REPAR-12', vatCode: '2' },
+  ],
+}
+
+describe('aliquote oltre le cinque lettere (FW serie 2 G100)', () => {
+  it('non scarta i reparti con slot IVA da 6 a 12', () => {
+    // La RT30 espone 12 slot IVA numerati. Fermandosi alle lettere A..E i
+    // reparti 9 e 10 sparivano in silenzio dalla mappatura.
+    expect(usableDepartments(RT30_G100).map((d) => d.number)).toEqual([
+      '1',
+      '9',
+      '10',
+      '11',
+      '12',
+    ])
+  })
+
+  it('mappa le aliquote reali della cliente', () => {
+    expect(deptMappingFromProbe(RT30_G100)).toEqual({ '22.00': 1, '4.00': 11, '10.00': 12 })
+  })
+
+  it('continua a risolvere le tabelle a lettere delle RT serie 1', () => {
+    const serie1: AxonProbe = {
+      ...RT30_G100,
+      vatTable: { A: '4', B: '10', C: '22', D: '0', E: '0' },
+      departments: [{ number: '7', description: 'X', vatCode: '2' }],
+    }
+    expect(deptMappingFromProbe(serie1)).toEqual({ '10.00': 7 })
+  })
+
+  it('scarta uno slot IVA oltre il dodicesimo', () => {
+    const oltre: AxonProbe = {
+      ...RT30_G100,
+      departments: [{ number: '5', description: 'X', vatCode: '13' }],
+    }
+    expect(deptMappingFromProbe(oltre)).toEqual({})
+  })
+})
+
 describe('deptMappingFromProbe', () => {
   it('mappa aliquota su primo reparto che la usa', () => {
     const probe: AxonProbe = {

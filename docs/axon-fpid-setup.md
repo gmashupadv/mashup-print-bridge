@@ -63,58 +63,88 @@ configurazione reale della RT.
 Non compilare la mappatura a mano: la corrispondenza aliquota↔reparto dipende da
 come la stampante è stata programmata e varia da installazione a installazione.
 
-## 5. Ricavare i comandi SF20 di vendita
+## 5. I comandi SF20
 
-**Questo passo è quello che sblocca la stampa degli scontrini.** Finché non è
-fatto, `/print`, `/daily-close` e `/open-drawer` rispondono con un errore che
-rimanda a questa sezione.
+La sintassi di vendita è stata ricavata dal **Pannello del Tecnico → Stampa
+Scontrini di test** su una RT30 con FW serie 2 G100 e **validata il 29/07/2026**
+emettendo uno scontrino fiscale reale da 0,01 €:
 
-In axonFPiD_Pro_v7:
+```
+3/S/PROVA//1/0.01/1/22///0/
+U/
+5/1/0////PC//
+```
 
-1. **Pannello del Tecnico → Stampa Scontrini di test.** La finestra mostra a
-   sinistra i comandi SF20 dello scontrino di esempio selezionato e a destra
-   l'anteprima di stampa. Serve almeno il primo esempio: una vendita a reparto
-   più la chiusura con un pagamento.
-2. Fotografare o trascrivere i comandi.
-3. Facoltativo ma utile: **Invia Comandi SF20 o File TXT** permette di inviare
-   un singolo comando e leggerne la risposta, per validare la sintassi prima di
-   scriverla nel codice.
+La RT ha risposto `00/00/02/75` — REPLY `00`, comando elaborato correttamente —
+e ha emesso il documento. È implementata in `src/main/printing/sf20.ts`.
 
-Le informazioni da ricavare:
+Gli scontrini di esempio mostrano una riga iniziale `I/12345678/0/`, ma quel
+numero è un segnaposto e la sequenza funziona senza: il driver non la emette.
 
-| Operazione | Cosa serve |
+### Riga di vendita
+
+```
+3/S/Prodotto "A"//1/160.65/4/22///0/
+│ │      │      │ │   │    │ │ ││ └ 0 = bene, 1 = servizio
+│ │      │      │ │   │    │ │ │└── campo non identificato, sempre vuoto
+│ │      │      │ │   │    │ │ └─── natura esenzione (N1..N6), solo se IVA = 0
+│ │      │      │ │   │    │ └───── aliquota IVA in percentuale
+│ │      │      │ │   │    └─────── reparto
+│ │      │      │ │   └──────────── prezzo unitario
+│ │      │      │ └──────────────── quantità
+│ │      │      └────────────────── seconda riga di descrizione
+│ │      └───────────────────────── descrizione
+│ └──────────────────────────────── S = vendita, G = omaggio
+└────────────────────────────────── comando di vendita
+```
+
+### Pagamento
+
+```
+5/1/200////PC//
+│ │  │     └── PC contante, PE elettronico, NR non riscosso, SP sconto a pagare
+│ │  └──────── importo; 0 = salda tutto il residuo
+│ └─────────── codice pagamento programmato sulla RT
+└───────────── comando di pagamento
+```
+
+Codici di fabbrica (`sf20.txt`): 1 Contante, 2 Crediti (non riscosso), 3 Ticket,
+4 Bancomat, 5 Carta di credito, 6-10 programmabili. Il driver usa 1/`PC` per i
+contanti e 4/`PE` per carta. Verificabili con `{/x/` o con la stampa "lista
+pagamenti".
+
+### Cosa resta da ricavare
+
+Queste operazioni rispondono ancora con un errore che rimanda a questa sezione,
+perché non comparivano negli scontrini di test:
+
+| Operazione | Stato |
 |---|---|
-| Riga di vendita | comando, campi reparto / prezzo / quantità / descrizione |
-| Sconto | comando e se si applica a riga o a subtotale |
-| Subtotale | comando |
-| Pagamento e chiusura | comando, codice pagamento, gestione dell'importo parziale per lo split |
-| Chiusura giornaliera | comando di azzeramento Z1 |
-| Apertura cassetto | comando |
+| **Chiusura giornaliera** (`/daily-close`) | comando di azzeramento Z1 ignoto |
+| **Apertura cassetto** (`/open-drawer`) | comando ignoto |
+| **Sconto sul totale** | il comando `4/` compare solo come sconto di **riga**, subito dopo una riga di vendita; la forma sul subtotale non è verificata |
+| **Righe con IVA 0%** | richiedono la natura di esenzione (N1..N6), che `ReceiptItem` non trasporta |
 
-Codici di pagamento programmati di fabbrica sull'SF20 (`sf20.txt`):
-1 Contante, 2 Crediti (non riscosso), 3 Ticket, 4 Bancomat, 5 Carta di credito,
-6-10 programmabili. Da confermare con `{/x/` o con la stampa "lista pagamenti".
+Per ricavarle: **Pannello del Tecnico → Invia Comandi SF20 o File TXT** consente
+di mandare un comando e leggerne la risposta prima di scriverlo nel codice.
+In alternativa, richiedere la specifica del protocollo SF20 ad A.P.esse.
 
-4. Completare `buildReceipt`, `buildDailyClose` e `buildOpenDrawer` in
-   `src/main/printing/sf20.ts`, sostituendo il lancio di
-   `Sf20CommandUnavailableError`, e aggiungere i test corrispondenti in
-   `src/main/printing/sf20.test.ts`.
+Completandole, sostituire il lancio di `Sf20CommandUnavailableError` in
+`src/main/printing/sf20.ts` e aggiungere i test in `sf20.test.ts`.
 
 ## 6. Attenzione con più stampanti fiscali configurate
 
-Il driver `axon-fpid` dichiara la capability `fiscal-receipt` fin da subito,
-anche prima di aver completato il passo 5. Se in `printers[]` è presente
-anche una stampante Epson (o un'altra fiscale) funzionante, ma posizionata
-**dopo** quella axon-fpid nell'array, `resolveByCapability` (`server.ts`)
-sceglie comunque axon-fpid per ogni `/print`, `/daily-close` o `/open-drawer`
-che arriva **senza** `printerId` esplicito — la prima stampante con la
-capability richiesta, in ordine di configurazione. Il risultato è un
-`Sf20CommandUnavailableError` invece dello scontrino atteso dalla Epson.
+`axon-fpid` dichiara la capability `fiscal-receipt`. Se in `printers[]` è
+presente anche una Epson (o un'altra fiscale) funzionante ma posizionata
+**dopo** quella axon-fpid, `resolveByCapability` (`server.ts`) sceglie comunque
+axon-fpid per ogni `/print`, `/daily-close` o `/open-drawer` che arriva
+**senza** `printerId` esplicito: è la prima stampante con la capability
+richiesta, in ordine di configurazione.
 
-Finché i comandi SF20 di vendita non sono stati ricavati (passo 5), tenere
-axon-fpid come **unica** stampante fiscale configurata, oppure far sì che il
-POS invii sempre un `printerId` esplicito quando vuole raggiungere l'altra
-fiscale.
+Per `/print` oggi questo va bene. Per `/daily-close` e `/open-drawer`, finché i
+relativi comandi non sono noti, il risultato è un errore invece dell'operazione
+attesa dall'altra fiscale: tenere axon-fpid come **unica** stampante fiscale
+configurata, oppure far sì che il POS invii sempre un `printerId` esplicito.
 
 ## 7. Collaudo
 

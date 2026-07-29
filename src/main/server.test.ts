@@ -821,20 +821,15 @@ describe('integrazione axon-fpid via HTTP', () => {
     15_000
   )
 
-  it('POST /print senza altra fiscale configurata risponde 500 col messaggio italiano di Sf20CommandUnavailableError', async () => {
+  it('POST /daily-close risponde 500 col messaggio italiano di Sf20CommandUnavailableError', async () => {
+    // La chiusura giornaliera non era fra gli scontrini di test del Pannello del
+    // Tecnico, quindi il comando resta ignoto: il POS deve ricevere il messaggio
+    // che indirizza alla procedura, non un errore generico.
     const axonDriver = await connectedAxonDriver()
     const printers: ManagedPrinter[] = [{ config: axonPrinterConfig(), driver: axonDriver }]
     const app = buildServer({ getPrinters: () => printers, version: '1.0.0' })
 
-    const res = await app.inject({
-      method: 'POST',
-      url: '/print',
-      payload: {
-        items: [{ description: 'Prodotto test', quantity: 1, unitPrice: 1, vatRate: 22 }],
-        discount: 0,
-        payments: [{ description: 'Contanti', amount: 1, paymentType: 1 }],
-      },
-    })
+    const res = await app.inject({ method: 'POST', url: '/daily-close', payload: {} })
 
     expect(res.statusCode).toBe(500)
     const body = res.json()
@@ -842,4 +837,33 @@ describe('integrazione axon-fpid via HTTP', () => {
     expect(body.error).toContain('Comando SF20')
     expect(body.error).toContain('Scontrini di test')
   })
+
+  it(
+    'POST /print raggiunge lo spool e riporta la diagnostica di cartella, non un errore generico',
+    async () => {
+      // Con la sintassi di vendita nota, /print non fallisce piu` in fase di
+      // composizione: arriva al filesystem. Con axonFPiD assente il POS deve
+      // ricevere la diagnostica che nomina il Server di Stampa.
+      const axonDriver = await connectedAxonDriver()
+      const printers: ManagedPrinter[] = [{ config: axonPrinterConfig(), driver: axonDriver }]
+      const app = buildServer({ getPrinters: () => printers, version: '1.0.0' })
+
+      const res = await app.inject({
+        method: 'POST',
+        url: '/print',
+        payload: {
+          items: [{ description: 'Prodotto test', quantity: 1, unitPrice: 1, vatRate: 22 }],
+          discount: 0,
+          payments: [{ description: 'Contanti', amount: 1, paymentType: 1 }],
+        },
+      })
+
+      expect(res.statusCode).toBe(500)
+      const body = res.json()
+      expect(body.success).toBe(false)
+      expect(body.error).toContain('Server di Stampa')
+      expect(body.error).toContain('NON è stato stampato')
+    },
+    30_000
+  )
 })

@@ -528,15 +528,39 @@ describe('probeConfig', () => {
   })
 })
 
-describe('operazioni non ancora implementabili', () => {
-  it('printReceipt fallisce con un messaggio che indirizza alla procedura', async () => {
+describe('printReceipt', () => {
+  const RECEIPT_RESPONSE = `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
+<DEVICE_STATUS>00</DEVICE_STATUS><FISCAL_STATUS>02</FISCAL_STATUS>
+<CMD_X_ULTIMO_NUMERO_SCONTRINO>124</CMD_X_ULTIMO_NUMERO_SCONTRINO>
+<CMD_a_ECR_MATRICOLA>8AIGE013756</CMD_a_ECR_MATRICOLA></RESPONSE>`
+
+  it('deposita la sequenza di vendita e restituisce numero scontrino e matricola', async () => {
     const driver = await connect()
-    await expect(
-      driver.printReceipt({
-        items: [{ description: 'X', quantity: 1, unitPrice: 1, department: 1, vatRate: 22 }],
-        discount: 0,
-        payments: [{ description: 'Contanti', amount: 1, paymentType: 0 }],
-      })
-    ).rejects.toThrow(/Scontrini di test/)
+    const served = serveOnce(() => RECEIPT_RESPONSE)
+    const result = await driver.printReceipt({
+      items: [{ description: 'PROVA', quantity: 1, unitPrice: 0.01, department: 1, vatRate: 22 }],
+      discount: 0,
+      payments: [{ description: 'Contanti', amount: 0.01, paymentType: 0 }],
+    })
+    const commands = (await served).split('\r\n').filter(Boolean)
+
+    // Le prime tre righe sono la sequenza validata sulla RT della cliente;
+    // X/ e a/ sono accodate per farsi restituire numero e matricola.
+    expect(commands).toEqual(['3/S/PROVA//1/0.01/1/22///0/', 'U/', '5/1/0////PC//', 'X/', 'a/'])
+    expect(result.success).toBe(true)
+    expect(result.receiptNumber).toBe('124')
+    expect(result.printerSerial).toBe('8AIGE013756')
+  })
+})
+
+describe('operazioni non ancora implementabili', () => {
+  it('dailyClose fallisce con un messaggio che indirizza alla procedura', async () => {
+    const driver = await connect()
+    await expect(driver.dailyClose('1')).rejects.toThrow(/Scontrini di test/)
+  })
+
+  it('openDrawer fallisce con un messaggio che indirizza alla procedura', async () => {
+    const driver = await connect()
+    await expect(driver.openDrawer('1')).rejects.toThrow(/Scontrini di test/)
   })
 })

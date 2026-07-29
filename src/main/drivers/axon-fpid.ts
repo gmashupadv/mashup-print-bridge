@@ -20,10 +20,10 @@ import type {
 import { parseAxonResponse, describeFailure, firstTag } from '../printing/axon-response'
 import type { AxonResponse } from '../printing/axon-response'
 import * as sf20 from '../printing/sf20'
-// VAT_LETTERS e AxonProbe vivono in un modulo separato perché il pannello React
-// del renderer li importa direttamente da printing/axon-probe (non da qui):
-// questo file trascina node:fs/promises e node:path, non bundlabili lato browser.
-import { VAT_LETTERS } from '../printing/axon-probe'
+// AxonProbe e la logica di mappatura vivono in un modulo separato perché il
+// pannello React del renderer li importa direttamente da printing/axon-probe
+// (non da qui): questo file trascina node:fs/promises e node:path, non
+// bundlabili lato browser.
 import type { AxonProbe } from '../printing/axon-probe'
 
 const POLL_INTERVAL_MS = 250
@@ -304,8 +304,17 @@ export class AxonFpidDriver implements PrinterDriver {
     const descriptions = res.tags['CMD_d_DPT_DESCRIZIONE'] ?? []
     const vatCodes = res.tags['CMD_d_DPT_ALIQUOTAIVA'] ?? []
 
+    // Raccogliamo ogni CMD_e_VAT_* presente invece di chiedere cinque lettere
+    // fisse: le RT serie 1 rispondono CMD_e_VAT_A..E, quelle serie 2 G100 hanno
+    // dodici aliquote e possono numerarle. La chiave della tabella è il suffisso
+    // del TAG, e resolveVatRate in axon-probe.ts prova sia il numero sia la lettera.
+    const VAT_TAG_PREFIX = 'CMD_e_VAT_'
     const vatTable: Record<string, string> = {}
-    for (const letter of VAT_LETTERS) vatTable[letter] = firstTag(res, `CMD_e_VAT_${letter}`)
+    for (const [tag, values] of Object.entries(res.tags)) {
+      if (tag.startsWith(VAT_TAG_PREFIX)) {
+        vatTable[tag.slice(VAT_TAG_PREFIX.length)] = values[0] ?? ''
+      }
+    }
 
     return {
       firmware: firstTag(res, 'CMD_v_ECR_VERSIONEFW'),

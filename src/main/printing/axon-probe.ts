@@ -6,7 +6,20 @@
 //
 // La dipendenza è a senso unico (axon-fpid.ts importa da qui, non viceversa),
 // quindi VAT_LETTERS vive solo qui ed è ri-esportata anziché duplicata.
+
+/**
+ * Etichette delle aliquote sulle RT con FW serie 1, che ne espongono cinque.
+ * Le RT con FW serie 2 G100 ne espongono dodici, numerate: vedi MAX_VAT_SLOTS.
+ */
 export const VAT_LETTERS = ['A', 'B', 'C', 'D', 'E'] as const
+
+/**
+ * Slot IVA massimi. Le RT serie 1 ne hanno 5 (lettere A..E), quelle serie 2
+ * G100 ne hanno 12 (numerati). Verificato su una RT30 G100 della cliente: la
+ * tabella mostra Iva 1..Iva 12 e i reparti puntano a slot fino al 10.
+ * Limitarsi a 5 scartava in silenzio i reparti con slot 6..12.
+ */
+export const MAX_VAT_SLOTS = 12
 
 export interface AxonDepartment {
   number: string
@@ -31,12 +44,20 @@ export interface AxonProbe {
  * o "ESENTE").
  */
 function resolveVatRate(probe: AxonProbe, dept: AxonDepartment): number | null {
-  const letter = VAT_LETTERS[Number(dept.vatCode) - 1]
-  if (!letter) return null
-  const rate = probe.vatTable[letter]
-  if (rate == null || rate === '') return null
-  const parsedRate = Number(rate)
-  return Number.isFinite(parsedRate) ? parsedRate : null
+  const code = Number(dept.vatCode)
+  if (!Number.isInteger(code) || code < 1 || code > MAX_VAT_SLOTS) return null
+  // Il codice IVA del reparto è un indice 1-based. Non sappiamo a priori se la
+  // RT etichetta le aliquote per numero (serie 2 G100) o per lettera (serie 1),
+  // quindi proviamo entrambe le chiavi invece di assumere il firmware.
+  const letter: string | undefined = VAT_LETTERS[code - 1]
+  const keys = letter ? [String(code), letter] : [String(code)]
+  for (const key of keys) {
+    const rate = probe.vatTable[key]
+    if (rate == null || rate === '') continue
+    const parsedRate = Number(rate)
+    if (Number.isFinite(parsedRate)) return parsedRate
+  }
+  return null
 }
 
 /**
@@ -56,7 +77,7 @@ export function usableDepartments(probe: AxonProbe): AxonDepartment[] {
 
 /**
  * deptMapping = aliquota IVA (due decimali) → primo reparto che la usa.
- * Il codice IVA del reparto è 1..5 e punta alle lettere A..E della tabella.
+ * Il codice IVA del reparto è un indice 1..MAX_VAT_SLOTS nella tabella IVA.
  */
 export function deptMappingFromProbe(probe: AxonProbe): Record<string, number> {
   const mapping: Record<string, number> = {}
