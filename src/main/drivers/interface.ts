@@ -54,6 +54,8 @@ export interface DriverConfig {
   operatorId: string
   deptMapping: Record<string, number>
   deviceName?: string
+  spoolDir?: string
+  logDir?: string
   paper?: PaperConfig
   template?: LabelTemplate
 }

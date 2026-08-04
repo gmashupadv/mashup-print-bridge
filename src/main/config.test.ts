@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { promises as fs, writeFileSync, mkdtempSync } from 'node:fs'
 import * as path from 'node:path'
+import { tmpdir } from 'node:os'
 import * as os from 'node:os'
 import { createConfigManager } from './config'
 
@@ -190,5 +191,33 @@ describe('role migration', () => {
     expect(p.paper?.widthMm).toBe(62)
     expect(p.connection.deviceName).toBe('Brother QL-800')
     expect(p.template?.preset).toBe('product-price')
+  })
+
+  it('preserva spoolDir e logDir nella configurazione della stampante', async () => {
+    const file = path.join(tmpdir(), `cfg-${Date.now()}-spool.json`)
+    const manager = createConfigManager(file)
+    await manager.save({
+      printers: [
+        {
+          id: 'fiscal',
+          label: 'Hydra',
+          role: 'fiscal',
+          driver: 'axon-fpid',
+          connection: {
+            ip: '',
+            port: 0,
+            timeout: 30000,
+            spoolDir: 'C:\\axonFPiD_Pro_v7\\Spool',
+            logDir: 'C:\\axonFPiD_Pro_v7\\Log',
+          },
+          operatorId: '1',
+          deptMapping: {},
+        },
+      ],
+    })
+
+    const reloaded = createConfigManager(file).get()
+    expect(reloaded.printers[0].connection.spoolDir).toBe('C:\\axonFPiD_Pro_v7\\Spool')
+    expect(reloaded.printers[0].connection.logDir).toBe('C:\\axonFPiD_Pro_v7\\Log')
   })
 })

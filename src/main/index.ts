@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, dialog } from 'electron'
 import * as path from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import log from 'electron-log'
@@ -42,6 +42,8 @@ function driverConfigFrom(pc: PrinterConfig) {
     operatorId: pc.operatorId,
     deptMapping: pc.deptMapping,
     deviceName: pc.connection.deviceName,
+    spoolDir: pc.connection.spoolDir,
+    logDir: pc.connection.logDir,
     paper: pc.paper,
     template: pc.template,
   }
@@ -289,6 +291,26 @@ ipcMain.handle('label:preview', (_e, paper?: PaperConfig, template?: LabelTempla
     template: { ...DEFAULT_LABEL_TEMPLATE, ...template },
   })
 )
+
+// Selettore di cartella per il driver axon-fpid (cartella di ascolto e LOG)
+ipcMain.handle('dialog:pick-folder', async () => {
+  const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+  return result.canceled ? null : (result.filePaths[0] ?? null)
+})
+
+// Sonda di configurazione: canale separato da driver:test, che restituisce
+// sempre un PrinterStatus mentre qui la struttura di ritorno è diversa.
+ipcMain.handle('driver:probe', async (_e, printerId: string) => {
+  const driver = drivers.get(printerId)
+  if (!driver) throw new Error(`Driver not found: ${printerId}`)
+  const probe = (driver as { probeConfig?: () => Promise<unknown> }).probeConfig
+  if (typeof probe !== 'function') {
+    throw new Error('Questo driver non supporta la sonda di configurazione')
+  }
+  const result = await probe.call(driver)
+  emitLog(`Sonda di configurazione eseguita [${printerId}]`)
+  return result
+})
 
 // ------- App lifecycle -------
 

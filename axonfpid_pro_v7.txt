@@ -1,0 +1,2335 @@
+--- Pagina 1 ---
+2023
+axonFPiD_Pro_v7 versione 5.7.0
+Manuale Utente
+A.P.esse S.p.A.
+12/05/2023
+
+--- Pagina 2 ---
+Sommario
+INSTALLAZIONE AXONFPID_PRO_V7 .................................................................................................................. 3
+ELENCO MODELLI STAMPANTI FISCALI GESTITE DA AXONFPID_PRO_V7 ............................................................... 3
+VERSIONE DI AXONFPID_PRO_V7 ...................................................................................................................... 3
+BARRA INFORMAZIONI E STRUMENTI APPLICAZIONE .......................................................................................... 3
+FINESTRA PRINCIPALE AXONFPID_PRO_V7......................................................................................................... 4
+MODALITÀ ESECUZIONE FPID: ........................................................................................................................... 4
+INFO STAMPANTE: ........................................................................................................................................... 5
+CONNESSIONE STAMPANTE: ............................................................................................................................. 5
+SERVER DI STAMPA: ......................................................................................................................................... 5
+LOG E FILE DI RISPOSTA: ................................................................................................................................... 6
+PARAMETRI GENERALI: .........................................................................................................................................19
+SALVATAGGIO PARAMETRI DI CONFIGURAZIONE:...........................................................................................................19
+FINESTRA DI CONFIGURAZIONE STAMPANTE.....................................................................................................20
+INTESTAZIONE, DENOMINAZIONE E CODICI ATECO: ...........................................................................................20
+PIE DI SCONTRINO, VENTILAZIONE IVA: .....................................................................................................................21
+GESTIONE LOGHI .................................................................................................................................................22
+IVA E REPARTI: ..................................................................................................................................................22
+PLU: ...............................................................................................................................................................24
+PAGAMENTI: ..................................................................................................................................................24
+MESSAGGI: .......................................................................................................................................................25
+PARAMETRI S: ....................................................................................................................................................25
+CATEGORIE: .......................................................................................................................................................26
+GESTIONE CONFIGURAZIONE TERMINALI POS:..............................................................................................................26
+GESTIONE CONFIGURAZIONE PARAMETRI MODULO WIFI: ................................................................................................27
+FINESTRA USO COME ECR ................................................................................................................................28
+FINESTRA SCONTRINO ELETTRONICO ................................................................................................................30
+FINESTRA LETTURA DFGE .................................................................................................................................31
+FINESTRA TRASMISSIONE DEI CORRISPETTIVI ....................................................................................................32
+FINESTRA TRASMISSIONE LOTTERIA .................................................................................................................34
+FINESTRA PANNELLO DEL TECNICO ...................................................................................................................38
+RISTAMPA SCONTRINI - FATTURE - NOTE CREDITO DA DFGE O GIORNATA APERTA...............................................44
+SALVA SCONTRINI - FATTURE - NOTE CREDITO DA DFGE O GIORNATA APERTA SU FILE TXT ...................................46
+SALVA CORRISPETTIVI PER CHIUSURA FISCALE SU FILE XML ................................................................................49
+ACQUISISCI DA RT SCONTRINO ELETTRONICO E SALVA SU PDF............................................................................49
+RICHIESTA INFORMAZIONI A STAMPANTE MF / RT TRAMITE COMANDO READINFO: ............................................50
+ELENCO COMANDI SF20 GESTITI CON RISPOSTA NEL FILE RESPONSE_DOCUMENTOXXX.XML: ...............................53
+TABELLA REPLY CODE E POST ACTION ..............................................................................................................54
+TABELLA DESCRIZIONE POST ACTION .........................................................................................................58
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+2
+
+--- Pagina 3 ---
+Installazione axonFPiD_Pro_v7
+avviare il file axonFPiD_Pro_v7.msi per installare il driver. Per default è proposta la cartella di installazione
+'C:\axonFPiD_Pro_v7'. L'installazione prevede la creazione di una sottocartella 'Documentazione' dove sarà
+automaticamente salvato il Manuale Utente.
+Installazione su Windows 10 – si ricorda che, come da indicazione Microsoft, l’utilizzo dell’Esecuzione
+Automatica in ambiente Windows 10 per l’avvio delle app è sconsigliata perché le app come
+l’axonFPiD_Pro potrebbero essere avviate dal sistema prima dell’avvio dei servizi necessari al loro
+funzionamento. Per questo motivo Microsoft consiglia l’utilizzo delle Operazioni Pianificate in sostituzione
+dell’Esecuzione Automatica tramite l’Utilità di Pianificazione (da Pannello di Controllo -> Strumenti di
+Amministrazione -> Utilità di Pianificazione).
+Elenco modelli stampanti fiscali gestite da axonFPiD_Pro_v7
+Modelli gestiti da axonFPiD_Pro_v7: Hydra RT, Helios RT, Edoplus RT, Aura RT con FW serie 1, Hydra II RT,
+Aura RT, RT21, RT22 e RT30 con FW serie 2 G100.
+Versione di axonFPiD_Pro_v7
+la versione del driver axonFPiD_Pro_v7 è visualizzata nella parte alta della finestra principale.
+Barra informazioni e strumenti applicazione
+sotto alla barra 'Versione' è presente la barra Informazioni e Strumenti di axonFPiD_Pro_v7. In particolare:
+per connessione attiva sono visualizzati automaticamente il modello, il Numero di Serie della stampante, la
+Modalità operativa, la versione del Firmware installato sulla stampante fiscale. Nella parte destra del
+pannello è presente il led flag della connessione che è verde per connessione attiva, rosso per connessione
+non attiva e quattro Icone di operatività dell'applicazione. Nel dettaglio:
+attiva / disattiva fumetto Stato Stampante per segnalazione popup di fine carta, sportello
+aperto, display disconnesso, errore grave, stampante in stato di PERIODO INATTIVO.
+attiva / disattiva audio Stato Stampante per segnalazione di fine carta, sportello aperto,
+display disconnesso, errore grave, stampante in stato di PERIODO INATTIVO, click dei tasti,
+messaggi audio.
+visualizza il manuale utente online.
+Chiude l’applicazione axonFPiD_Pro_v7.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+3
+
+--- Pagina 4 ---
+Finestra principale axonFPiD_Pro_v7
+Nella parte sinistra della finestra sono presenti i tasti operativi dell’applicazione attivabili o disattivabili nel
+pannello del tecnico, nella parte destra in alto e al centro la parte operativa dedicata ai tasti funzione di
+configurazione dell’axonFPiD_Pro_v7 e alle Info Stampante, in basso il pannello Monitor Runtime che, se
+attivato, visualizza messaggi associati alla comunicazione e all’operatività del server di stampa. Nel dettaglio
+i tasti funzione:
+Modalità Esecuzione FPiD:
+Selezionare la modalità di esecuzione tra le 4 proposte:
+1) Normal – applicazione in modalità attiva.
+2) Minimized - ovvero finestra principale minimizzata
+nella try bar all'avvio dell'applicazione.
+3) Iconized - ovvero finestra principale iconizzata nella
+tray bar all'avvio dell'applicazione.
+4) VirtualECR - ovvero apertura della finestra principale e
+passaggio diretto alla finestra 'Uso come
+ECR' al termine della fase di connessione.
+Salvare con il tasto SALVA e riavviare l’axonFPiD_Pro_v7.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+4
+
+--- Pagina 5 ---
+Info Stampante:
+la pressione del tasto Info Stampante avvia la richiesta
+alla RT di un gruppo di informazioni visualizzate
+nell’area operativa. Tra le informazioni il modello della
+stampante, la sua Matricola, la versione del FW
+installato sulla stampante, lo stato della carta, dello
+sportello, della taglierina e di un or di errori hardware,
+le info relative al giornale elettronico (DFGE) ovvero il
+suo numero, la data della sua fine, i giorni operativi
+rimanenti e lo spazio disponibile in percentuale, le info
+della Memoria Fiscale ovvero lo stato del suo
+collegamento, lo stato fiscale, il totale degli
+azzeramenti effettuati e il totale degli azzeramenti
+rimanenti, e infine le info sulla versione dell’axonFPiD_Pro_v7 e sul sistema operativo installato nel PC.
+Connessione Stampante:
+utilizzare il tasto per configurare la connessione verso
+stampante fiscale. Le possibili connessioni sono:
+RS232 – USB virtual COM: per USB virtual COM
+installare il driver per la creazione della porta COM
+virtuale. Nel pannello di configurazione selezionare la
+porta COM e la velocità di comunicazione (default
+115.200 baud).
+Ethernet UDP o TCPIP: nel pannello di configurazione
+indicare l’indirizzo IP della stampante e la porta di
+comunicazione (default 9101). Sulla stampante, nel
+menù Ethernet, indicare se la comunicazione scelta è UDP (solo per RT con FW serie 1) o TCPIP. Salvare nel
+pannello di configurazione premendo il tasto SALVA.
+Server di stampa:
+utilizzare il tasto per attivare e configurare il Server di
+Stampa indicando la cartella di ascolto dove saranno
+accodati i file di stampa, indicando il nome file (* per
+tutti i nomi) e l’estensione dei file di stampa (TXT per
+default). Tramite il tasto ESTENSIONI NON UTILIZZABILI
+è possibile accedere alla lista di estensioni che non
+possono essere utilizzate e personalizzare la lista
+eliminando o aggiungendo le estensioni necessarie.
+Per utilizzo di più PC per stampa su una unica
+stampante fiscale è necessario installare un solo
+axonFPiD_Pro_v7 su un PC e poi condividere in rete la
+cartella di ascolto. Dalla versione 3.4.5 sono presenti 2 nuovi parametri:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+5
+
+--- Pagina 6 ---
+Attiva Annullo Documento in caso di errore bloccante su riga di comando SF20: attivando il parametro in
+caso di Reply Code bloccante in risposta a comando SF20, normalmente gestito ignorando il comando e
+proseguendo nella stampa, la stampa è interrotta e il Documento è automaticamente annullato.
+L’annullamento è segnalato nell’ eventuale file di LOG verboso e nell’eventuale file di Response XML.
+Attiva Annullo e ristampa del Documento per Timeout risposta a comando SF20: attivando il parametro in
+caso di non risposta a comando SF20 da parte della RT nei tempi impostati nel Timeout dell’app, in
+sostituzione del reinvio del comando da parte dell’app, la stampa è interrotta e il Documento è
+automaticamente annullato e successivamente ristampato.
+Salvare la configurazione con il tasto SALVA.
+LOG e file di risposta:
+L'applicazione fornisce a completamento dell'attività
+del server di stampa alcuni file di risposta o di gestione
+che consentono il ritorno di informazione verso i
+gestionali / applicativi. Questi file di LOG o di
+informazione sono salvati nella cartella selezionata per
+i LOG e i file di risposta proposta di default
+dall’axonFPiD_Pro_v7 ma parametrizzabile nel
+pannello di configurazione. Ogni singolo file di LOG o di
+risposta può essere attivato o disattivato. Premere il
+tasto SALVA per salvare la configurazione. Nel dettaglio
+i file generati dall’axonFPiD_Pro_v7:
+LOG COMPATTO: se attivato l'applicazione
+fornisce un file di log con informazioni minimali sulla gestione della coda di stampa. Il nome del file è
+'FPiD AAAAMMGG.log' dove AAAAMMGG sono anno espresso in 4 cifre, mese espresso in 2 cifre e giorno
+espresso in 2 cifre.
+LOG VERBOSE: se attivato l'applicazione fornisce un file di log con informazioni dettagliate di tutte le
+fasi di acquisizione e gestione dei file di stampa con indicazioni relative al singolo comando, alla relativa
+risposta da parte della stampante con dettaglio di Codici di ritorno e stati del device e fiscale e
+dell'eventuale Post Action intrapresa dall'applicazione in caso di risposta non ok. Il nome del file è 'FPiD
+AAAAMMGG.log' dove AAAAMMGG sono anno espresso in 4 cifre, mese espresso in 2 cifre e giorno
+espresso in 2 cifre.
+RESPONSE XML: se attivato l'applicazione fornisce un file XML di ritorno per ogni singolo scontrino /
+documento inserito nella coda di stampa e inviato alla stampante. Nel file Response sono sempre presenti
+dei TAG relativi all'esito, agli stati di ritorno, alle eventuali Eccezioni e alle Post Action intraprese in caso di
+errore. Sono presenti inoltre, se richiesti tramite i comandi SF20 ‘t/’ o ‘0/1/’ o ‘0/2/’ o ‘0/3/’ o ‘0/’ o ‘e/’ o
+'9/' o 'X/', ‘i/’, ‘,/10/’, ‘a/’, ‘v/’, ‘d/x/’, ‘:/x/’, ‘{/x/’, ‘z/x/y/2/’, ‘z/x//3/’, ‘,/18/’, 0/4/z/s/ (solo per RT con FW
+serie 2 G100) i TAG relativi ai campi di informazione restituiti dalla stampante in risposta al singolo comando
+di interrogazione. Il nome del file Response è composto da 'Response_ Nome del File in stampa.xml'. Di
+seguito un dettaglio della struttura del file xml, del significato dei TAG.
+-----------------------------------------------------------------------------------------------------------------------------------------------
+- <?xml version="1.0" encoding="utf-8" standalone="yes"?>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+6
+
+--- Pagina 7 ---
+-TAG <RESPONSE> (sempre presente - apertura)
+- TAG <ESITO>xx </ESITO> (sempre presente - xx = OK o NON OK)
+- TAG <REPLY>00</REPLY> (sempre presente tranne se NON OK per Response a Check Format)
+- TAG <DEVICE_STATUS>00</DEVICE_STATUS> (sempre presente tranne se NON OK per Response a Check Format)
+- TAG <FISCAL_STATUS>02</FISCAL_STATUS> (sempre presente tranne se NON OK per Response a Check Format)
+- TAG <ECCEZIONE> (solo in caso di Errore ovvero Reply Code <> 00)
+- TAG <NUMERO_RIGA_ECCEZIONE>001</NUMERO_RIGA_ECCEZIONE>
+- TAG <COMANDO_ECCEZIONE>3/S/xxxxxx...</COMANDO_ECCEZIONE>
+- TAG <REPLY_ECCEZIONE>2D</REPLY_ECCEZIONE>
+- TAG <DEVICE_STATUS_ECCEZIONE>00</DEVICE_STATUS_ECCEZIONE>
+- TAG <FISCAL_STATUS_ECCEZIONE>06</FISCAL_STATUS_ECCEZIONE>
+- TAG <DESC_ERRORE_ECCEZIONE>xxxxxxxxxxxxxxxxxxxxxx</DESC_ERRORE_ECCEZIONE>
+- TAG <AZIONE_ECCEZIONE>x</AZIONE_ECCEZIONE> (x da 0 a 9 - vedi legenda Azioni Post Eccezione)
+- TAG </ECCEZIONE>
+Comando t/
+- TAG <CMD_t_DATA>13/07/2016</CMD_t_DATA>
+- TAG <CMD_t_ORA>18:09</CMD_t_ORA>
+Comando 0/1/
+- TAG <CMD_0_1_PROSSIMOAZZERAMENTO>xxx</CMD_0_1_PROSSIMOAZZERAMENTO>
+- TAG <CMD_0_1_NET_AMOUNT_VAT1_SALES>0.00</CMD_0_1_NET_AMOUNT_VAT1_SALES>
+- TAG <CMD_0_1_VAT_AMOUNT_VAT1_SALES>0.00</CMD_0_1_VAT_AMOUNT_VAT1_SALES>
+- TAG <CMD_0_1_NET_AMOUNT_VAT1_RM>0.00</CMD_0_1_NET_AMOUNT_VAT1_RM>
+- TAG <CMD_0_1_NET_AMOUNT_VAT1_ANN>0.00</CMD_0_1_NET_AMOUNT_VAT1_ANN>
+- TAG <CMD_0_1_NET_AMOUNT_VAT2_SALES>0.00</CMD_0_1_NET_AMOUNT_VAT2_SALES>
+- TAG <CMD_0_1_VAT_AMOUNT_VAT2_SALES>0.00</CMD_0_1_VAT_AMOUNT_VAT2_SALES>
+- TAG <CMD_0_1_NET_AMOUNT_VAT2_RM>0.00</CMD_0_1_NET_AMOUNT_VAT2_RM>
+- TAG <CMD_0_1_NET_AMOUNT_VAT2_ANN>0.00</CMD_0_1_NET_AMOUNT_VAT2_ANN>
+- TAG <CMD_0_1_NET_AMOUNT_VAT3_SALES>0.00</CMD_0_1_NET_AMOUNT_VAT3_SALES>
+- TAG <CMD_0_1_VAT_AMOUNT_VAT3_SALES>0.00</CMD_0_1_VAT_AMOUNT_VAT3_SALES>
+- TAG <CMD_0_1_NET_AMOUNT_VAT3_RM>0.00</CMD_0_1_NET_AMOUNT_VAT3_RM>
+- TAG <CMD_0_1_NET_AMOUNT_VAT3_ANN>0.00</CMD_0_1_NET_AMOUNT_VAT3_ANN>
+- TAG <CMD_0_1_NET_AMOUNT_VAT4_SALES>0.00</CMD_0_1_NET_AMOUNT_VAT4_SALES>
+- TAG <CMD_0_1_VAT_AMOUNT_VAT4_SALES>0.00</CMD_0_1_VAT_AMOUNT_VAT4_SALES>
+- TAG <CMD_0_1_NET_AMOUNT_VAT4_RM>0.00</CMD_0_1_NET_AMOUNT_VAT4_RM>
+- TAG <CMD_0_1_NET_AMOUNT_VAT5_ANN>0.00</CMD_0_1_NET_AMOUNT_VAT4_ANN>
+- TAG <CMD_0_1_NET_AMOUNT_VAT5_SALES>0.00</CMD_0_1_NET_AMOUNT_VAT5_SALES>
+- TAG <CMD_0_1_VAT_AMOUNT_VAT5_SALES>0.00</CMD_0_1_VAT_AMOUNT_VAT5_SALES>
+- TAG <CMD_0_1_NET_AMOUNT_VAT5_RM>0.00</CMD_0_1_NET_AMOUNT_VAT5_RM>
+- TAG <CMD_0_1_NET_AMOUNT_VAT5_ANN>0.00</CMD_0_1_NET_AMOUNT_VAT5_ANN>
+- TAG <CMD_0_1_TOTAL_N1_SALES>0.00</CMD_0_1_TOTAL_N1_SALES>
+- TAG <CMD_0_1_TOTAL_N1_RM>0.00</CMD_0_1_TOTAL_N1_RM>
+- TAG <CMD_0_1_TOTAL_N1_ANN>0.00</CMD_0_1_TOTAL_N1_ANN>
+- TAG <CMD_0_1_TOTAL_N2_SALES>0.00</CMD_0_1_TOTAL_N2_SALES>
+- TAG <CMD_0_1_TOTAL_N2_RM>0.00</CMD_0_1_TOTAL_N2_RM>
+- TAG <CMD_0_1_TOTAL_N2_ANN>0.00</CMD_0_1_TOTAL_N2_ANN>
+- TAG <CMD_0_1_TOTAL_N3_SALES>0.00</CMD_0_1_TOTAL_N3_SALES>
+- TAG <CMD_0_1_TOTAL_N3_RM>0.00</CMD_0_1_TOTAL_N3_RM>
+- TAG <CMD_0_1_TOTAL_N3_ANN>0.00</CMD_0_1_TOTAL_N3_ANN>
+- TAG <CMD_0_1_TOTAL_N4_SALES>0.00</CMD_0_1_TOTAL_N4_SALES>
+- TAG <CMD_0_1_TOTAL_N4_RM>0.00</CMD_0_1_TOTAL_N4_RM>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+7
+
+--- Pagina 8 ---
+- TAG <CMD_0_1_TOTAL_N4_ANN>0.00</CMD_0_1_TOTAL_N4_ANN>
+- TAG <CMD_0_1_TOTAL_N5_SALES>0.00</CMD_0_1_TOTAL_N5_SALES>
+- TAG <CMD_0_1_TOTAL_N5_RM>0.00</CMD_0_1_TOTAL_N5_RM>
+- TAG <CMD_0_1_TOTAL_N5_ANN>0.00</CMD_0_1_TOTAL_N5_ANN>
+- TAG <CMD_0_1_TOTAL_N6_SALES>0.00</CMD_0_1_TOTAL_N6_SALES>
+- TAG <CMD_0_1_TOTAL_N6_RM>0.00</CMD_0_1_TOTAL_N6_RM>
+- TAG <CMD_0_1_TOTAL_N6_ANN>0.00</CMD_0_1_TOTAL_N6_ANN>
+Comando 0/
+- TAG <CMD_0_IVA_GIORNO>
+- TAG <IVA_1>xxxxx</IVA_1>
+- TAG <IVA_2>xxxxx</IVA_2>
+- TAG <IVA_3>xxxxx</IVA_3>
+- TAG <IVA_4>xxxxx</IVA_4>
+- TAG <IVA_5>xxxxx</IVA_5>
+- TAG </CMD_0_IVA_GIORNO>
+- TAG <CMD_0_TOTALE_IVA_GIORNO>xxxxxx</CMD_0_TOTALE_IVA_GIORNO>
+- TAG <CMD_0_NUMERO_SCONTRINO>123</CMD_0_NUMERO_SCONTRINO>
+- TAG <CMD_0_NUMERO_SCONTRINO_NF>0</CMD_0_NUMERO_SCONTRINO_NF>
+- TAG <CMD_0_TOTALE_VUOTI>0</CMD_0_TOTALE_VUOTI>
+- TAG <CMD_0_TOTALE_RIMBORSATI>0</CMD_0_TOTALE_RIMBORSATI>
+- TAG <CMD_0_TOTALE_ANNULLATI>0</CMD_0_TOTALE_ANNULLATI>
+- TAG <CMD_0_TOTALE_SCONTRINI_FISCALI>50</CMD_0_TOTALE_SCONTRINI_FISCALI>
+- TAG <CMD_0_TOTALE_FATTURE>10</CMD_0_TOTALE_FATTURE>
+- TAG <CMD_0_TOTALE_NOTE_CREDITO>0</CMD_0_TOTALE_NOTE_CREDITO>
+- TAG <CMD_0_NUMERO_FATTURE>10</CMD_0_NUMERO_FATTURE>
+- TAG <CMD_0_NUMERO_NOTE_CREDITO>0</CMD_0_NUMERO_NOTE_CREDITO>
+Comando 0 / 2 per RT con FW serie 1
+- TAG <CMD_0_2_AZZERAMENTO>178</CMD_0_2_AZZERAMENTO>
+- TAG <CMD_0_2_TIPO>V1</CMD_0_2_TIPO>
+- TAG <CMD_0_2_IMPOSTA>0.00</CMD_0_2_IMPOSTA>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>V2</CMD_0_2_TIPO>
+- TAG <CMD_0_2_IMPOSTA>0.00</CMD_0_2_IMPOSTA>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+8
+
+--- Pagina 9 ---
+- TAG <CMD_0_2_TIPO>V3</CMD_0_2_TIPO>
+- TAG <CMD_0_2_IMPOSTA>0.00</CMD_0_2_IMPOSTA>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>V4</CMD_0_2_TIPO>
+- TAG <CMD_0_2_IMPOSTA>0.00</CMD_0_2_IMPOSTA>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>V5</CMD_0_2_TIPO>
+- TAG <CMD_0_2_IMPOSTA>0.00</CMD_0_2_IMPOSTA>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>N1</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>N2</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+9
+
+--- Pagina 10 ---
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>N3</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>N4</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>N5</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_TIPO>N6</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+- presente solo se Ventilazione IVA è ATTIVA
+- TAG <CMD_0_2_TIPO>VR</CMD_0_2_TIPO>
+- TAG <CMD_0_2_AMMONTARE>0.00</CMD_0_2_AMMONTARE>
+- TAG <CMD_0_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_BENI_IN_SOSPESO>0.00</CMD_0_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_NON_RISCOSSO_OMAGGI>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+10
+
+--- Pagina 11 ---
+Comando 0 / 2 per RT con FW serie 2 G100
+- TAG <CMD_0_2_AZZERAMENTO>178</CMD_0_2_AZZERAMENTO>
+- TAG <CMD_0_2_IVA_1_ETICHETTA>xx</CMD_0_2_IVA_1_ETICHETTA>
+- TAG <CMD_0_2_IVA_1_IMPOSTA>0.00</CMD_0_2_IVA_1_IMPOSTA>
+- TAG <CMD_0_2_IVA_1_AMMONTARE>0.00</CMD_0_2_IVA_1_AMMONTARE>
+- TAG <CMD_0_2_IVA_1_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_1_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_1_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_1_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_1_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_1_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_1_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_1_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_1_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_1_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_1_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_1_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_1_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_1_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_1_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_1_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_2_ETICHETTA>xx</CMD_0_2_IVA_2_ETICHETTA>
+- TAG <CMD_0_2_IVA_2_IMPOSTA>0.00</CMD_0_2_IVA_2_IMPOSTA>
+- TAG <CMD_0_2_IVA_2_AMMONTARE>0.00</CMD_0_2_IVA_2_AMMONTARE>
+- TAG <CMD_0_2_IVA_2_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_2_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_2_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_2_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_2_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_2_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_2_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_2_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_2_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_2_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_2_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_2_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_2_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_2_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_2_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_2_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_3_ETICHETTA>xx</CMD_0_2_IVA_3_ETICHETTA>
+- TAG <CMD_0_2_IVA_3_IMPOSTA>0.00</CMD_0_2_IVA_3_IMPOSTA>
+- TAG <CMD_0_2_IVA_3_AMMONTARE>0.00</CMD_0_2_IVA_3_AMMONTARE>
+- TAG <CMD_0_2_IVA_3_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_3_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_3_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_3_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_3_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_3_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_3_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_3_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_3_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_3_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_3_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_3_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_3_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_3_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_3_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_3_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_4_ETICHETTA>xx</CMD_0_2_IVA_4_ETICHETTA>
+- TAG <CMD_0_2_IVA_4_IMPOSTA>0.00</CMD_0_2_IVA_4_IMPOSTA>
+- TAG <CMD_0_2_IVA_4_AMMONTARE>0.00</CMD_0_2_IVA_4_AMMONTARE>
+- TAG <CMD_0_2_IVA_4_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_4_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_4_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_4_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_4_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_4_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_4_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_4_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_4_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_4_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_4_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_4_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_4_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_4_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_4_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_4_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_5_ETICHETTA>xx</CMD_0_2_IVA_5_ETICHETTA>
+- TAG <CMD_0_2_IVA_5_IMPOSTA>0.00</CMD_0_2_IVA_5_IMPOSTA>
+- TAG <CMD_0_2_IVA_5_AMMONTARE>0.00</CMD_0_2_IVA_5_AMMONTARE>
+- TAG <CMD_0_2_IVA_5_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_5_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_5_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_5_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_5_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_5_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_5_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_5_BENI_IN_SOSPESO>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+11
+
+--- Pagina 12 ---
+- TAG <CMD_0_2_IVA_5_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_5_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_5_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_5_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_5_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_5_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_5_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_5_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_6_ETICHETTA>xx</CMD_0_2_IVA_6_ETICHETTA>
+- TAG <CMD_0_2_IVA_6_IMPOSTA>0.00</CMD_0_2_IVA_6_IMPOSTA>
+- TAG <CMD_0_2_IVA_6_AMMONTARE>0.00</CMD_0_2_IVA_6_AMMONTARE>
+- TAG <CMD_0_2_IVA_6_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_6_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_6_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_6_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_6_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_6_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_6_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_6_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_6_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_6_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_6_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_6_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_6_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_6_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_6_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_6_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_7_ETICHETTA>xx</CMD_0_2_IVA_7_ETICHETTA>
+- TAG <CMD_0_2_IVA_7_IMPOSTA>0.00</CMD_0_2_IVA_7_IMPOSTA>
+- TAG <CMD_0_2_IVA_7_AMMONTARE>0.00</CMD_0_2_IVA_7_AMMONTARE>
+- TAG <CMD_0_2_IVA_7_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_7_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_7_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_7_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_7_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_7_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_7_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_7_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_7_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_7_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_7_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_7_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_7_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_7_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_7_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_7_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_8_ETICHETTA>xx</CMD_0_2_IVA_8_ETICHETTA>
+- TAG <CMD_0_2_IVA_8_IMPOSTA>0.00</CMD_0_2_IVA_8_IMPOSTA>
+- TAG <CMD_0_2_IVA_8_AMMONTARE>0.00</CMD_0_2_IVA_8_AMMONTARE>
+- TAG <CMD_0_2_IVA_8_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_8_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_8_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_8_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_8_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_8_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_8_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_8_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_8_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_8_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_8_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_8_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_8_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_8_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_8_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_8_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_9_ETICHETTA>xx</CMD_0_2_IVA_9_ETICHETTA>
+- TAG <CMD_0_2_IVA_9_IMPOSTA>0.00</CMD_0_2_IVA_9_IMPOSTA>
+- TAG <CMD_0_2_IVA_9_AMMONTARE>0.00</CMD_0_2_IVA_9_AMMONTARE>
+- TAG <CMD_0_2_IVA_9_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_9_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_9_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_9_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_9_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_9_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_9_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_9_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_9_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_9_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_9_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_9_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_9_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_9_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_9_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_9_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_10_ETICHETTA>xx</CMD_0_2_IVA_10_ETICHETTA>
+- TAG <CMD_0_2_IVA_10_IMPOSTA>0.00</CMD_0_2_IVA_10_IMPOSTA>
+- TAG <CMD_0_2_IVA_10_AMMONTARE>0.00</CMD_0_2_IVA_10_AMMONTARE>
+- TAG <CMD_0_2_IVA_10_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_10_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_10_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_10_TOTALE_AMMONTARE_RESI>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+12
+
+--- Pagina 13 ---
+- TAG <CMD_0_2_IVA_10_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_10_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_10_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_10_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_10_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_10_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_10_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_10_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_10_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_10_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_10_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_10_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_11_ETICHETTA>xx</CMD_0_2_IVA_11_ETICHETTA>
+- TAG <CMD_0_2_IVA_11_IMPOSTA>0.00</CMD_0_2_IVA_11_IMPOSTA>
+- TAG <CMD_0_2_IVA_11_AMMONTARE>0.00</CMD_0_2_IVA_11_AMMONTARE>
+- TAG <CMD_0_2_IVA_11_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_11_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_11_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_11_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_11_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_11_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_11_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_11_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_11_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_11_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_11_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_11_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_11_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_11_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_11_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_11_NON_RISCOSSO_OMAGGI>
+- TAG <CMD_0_2_IVA_12_ETICHETTA>xx</CMD_0_2_IVA_12_ETICHETTA>
+- TAG <CMD_0_2_IVA_12_IMPOSTA>0.00</CMD_0_2_IVA_12_IMPOSTA>
+- TAG <CMD_0_2_IVA_12_AMMONTARE>0.00</CMD_0_2_IVA_12_AMMONTARE>
+- TAG <CMD_0_2_IVA_12_IMPORTO_PARZIALE>0.00</CMD_0_2_IVA_12_IMPORTO_PARZIALE>
+- TAG <CMD_0_2_IVA_12_TOTALE_AMMONTARE_RESI>0.00</CMD_0_2_IVA_12_TOTALE_AMMONTARE_RESI>
+- TAG <CMD_0_2_IVA_12_TOTALE_AMMONTARE_ANNULLI>0.00</CMD_0_2_TOTALE_IVA_12_AMMONTARE_ANNULLI>
+- TAG <CMD_0_2_IVA_12_BENI_IN_SOSPESO>0.00</CMD_0_2_IVA_12_BENI_IN_SOSPESO>
+- TAG <CMD_0_2_IVA_12_NON_RISCOSSO_SERVIZI>0.00</CMD_0_2_IVA_12_NON_RISCOSSO_SERVIZI>
+- TAG <CMD_0_2_IVA_12_NON_RISCOSSO_FATTURE>0.00</CMD_0_2_IVA_12_NON_RISCOSSO_FATTURE>
+- TAG <CMD_0_2_IVA_12_NON_RISCOSSO_DCR_A_SSN>0.00</CMD_0_2_IVA_12_NON_RISCOSSO_DCR_A_SSN>
+- TAG <CMD_0_2_IVA_12_NON_RISCOSSO_OMAGGI>0.00</CMD_0_2_IVA_12_NON_RISCOSSO_OMAGGI>
+Comando 0 / 3 per RT con FW serie 1
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_A>0.00</CMD_0_3_TOTALE_IVATO_IVA_A>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_B>0.00</CMD_0_3_TOTALE_IVATO_IVA_B>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_C>0.00</CMD_0_3_TOTALE_IVATO_IVA_C>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_D>0.00</CMD_0_3_TOTALE_IVATO_IVA_D>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_E>0.00</CMD_0_3_TOTALE_IVATO_IVA_E>
+- TAG <CMD_0_3_TOTALE_NATURA_N1>0.00</CMD_0_3_TOTALE_NATURA_N1>
+- TAG <CMD_0_3_TOTALE_NATURA_N2>0.00</CMD_0_3_TOTALE_NATURA_N2>
+- TAG <CMD_0_3_TOTALE_NATURA_N3>0.00</CMD_0_3_TOTALE_NATURA_N3>
+- TAG <CMD_0_3_TOTALE_NATURA_N4>0.00</CMD_0_3_TOTALE_NATURA_N4>
+- TAG <CMD_0_3_TOTALE_NATURA_N5>0.00</CMD_0_3_TOTALE_NATURA_N5>
+- TAG <CMD_0_3_TOTALE_NATURA_N6>0.00</CMD_0_3_TOTALE_NATURA_N6>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_A>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_A>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_B>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_B>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_C>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_C>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_D>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_D>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_E>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_E>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_NATURA_N1>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_NATURA_N1>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_NATURA_N2>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_NATURA_N2>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_NATURA_N3>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_NATURA_N3>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_NATURA_N4>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_NATURA_N4>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_NATURA_N5>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_NATURA_N5>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_NATURA_N6>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_NATURA_N6>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+13
+
+--- Pagina 14 ---
+Comando 0 / 3 per RT con FW serie 2 G100
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_1>0.00</CMD_0_3_TOTALE_IVATO_IVA_1>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_2>0.00</CMD_0_3_TOTALE_IVATO_IVA_2>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_3>0.00</CMD_0_3_TOTALE_IVATO_IVA_3>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_4>0.00</CMD_0_3_TOTALE_IVATO_IVA_4>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_5>0.00</CMD_0_3_TOTALE_IVATO_IVA_5>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_6>0.00</CMD_0_3_TOTALE_IVATO_IVA_6>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_7>0.00</CMD_0_3_TOTALE_IVATO_IVA_7>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_8>0.00</CMD_0_3_TOTALE_IVATO_IVA_8>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_9>0.00</CMD_0_3_TOTALE_IVATO_IVA_9>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_10>0.00</CMD_0_3_TOTALE_IVATO_IVA_10>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_11>0.00</CMD_0_3_TOTALE_IVATO_IVA_11>
+- TAG <CMD_0_3_TOTALE_IVATO_IVA_12>0.00</CMD_0_3_TOTALE_IVATO_IVA_12>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_1>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_1>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_2>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_2>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_3>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_3>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_4>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_4>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_5>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_5>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_6>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_6>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_7>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_7>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_8>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_8>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_9>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_9>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_10>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_10>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_11>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_11>
+- TAG <CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_12>0.00</CMD_0_3_TOTALE_NON_RISCOSSO_OMAGGI_IVA_12>
+Comando 9 / per RT con FW serie 1
+- TAG <CMD_9_ACCUMULATORI_IVA>
+- TAG <ACC_IVA_1>xxxx</ACC_IVA_1>
+- TAG <ACC_IVA_2>xxxx</ACC_IVA_2>
+- TAG <ACC_IVA_3>xxxx</ACC_IVA_3>
+- TAG <ACC_IVA_4>xxxx</ACC_IVA_4>
+- TAG <ACC_IVA_5>xxxx</ACC_IVA_5>
+- TAG </CMD_9_ACCUMULATORI_IVA>
+- TAG <CMD_9_NUMERO_SCONTRINO>123</CMD_9_NUMERO_SCONTRINO>
+- TAG <CMD_9_TOTALE_TRANSAZIONI>xxxx</CMD_9_TOTALE_TRANSAZIONI>
+- TAG <CMD_9_TOTALE_RESI>xxxx</CMD_9_TOTALE_RESI>
+Comando 9 / per RT con FW serie 2 G100
+- TAG <CMD_9_ACCUMULATORI_IVA>
+- TAG <ACC_IVA_1>xxxx</ACC_IVA_1>
+- TAG <ACC_IVA_2>xxxx</ACC_IVA_2>
+- TAG <ACC_IVA_3>xxxx</ACC_IVA_3>
+- TAG <ACC_IVA_4>xxxx</ACC_IVA_4>
+- TAG <ACC_IVA_5>xxxx</ACC_IVA_5>
+- TAG <ACC_IVA_6>xxxx</ACC_IVA_6>
+- TAG <ACC_IVA_7>xxxx</ACC_IVA_7>
+- TAG <ACC_IVA_8>xxxx</ACC_IVA_8>
+- TAG <ACC_IVA_9>xxxx</ACC_IVA_9>
+- TAG <ACC_IVA_10>xxxx</ACC_IVA_10>
+- TAG <ACC_IVA_11>xxxx</ACC_IVA_11>
+- TAG <ACC_IVA_12>xxxx</ACC_IVA_12>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+14
+
+--- Pagina 15 ---
+- TAG </CMD_9_ACCUMULATORI_IVA>
+- TAG <CMD_9_NUMERO_SCONTRINO>123</CMD_9_NUMERO_SCONTRINO>
+- TAG <CMD_9_TOTALE_TRANSAZIONI>xxxx</CMD_9_TOTALE_TRANSAZIONI>
+- TAG <CMD_9_TOTALE_RESI>xxxx</CMD_9_TOTALE_RESI>
+Comando X/
+- TAG <CMD_X_TIPO_TRANSAZIONE>1</CMD_X_TIPO_TRANSAZIONE>
+- TAG <CMD_X_ULTIMO_NUMERO_SCONTRINO>123</CMD_X_ULTIMO_NUMERO_SCONTRINO>
+- TAG <CMD_X_ULTIMO_NUMERO_SCONTRINO_NF>1</CMD_X_ULTIMO_NUMERO_SCONTRINO_NF>
+- TAG <CMD_X_ULTIMO_NUMERO_FATTURA>10</CMD_X_ULTIMO_NUMERO_FATTURA>
+- TAG <CMD_X_ULTIMO_NUMERO_NOTA_CREDITO>0</CMD_X_ULTIMO_NUMERO_NOTA_CREDITO>
+- TAG <CMD_X_SUFFISSO_FATTURA>xxx</CMD_X_SUFFISSO_FATTURA>
+- TAG <CMD_X_NUMERO_FILE_LOTTERIA>xxx</CMD_X_NUMERO_FILE_LOTTERIA>
+- TAG <CMD_X_STATO_XML_LOTTERIA>xxx</CMD_X_STATO_XML_LOTTERIA>
+Comando i/
+- TAG <CMD_i_Z_DATA>230719</CMD_i_Z_DATA>
+- TAG <CMD_i_Z_ORA>153500</CMD_i_Z_ORA>
+- TAG <CMD_i_Z_NUMERO>49</CMD_i_Z_NUMERO>
+- TAG <CMD_i_Z_TOTALESCONTRINI>102</CMD_i_Z_TOTALESCONTRINI>
+- TAG <CMD_i_Z_GRANTOTALE>364.52</CMD_i_Z_GRANTOTALE>
+- TAG <CMD_i_Z_TOTALEFATTURE>0.00</CMD_i_Z_TOTALEFATTURE>
+- TAG <CMD_i_Z_TOTALENOTACREDITO>0.00</CMD_i_Z_TOTALENOTACREDITO>
+Comando ,/10/
+- TAG <CMD_virgola_ECR_STATO>1</CMD_virgola_ECR_STATO>
+- TAG <CMD_virgola_ECR_DATART></CMD_virgola_ECR_DATART>
+Comando a/
+- TAG <CMD_a_ECR_MATRICOLA>8A014141</CMD_a_ECR_MATRICOLA>
+- TAG <CMD_a_ECR_NUMERO>1</CMD_a_ECR_NUMERO>
+- TAG <CMD_a_ECR_CODICEMODELLO>TN</CMD_a_ECR_CODICEMODELLO>
+- TAG <CMD_a_ECR_CODICEVERSIONE>V2 R1 B7</CMD_a_ECR_CODICEVERSIONE>
+Comando v/
+- TAG <CMD_v_ECR_VERSIONEFW>V2 R1 B7 F064</CMD_v_ECR_VERSIONEFW>
+- TAG <CMD_v_ECR_VERSIONEPROTOCOLLO>V2 R1 B7</CMD_v_ECR_VERSIONEPROTOCOLLO>
+- TAG <CMD_v_ECR_MASSIMOCHIAVI>90</CMD_v_ECR_MASSIMOCHIAVI>
+- TAG <CMD_v_ECR_MASSIMOPLU>50000</CMD_v_ECR_MASSIMOPLU>
+- TAG <CMD_v_ECR_MASSIMOREPARTI>60</CMD_v_ECR_MASSIMOREPARTI>
+- TAG <CMD_v_ECR_MASSIMOPAGAMENTI>10</CMD_v_ECR_MASSIMOPAGAMENTI>
+Comando e/
+- TAG <CMD_e_VAT_A>0</CMD_e_VAT_A>
+- TAG <CMD_e_VAT_B>4</CMD_e_VAT_B>
+- TAG <CMD_e_VAT_C>5</CMD_e_VAT_C>
+- TAG <CMD_e_VAT_D>10</CMD_e_VAT_D>
+- TAG <CMD_e_VAT_E>22</CMD_e_VAT_E>
+Comando d/x/
+- TAG <CMD_d_DPT_NUMERO>1</CMD_d_DPT_NUMERO>
+- TAG <CMD_d_DPT_DESCRIZIONE>REPAR-01</CMD_d_DPT_DESCRIZIONE>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+15
+
+--- Pagina 16 ---
+- TAG <CMD_d_DPT_ALIQUOTAIVA>1</CMD_d_DPT_ALIQUOTAIVA>
+- TAG <CMD_d_DPT_FLAGSETTING>0011000</CMD_d_DPT_FLAGSETTING>
+- TAG <CMD_d_DPT_PREZZO>0.00</CMD_d_DPT_PREZZO>
+- TAG <CMD_d_DPT_MAXPREZZO>999999.99</CMD_d_DPT_MAXPREZZO>
+- TAG <CMD_d_DPT_QTAVENDUTACORRENTE>14.000</CMD_d_DPT_QTAVENDUTACORRENTE>
+- TAG <CMD_d_DPT_TOTALEVENDITE>14.00</CMD_d_DPT_TOTALEVENDITE>
+- TAG <CMD_d_DPT_QTAVENDUTAACCUMULATA>97.000</CMD_d_DPT_QTAVENDUTAACCUMULATA>
+- TAG<CMD_d_DPT_TOTALEVENDITEACCUMULATO>92.60</CMD_d_DPT_TOTALEVENDITEACCUMULATO>
+- TAG <CMD_d_DPT_CATEGORIA>1</CMD_d_DPT_CATEGORIA>
+- TAG <CMD_d_DPT_SECONDOPREZZO>0.00</CMD_d_DPT_SECONDOPREZZO>
+- TAG <CMD_d_DPT_NATURAESENZIONE>0</CMD_d_DPT_NATURAESENZIONE>
+Comando :/x/
+- TAG <CMD_2PUNTI_DPT_NUMERO>1</CMD_2PUNTI_DPT_NUMERO>
+- TAG <CMD_2PUNTI_DPT_DESCRIZIONE>REPAR-01</CMD_2PUNTI_DPT_DESCRIZIONE>
+- TAG <CMD_2PUNTI_DPT_ALIQUOTAIVA>1</CMD_2PUNTI_DPT_ALIQUOTAIVA>
+- TAG <CMD_2PUNTI_DPT_CATEGORIA>1</CMD_2PUNTI_DPT_CATEGORIA>
+- TAG <CMD_2PUNTI_DPT_PREZZO>0.00</CMD_2PUNTI_DPT_PREZZO>
+- TAG <CMD_2PUNTI_DPT_MAXPREZZO>999999.99</CMD_2PUNTI_DPT_MAXPREZZO>
+- TAG <CMD_2PUNTI_DPT_SECONDOPREZZO>0.00</CMD_2PUNTI_DPT_SECONDOPREZZO>
+- TAG <CMD_2PUNTI_DPT_FLAGSETTING>1100000</CMD_2PUNTI_DPT_FLAGSETTING>
+- TAG <CMD_2PUNTI_DPT_QTAVENDUTACORRENTE>14.000</CMD_2PUNTI_DPT_QTAVENDUTACORRENTE>
+- TAG <CMD_2PUNTI_DPT_TOTALEVENDITE>14.00</CMD_2PUNTI_DPT_TOTALEVENDITE>
+- TAG <CMD_2PUNTI_DPT_QTAVENDUTAACCUMULATA>97.000</CMD_2PUNTI_DPT_QTAVENDUTAACCUMULATA>
+- TAG <CMD_2PUNTI_DPT_TOTALEVENDITEACCUMULATO>92.60</CMD_2PUNTI_DPT_TOTALEVENDITEACCUMULATO>
+- TAG <CMD_2PUNTI_DPT_NATURAESENZIONE>0</CMD_2PUNTI_DPT_NATURAESENZIONE>
+Comando {/x/
+- TAG <CMD_GRAFFA_CODICEPAGAMENTO>2</CMD_GRAFFA_CODICEPAGAMENTO>
+- TAG <CMD_GRAFFA_DESCRIZIONE>CREDITI</CMD_GRAFFA_DESCRIZIONE>
+- TAG <CMD_GRAFFA_DESCRIZIONEBREVE>CRED</CMD_GRAFFA_DESCRIZIONEBREVE>
+- TAG <CMD_GRAFFA_COMMENTO></CMD_GRAFFA_COMMENTO>
+- TAG <CMD_GRAFFA_CODICEDISCOUNTMARKUP>1</CMD_GRAFFA_CODICEDISCOUNTMARKUP>
+- TAG <CMD_GRAFFA_STATO_TIPO>2</CMD_GRAFFA_STATO_TIPO>
+- TAG <CMD_GRAFFA_COMMENTOATTIVO>0</CMD_GRAFFA_COMMENTOATTIVO>
+- TAG <CMD_GRAFFA_FLAGS>10000000</CMD_GRAFFA_FLAGS>
+- TAG <CMD_GRAFFA_TOTALEPAGAMENTO>0.20</CMD_GRAFFA_TOTALEPAGAMENTO>
+Comando z/x/y/2
+- TAG <CMD_z2_NUMEROEJ>003</CMD_z2_NUMEROEJ>
+- TAG <CMD_z2_NUMEROSCONTRINO>000000</CMD_z2_NUMEROSCONTRINO>
+- TAG <CMD_z2_NUMEROFATTURA>000000</CMD_z2_NUMEROFATTURA>
+- TAG <CMD_z2_NUMERONOTACREDITO>000000</CMD_z2_NUMERONOTACREDITO>
+Comando z/x//3
+- TAG <CMD_z3_NUMEROAZZERAMENTO>41</CMD_z3_NUMEROAZZERAMENTO>
+- TAG <CMD_z3_DATAAZZERAMENTO>230719</CMD_z3_DATAAZZERAMENTO>
+- TAG <CMD_z3_STATOAZZERAMENTO>0</CMD_z3_STATOAZZERAMENTO>
+- TAG <CMD_z3_DATATRASMISSIONE>230719</CMD_z3_DATATRASMISSIONE>
+- TAG <CMD_z3_IDTRASMISSIONE>27561325</CMD_z3_IDTRASMISSIONE>
+Comando ,/18/
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+16
+
+--- Pagina 17 ---
+- TAG <CMD_ATECO_CODICE_ATECO_1>000000</CMD_ATECO_CODICE_ATECO_1>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_1>ATECO-1</CMD_ATECO_DESCRIZIONE_ATECO_1>
+- TAG <CMD_ATECO_CODICE_ATECO_2>000000</CMD_ATECO_CODICE_ATECO_2>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_2>ATECO-2</CMD_ATECO_DESCRIZIONE_ATECO_2>
+- TAG <CMD_ATECO_CODICE_ATECO_3>000000</CMD_ATECO_CODICE_ATECO_3>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_3>ATECO-3</CMD_ATECO_DESCRIZIONE_ATECO_3>
+- TAG <CMD_ATECO_CODICE_ATECO_4>000000</CMD_ATECO_CODICE_ATECO_4>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_4>ATECO-4</CMD_ATECO_DESCRIZIONE_ATECO_4>
+- TAG <CMD_ATECO_CODICE_ATECO_5>000000</CMD_ATECO_CODICE_ATECO_5>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_5>ATECO-5</CMD_ATECO_DESCRIZIONE_ATECO_5>
+- TAG <CMD_ATECO_CODICE_ATECO_VAT_A>0</CMD_ATECO_CODICE_ATECO_VAT_A>
+- TAG <CMD_ATECO_CODICE_ATECO_VAT_B>0</CMD_ATECO_CODICE_ATECO_VAT_B>
+- TAG <CMD_ATECO_CODICE_ATECO_VAT_C>0</CMD_ATECO_CODICE_ATECO_VAT_C>
+- TAG <CMD_ATECO_CODICE_ATECO_VAT_D>0</CMD_ATECO_CODICE_ATECO_VAT_D>
+- TAG <CMD_ATECO_CODICE_ATECO_VAT_E>0</CMD_ATECO_CODICE_ATECO_VAT_E>
+- TAG <CMD_ATECO_CODICE_ATECO_6>000000</CMD_ATECO_CODICE_ATECO_6>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_6>ATECO-6</CMD_ATECO_DESCRIZIONE_ATECO_6>
+- TAG <CMD_ATECO_CODICE_ATECO_7>000000</CMD_ATECO_CODICE_ATECO_7>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_7>ATECO-7</CMD_ATECO_DESCRIZIONE_ATECO_7>
+- TAG <CMD_ATECO_CODICE_ATECO_8>000000</CMD_ATECO_CODICE_ATECO_8>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_8>ATECO-8</CMD_ATECO_DESCRIZIONE_ATECO_8>
+- TAG <CMD_ATECO_CODICE_ATECO_9>000000</CMD_ATECO_CODICE_ATECO_9>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_9>ATECO-9</CMD_ATECO_DESCRIZIONE_ATECO_9>
+- TAG <CMD_ATECO_CODICE_ATECO_10>000000</CMD_ATECO_CODICE_ATECO_10>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_10>ATECO-10</CMD_ATECO_DESCRIZIONE_ATECO_10>
+- TAG <CMD_ATECO_CODICE_ATECO_11>000000</CMD_ATECO_CODICE_ATECO_11>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_11>ATECO-11</CMD_ATECO_DESCRIZIONE_ATECO_11>
+- TAG <CMD_ATECO_CODICE_ATECO_12>000000</CMD_ATECO_CODICE_ATECO_12>
+- TAG <CMD_ATECO_DESCRIZIONE_ATECO_12>ATECO-12</CMD_ATECO_DESCRIZIONE_ATECO_12>
+- TAG <CMD_ATECO_CODICE_ATECO_N1>0</CMD_ATECO_CODICE_ATECO_N1>
+- TAG <CMD_ATECO_CODICE_ATECO_N2>0</CMD_ATECO_CODICE_ATECO_N2>
+- TAG <CMD_ATECO_CODICE_ATECO_N3>0</CMD_ATECO_CODICE_ATECO_N3>
+- TAG <CMD_ATECO_CODICE_ATECO_N4>0</CMD_ATECO_CODICE_ATECO_N4>
+- TAG <CMD_ATECO_CODICE_ATECO_N5>0</CMD_ATECO_CODICE_ATECO_N5>
+- TAG <CMD_ATECO_CODICE_ATECO_N6>0</CMD_ATECO_CODICE_ATECO_N6>
+- TAG <CMD_ATECO_CODICE_ATECO_VENTILAZIONE>0</CMD_ATECO_CODICE_ATECO_VENTILAZIONE>
+Comando 0/4/num. Z/num. Scontrino/ per RT con FW serie 2 G100
+- TAG <CMD_0_4_CODICE_LOTTERIA></CMD_0_4_CODICE_LOTTERIA>
+- TAG <CMD_0_4_CODICE_ELETTRONICO>123456789</CMD_0_4_CODICE_ELETTRONICO>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA1>0.00</CMD_0_4_TOTALE_IVATO_IVA1>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA2>0.00</CMD_0_4_TOTALE_IVATO_IVA2>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA3>30.00</CMD_0_4_TOTALE_IVATO_IVA3>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA4>0.00</CMD_0_4_TOTALE_IVATO_IVA4>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA5>0.00</CMD_0_4_TOTALE_IVATO_IVA5>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA6>0.00</CMD_0_4_TOTALE_IVATO_IVA6>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA7>0.00</CMD_0_4_TOTALE_IVATO_IVA7>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA8>0.00</CMD_0_4_TOTALE_IVATO_IVA8>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA9>0.00</CMD_0_4_TOTALE_IVATO_IVA9>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA10>0.00</CMD_0_4_TOTALE_IVATO_IVA10>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA11>0.00</CMD_0_4_TOTALE_IVATO_IVA11>
+- TAG <CMD_0_4_TOTALE_IVATO_IVA12>0.00</CMD_0_4_TOTALE_IVATO_IVA12>
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+17
+
+--- Pagina 18 ---
+- TAG <CMD_0_4_TOTALE_IVA1_SERVIZI>0.00</CMD_0_4_TOTALE_IVA1_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA2_SERVIZI>0.00</CMD_0_4_TOTALE_IVA2_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA3_SERVIZI>0.00</CMD_0_4_TOTALE_IVA3_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA4_SERVIZI>0.00</CMD_0_4_TOTALE_IVA4_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA5_SERVIZI>0.00</CMD_0_4_TOTALE_IVA5_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA6_SERVIZI>0.00</CMD_0_4_TOTALE_IVA6_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA7_SERVIZI>0.00</CMD_0_4_TOTALE_IVA7_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA8_SERVIZI>0.00</CMD_0_4_TOTALE_IVA8_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA9_SERVIZI>0.00</CMD_0_4_TOTALE_IVA9_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA10_SERVIZI>0.00</CMD_0_4_TOTALE_IVA10_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA11_SERVIZI>0.00</CMD_0_4_TOTALE_IVA11_SERVIZI>
+- TAG <CMD_0_4_TOTALE_IVA12_SERVIZI>0.00</CMD_0_4_TOTALE_IVA12_SERVIZI>
+- TAG <CMD_0_4_TOTALE_CONTANTI>30.00</CMD_0_4_TOTALE_CONTANTI>
+- TAG <CMD_0_4_TOTALE_ELETTRONICO>0.00</CMD_0_4_TOTALE_ELETTRONICO>
+- TAG <CMD_0_4_TOTALE_NON_RISCOSSO>0.00</CMD_0_4_TOTALE_NON_RISCOSSO>
+- TAG <CMD_0_4_TOTALE_SCONTO_A_PAGARE>0.00</CMD_0_4_TOTALE_SCONTO_A_PAGARE>
+- TAG <CMD_0_4_TOTALE_TICKET>0.00</CMD_0_4_TOTALE_TICKET>
+- TAG </RESPONSE> (chiusura)
+FILE Flag Semaforo: è un file FLAG che, se attivato, è creato nella Cartella dedicata ai LOG al termine
+della stampa del file per segnalare l'avvenuta stampa dello scontrino / documento. Il file semaforo è rimosso
+all'avvio della successiva stampa. Il nome del file è 'Scontrino.OK'.
+FILE Flag Errore: è un file FLAG che, se attivato, è creato nella Cartella dedicata ai LOG in presenza di
+Errore di struttura nel caso si sia abilitato il Check del formato dei Comandi. All'interno del file è segnalata la
+Riga del Comando con struttura errata. Il nome del file è 'Errore_Formato.log'.
+FILE Flag Fine Carta: è un file FLAG che, se attivato, è creato nella Cartella dedicata ai LOG per Fine Carta.
+Il file è rimosso al ripristino carta. Il nome del file è 'Fine_Carta.log'. Per la stampante RT30 è gestito il quasi
+fine carta tramite creazione, per File Flag Fine Carta attivo, del file ‘Quasi_Fine_Carta.log’.
+FILE Flag Sportello: è un file FLAG che, se attivato, è creato nella Cartella dedicata ai LOG per Sportello
+stampante aperto. Il file è rimosso alla chiusura sportello. Il nome del file è 'Sportello_Aperto.log'.
+FILE Flag Display: è un file FLAG che, se attivato, è creato nella Cartella dedicata ai LOG per Display
+disconnesso. Il file è rimosso alla riconnessione del Display. Il nome del file è 'Display_Non_OK.log'.
+FILE Flag Errore Grave: è un file FLAG che, se attivato, è creato nella Cartella dedicata ai LOG per Errori
+della stampante che necessitano di intervento tecnico. All'interno del File è segnalato il Codice e la
+descrizione dell'errore. Il nome del file è 'Errore_Grave.log'. In particolare per SKY, Hydra, Helios, Edoplus,
+Aura i codici di errore gestisti sono:
+Codice Errore 42: Tastiera scollegata Codice Errore 43: Problema Batteria Tampone
+Codice Errore 45: Errore Taglierina Codice Errore 46: Stampante scollegata
+Codice Errore 47: Stampante surriscaldata Codice Errore 48: Memoria Fiscale scollegata
+Codice Errore 49: Errore Fatale Codice Errore 50: Jumper inseriti
+Codice Errore 60: Giornale Elettronico pieno Codice Errore 87: SD piena
+Codice Errore 88: SD vecchia Codice Errore 89: SD oltre i limiti
+Codice Errore 90: Fiscal COMM problem
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+18
+
+--- Pagina 19 ---
+Parametri Generali:
+utilizzare il tasto per configurare alcune operatività
+aggiuntive dell’axonFPiD_Pro_v7. In particolare:
+Attiva Descrizioni a capo: attivando questa flag
+l'applicazione gestirà in automatico eventuali
+Descrizioni troppo lunghe portando il campo in eccesso
+nel secondo campo di Descrizione. L'eventuale
+successiva eccedenza del secondo campo di
+Descrizione verrà gestita tagliando l'eccedenza.
+Attiva Usa Aliquota IVA del reparto anche se
+dichiarata nel comando di vendita: attivando questa
+flag l'applicazione verificherà l'eventuale presenza del
+campo IVA. Per campo IVA presente nella riga di comando di vendita, l’applicazione rimuove il valore inserito
+per utilizzare l’IVA associata al Reparto.
+Attiva Annullo scontrino Fiscale per Fine Carta: attivando questa flag l'applicazione, in caso di fine carta
+durante l'area fiscale di uno scontrino / documento, annullerà automaticamente lo scontrino / documento.
+Al ripristino della carta l'applicazione ristamperà automaticamente lo scontrino / documento. Nel caso di
+fine carta al di fuori dell'area fiscale o per annullo per fine carta disattivato la stampante riprenderà la stampa
+della parte mancante dello scontrino / documento proponendo l'intero documento su due pezzi di carta.
+Attiva invio automatico del comando di chiusura del PERIODO INATTIVO su server di stampa: attivando
+questa flag l’applicazione, durante la gestione del Server di Stampa, sblocca l’eventuale blocco stampante
+per segnalazione di PERIODO INATTIVO inviando un apposito comando equivalente alla pressione del tasto
+SI sulla stampante e consente così, dopo la trasmissione telematica della chiusura fiscale a importo ZERO del
+periodo inattivo, la ripresa della stampa dei documenti in coda da parte del Server di Stampa.
+Attiva Chiusura automatica PERIODO INATTIVO all’avvio di axonFPiD_Pro_v7: attivando questa flag, in caso
+di riconoscimento del PERIODO INATTIVO all’avvio dell’applicazione, non viene più visualizzato il popup
+proposto all’operatore dove si chiede se si vuole chiudere il PERIODO INATTIVO ma viene automaticamente
+avviata la chiusura dello stesso tramite invio comando alla RT.
+Salvataggio Parametri di Configurazione:
+La pressione dei tasti SALVA per i pannelli di configurazione dell’axonFPiD_Pro_v7 , ovvero Modalità
+Esecuzione FPiD, Connessione Stampante, Server di Stampa, LOG e File di Risposta e Parametri Generali
+comporta l’aggiornamento del file di configurazione axonFPiD.ini e la chiusura dell’applicazione per il
+successivo riavvio con la nuove impostazioni.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+19
+
+--- Pagina 20 ---
+Finestra di Configurazione Stampante
+Finestra RT con FW di prima generazione Finestra RT con FW di seconda generazione (G100)
+Attenzione! L'accesso alla finestra di Configurazione Stampante comporta la pausa del Server di Stampa
+dopo conferma da parte dell’operatore.
+Nella finestra di Configurazione è possibile leggere o configurare la Intestazione dei documenti di stampa, la
+Denominazione indicata nei file XML10 Lotteria, i Codici ATECO associati alla partita IVA, le righe a Piè di
+scontrino, l’attivazione o la disattivazione della Ventilazione IVA, gestire e inviare alla stampante loghi grafici,
+leggere e configurare le Aliquote IVA e i Reparti, i PLU, i Pagamenti, programmare su stampante il messaggio
+di cortesia, leggere o configurare i Parametri S e le Categorie.
+Intestazione, Denominazione e Codici ATECO:
+Finestra per RT con FW di prima generazione Finestra per RT FW di seconda generazione (G100)
+Le intestazioni possono essere impostate nella finestra, recuperate dal file axonFPiD.ini tramite il tasto
+'LEGGI da FILE INI', o dalla stampante tramite il tasto 'LEGGI da STAMPANTE'. Possono poi essere salvate
+su file axonFPiD.ini tramite il tasto 'SALVA su FILE INI' o inviate direttamente alla stampante tramite il
+tasto 'INVIA a STAMPANTE'. Indicare nei campi 'Riga di Intestazione' il testo, specificarne l'allineamento
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+20
+
+--- Pagina 21 ---
+(sinistra, centro, destra) e il tipo di carattere da utilizzare scegliendo tra NORMALE, DOPPIA ALTEZZA,
+DOPPIA LARGHEZZA, DOPPIA ALTEZZA E LARGHEZZA, GRASSETTO.
+ATTENZIONE: il limite massimo di modifiche all'intestazione è di 60 cambiamenti. Per poter cambiare
+l'intestazione è necessario aver prima eseguito l'azzeramento.
+La Denominazione è indicata nella parte centrale della finestra selezionando tra le 8 righe dell’intestazione
+le righe da linkare alla Denominazione come per esempio Ragione Sociale dell’azienda e la Partita IVA.
+L’indicazione delle righe di intestazione fissate nella Denominazione possono essere lette dalla stampante
+tramite il tasto ‘LEGGI DA STAMPANTE’ o inviate e memorizzate nella stampante tramite il tasto ‘INVIA A
+STAMPANTE’.
+I Codici ATECO sono gestiti nella parte bassa della finestra. RT con FW di prima generazione: è possibile
+gestire fino ad un massimo di 12 Codici ATECO nella stampante fiscale, con i primi 5 (da Codice 1 a Codice 5)
+associati alle Aliquote IVA tramite posizione (A, B, C, D, E), i successivi 6 (da Codice 6 a Codice 11) associati
+ad Aliquota IVA 0% con Natura di Esenzione (Codice 6 = N1, Codice 7 = N2, Codice 8 = N3, Codice 9 = N4,
+Codice 10 = N5, Codice 11 = N6) e l’ultimo Ateco (Codice 12) associato alla Ventilazione IVA. RT con FW di
+seconda generazione: indicare solo il Codice e la descrizione. L’associazione alle Aliquote IVA è demandata
+alla configurazione delle Aliquote descritta in seguito. Entrambe le tipologie di FW: i Codici ATECO devono
+essere di 6 caratteri e possono essere identificati con una Descrizione. Se l’azienda dispone di un solo Codice
+ATECO per la propria Partita IVA non è necessario configurarlo, se l’azienda dispone invece di più di un Codice
+ATECO e utilizza la contabilità separata è necessario configurare i Codici nella stampante in modo che siano
+indicati negli XML dei corrispettivi. Tramite il tasto ‘I’ è possibile visualizzare un elenco pdf dei Codici ATECO
+aggiornato all’anno 2020.
+Pie di Scontrino, Ventilazione IVA:
+I testi nel fondo del documento possono essere
+impostati manualmente nella parte alta della finestra,
+recuperati dal file axonFPiD.ini con il tasto 'LEGGI DA
+FILE INI', o dalla stampante tramite il tasto 'LEGGI da
+STAMPANTE'. Possono essere salvati sul file
+axonFPiD.ini con il tasto 'SALVA su FILE INI' o inviati alla
+stampante con il tasto 'INVIA a STAMPANTE'. E'
+necessario indicare nei campi 'Riga di piè di Scontrino'
+il testo specificandone l'allineamento (sinistra, centro,
+destra) e il tipo di carattere da utilizzare tra NORMALE,
+DOPPIA ALTEZZA, DOPPIA LARGHEZZA, DOPPIA
+ALTEZZA E DOPPIA LARGHEZZA, GRASSETTO.
+La Ventilazione IVA per le RT con FW di prima generazione può essere ATTIVATA o DISATTIVATA nel pannello
+posto nella parte bassa della finestra. E’ possibile acquisire la configurazione della Ventilazione IVA della RT
+tramite il tasto ‘LEGGI DA STAMPANTE’ o inviare e memorizzare nella stampante la nuova impostazione
+tramite il tasto ‘INVIA A STAMPANTE’. Per le RT con FW di seconda generazione è possibile solo leggere con
+il tasto ‘LEGGI DA STAMPANTE’ visto che l’impostazione della Ventilazione IVA è demandata al pannello della
+configurazione delle Aliquote IVA.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+21
+
+--- Pagina 22 ---
+Gestione Loghi
+tramite la funzione 'Gestione Loghi' è possibile gestire
+l'invio di loghi grafici alla stampante fiscale
+memorizzando l'immagine in una delle Icone messe a
+disposizione dal menù della stampante. L'applicazione
+consente, oltre al caricamento di immagini in formato
+BMP, anche l'utilizzo di immagini nei formati JPG e PNG.
+Sono previsti il ridimensionamento automatico in
+funzione delle dimensioni gestite dalla stampante, la
+conversione dell'immagine in monocromatico (bianco
+e nero) e l'invio del logo tramite il tasto 'INVIA a
+STAMPANTE'. In particolare per la stampante Hydra
+sono anche gestiti loghi di dimensione fino a 512 x 512. La funzione 'Elimina vuoto sopra o sotto il Logo'
+consente di adattare con più facilità il logo al resto del documento. La finestra operativa si compone di
+un'area di visualizzazione, di una funzione di zoom tramite cursore, di un tasto per il caricamento
+dell'immagine, di un tasto per il suo ridimensionamento, di 2 spunte per l'eliminazione dei vuoti sopra o sotto,
+di un tasto per l'invio del logo alla stampante. Inoltre sono visualizzate le dimensioni originali dell'immagine
+in pixel ed è possibile definire la nuova dimensione tramite la selezione di Altezza e Larghezza. E' inoltre
+possibile indicare il numero di area bitmap in cui la stampante memorizzerà l'immagine ricevuta. Si ricorda
+inoltre che il logo inviato va attivato tramite FPiD con la gestione e l'invio dei parametri S o manualmente
+sulla tastiera della stampante nell'area di programmazione decidendo anche la posizione del logo sui
+documenti (1 = icona di intestazione, 2 = icona di fine documento). Dalla versione 3.4.5 di axonFPiD_Pro_v7
+è disponibile anche la funzione di lettura dei loghi da stampante RT tramite tasto dedicato ma solo per i
+seguenti livelli di Firmware RT di prima generazione: Hydra > F068.1, Helios > T57.1, Edoplus > T85.1, Aura >
+17.1. Nessuna limitazione per le RT con FW di seconda generazione (G100). Per le RT di seconda generazione
+(serie 2 G100) è presente nella parte bassa della finestra, in sostituzione dell’avviso per l’attivazione manuale
+dei loghi sulla RT, la possibilità di attivare e posizionare ogni singolo logo da I/F grafica dell’app. La selezione
+di ‘Nessun Logo’ consente la disattivazione di tutti i loghi attivi nella posizione selezionata nel secondo campo
+‘Posizione Logo’. La selezione dei loghi da 1 a 9 consente l’attivazione / disattivazione dello specifico logo e,
+in caso di attivazione, il posizionamento nell’area Intestazione o nell’area Piè di scontrino o in alternativa la
+stampa del logo su invio del comando SF20 ‘7/…’. Infine è possibile selezionare la dimensione del logo
+scegliendo di lasciarla invariata o di impostare la doppia dimensione.
+IVA e Reparti:
+Attenzione: la gestione della configurazione delle Aliquote IVA e dei Reparti è gestita con finestre
+grafiche diverse per le RT con FW di prima generazione e RT con FW di seconda generazione.
+FW di prima generazione:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+22
+
+--- Pagina 23 ---
+nella parte alta della finestra è presente la gestione delle 5 aliquote IVA tramite i tasti 'LEGGI IVA' dalla
+stampante e 'INVIA IVA' alla stampante. E' possibile
+variare manualmente i valori. Si ricorda che sono
+ammessi massimo 50 cambiamenti delle aliquote IVA
+sulla stampante e che i cambiamenti possono essere
+realizzati solo dopo aver effettuato la chiusura
+giornaliera. In caso di invio della stessa configurazione
+delle Aliquote IVA (valori e posizione), la stampante
+restituisce un codice di ERRORE per evitare una
+scrittura inutile. Nella finestra sono anche gestiti i
+Reparti fino ad un massimo di 60, visualizzati 20 per
+pagina 1 / 2/ 3 tramite appositi tasti di selezione. Nella
+finestra è possibile gestire nell’ordine i seguenti campi: Descrizione Reparto, posizione dell’Aliquota IVA
+associata al reparto in base alla disposizione delle Aliquote IVA visualizzata in alto, la Natura di esenzione per
+i reparti associati all’Aliquota IVA 0%, il primo Prezzo, il limite Massimo di Prezzo, il secondo Prezzo, la
+Categoria, le flag di stato del Reparto (Disponibile Vendite, Reparto a prezzo libero, Chiude Scontrino, Stampa
+doppia altezza, Attivi Prezzo 1 e 2, Reparto nel pacchetto, Attiva distributore automatico) e infine, il nuovo
+campo di selezione tra BENE o SERVIZIO. Tramite i tasti 'LEGGI REPARTI' e 'INVIA REPARTI' è possibile leggere
+o inviare alla stampante la programmazione impostata. Il tasto CANCELLA svuota la lista Reparti. Tramite i
+tasti PAGINA 1, PAGINA 2, PAGINA 3 è possibile visualizzare i Reparti da 1 a 20 (pagina 1), da 21 a 40 (pagina
+2) e da 41 a 60 (pagina 3).
+FW di seconda generazione (serie G100):
+ALIQUOTE IVA:
+nella finestra dedicata alle Aliquote IVA è possibile con
+il Firmware di nuova generazione (serie Gxxx)
+configurare 12 Aliquote IVA anziché 5 . La gestione
+delle Nature di Esenzione associate ad aliquota a valore
+0 e dei Codici Ateco è ora direttamente selezionabile in
+associazione con la singola Aliquota. Nella finestra è
+infatti possibile indicare nelle 12 posizioni disponibili il
+valore dell’Aliquota e, in caso di valore 0, è possibile
+selezionare la natura di esenzione (Nx) che sarà
+utilizzata. E’ inoltre possibile poi associare alla singola
+posizione dell’Aliquota l’indicazione dell’ eventuale
+Codice Ateco da utilizzare nella RT. La grafica di
+selezione dei Codici Ateco sarà visibile solo se in
+precedenza si sono impostati i Codici Ateco nella
+finestra dedicata alla loro configurazione. Premere il
+tasto ‘LEGGI IVA da STAMPANTE’ per acquisire le
+Aliquote configurate nella RT, premere il tasto ‘INVIA
+IVA a STAMPANTE’ per configurare nella RT le Aliquote
+impostate nella finestra.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+23
+
+--- Pagina 24 ---
+REPARTI:
+nella finestra dedicata ai Reparti, nella parte alta è possibile verificare in visualizzazione la configurazione
+delle Aliquote IVA con associate Natura di Esenzione e eventuale Codice Ateco. Subito sotto è possibile
+configurare o acquisire la configurazione dei 60 Reparti disponibili nella RT. A differenza delle RT con
+installato il Firmware di prima generazione, è ora presente nei campi di configurazione la possibile indicazione
+che associa il singolo Reparto alla funzione OMAGGIO. Chiaramente l’associazione del Reparto all’Aliquota
+vede ora la possibile selezione di 12 posizioni anziché le possibili 5 selezioni delle RT con Firmware di prima
+generazione.
+PLU:
+Attenzione: la gestione dei PLU è presente solo nelle RT con Firmware di prima generazione.
+È possibile modificare manualmente un singolo PLU e
+salvarlo con il tasto SALVA. La gestione dei PLU è
+realizzata tramite quattro tasti funzione. Con il tasto
+'LEGGI FILE' è possibile acquisire nella griglia un elenco
+di PLU direttamente da file TXT esterno. Con il tasto
+'SALVA FILE' è possibile inviare a un file TXT esterno il
+contento della griglia visualizzata per poter poi
+utilizzare il file salvato nella successiva configurazione
+dei PLU di altre stampanti. Con il tasto 'LEGGI' è
+possibile acquisire l'elenco dei PLU direttamente dalla
+memoria della stampante. Con il tasto 'INVIA' è infine
+possibile inviare alla stampante i PLU visualizzati in griglia. Sulla selezione di una singola riga della griglia è
+visualizzato il dettaglio delle informazioni del PLU nei campi di sola lettura posti subito sotto la griglia
+compresa l’indicazione dell’associazione del Reparto a Ventilazione IVA o a specifica Aliquota IVA. Questo
+rende possibile la modifica delle informazioni del PLU e il reinvio del PLU modificato alla stampante insieme
+agli altri PLU dell’elenco.
+Pagamenti:
+Finestra per RT con FW di prima generazione Finestra per RT FW di seconda generazione (G100)
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+24
+
+--- Pagina 25 ---
+nella finestra dedicata alla lettura e alla configurazione dei metodi di pagamento sono presenti fino ad un
+massimo di 20 forme di pagamento gestite dalla stampante fiscale. Nell’ordine è possibile indicare: il TIPO di
+PAGAMENTO tra Contanti, Pagamento Elettronico, Sconto a Pagare, Non Riscosso SERVIZI, Non Riscosso
+TICKET, Non Riscosso FATTURE, NON Riscosso DCR a SSN e Non Riscosso ALTRO, la descrizione completa del
+Pagamento, la descrizione breve del Pagamento, lo stato del Pagamento ovvero Attivo o Disattivo, il codice
+Discount / Markup e i parametri del Pagamento ovvero Visualizza Scroll Menù, Auto Discount / Markup,
+Obbligatorio Ammontare, Autorizza Entrate, Autorizza Uscite, Stampa Subtotale, il Pagamento da il resto,
+Accetta Commenti. Con il tasto ‘CANCELLA’ è possibile svuotare le tabelle di configurazione dei pagamenti,
+con il tasto ‘LEGGI DA STAMPANTE’ è possibile acquisire la configurazione dei 20 pagamenti dalla stampante
+e infine con il tasto ‘INVIA A STAMPANTE’ è possibile inviare la configurazione dei 20 pagamenti alla
+stampante. Per le RT di seconda generazione (serie 2 G100) la flag ‘1 = Visualizza Scroll Menu’ è stata
+sostituita dalla flag ‘1 = Pagamento POS Offline’. Nella modalità Pagamento POS Online (spunta disattivata)
+sui pagamenti elettronici è possibile indicare nell’ultima colonna ‘POS’ il numero di Terminale POS su cui sarà
+pilotato il pagamento elettronico. E’ possibile selezionare Terminale POS 1 o 2 o 3. Per i parametri di
+configurazione dei Terminali POS fare riferimento alla finestra di gestione avviata dal tasto ‘TERMINALI POS’
+descritta successivamente.
+Messaggi:
+nella finestra dedicata è possibile gestire i messaggi
+scorrevoli sul display della stampante fiscale. Si
+possono memorizzare fino a 10 messaggi utilizzando il
+tasto 'SALVA su FILE INI' per memorizzare i messaggi
+nel file axonFPiD.ini e il tasto 'LEGGI da FILE INI' per
+recuperare tutti i messaggi da axonFPiD.ini. Con il
+tasto 'INVIA a STAMPANTE' è possibile poi inviare il
+testo del messaggio selezionato con l'apposita spunta.
+Il messaggio sarà attivo sul display della stampante in
+visualizzazione scorrevole dopo il periodo di inattività
+indicato nel campo Tempo di Scroll del messaggio in
+secondi. E possibile inoltre configurare l'eventuale visualizzazione della DATA e dell'ORA in sostituzione del
+messaggio scorrevole.
+Parametri S:
+nella prima tabella (Flag S) della finestra è possibile
+configurare i campi FLAG. Nella seconda tabella
+(Massimali) si impostano sette campi 'massimali'
+riferiti al Prezzo di Vendita, alla Quantità, al Totale
+Scontrini, al Totale Vendite giornaliero, allo Sconto /
+Markup, al Bonus, all'ammontare di cassa. Nella terza
+tabella (ECR) si indicano info come ID o Nome
+postazione. Nella quarta tabella (Barc/Bill) si
+impostano i parametri riferiti al barcode. Questa
+tabella è presente solo per RT con FW di prima
+generazione. Nell'ultima tabella (Printer) si imposta il
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+25
+
+--- Pagina 26 ---
+valore dell'intensità di stampa. Con il tasto 'RIPRISTINA DEFAULT' si recuperano i valori dei Parametri S di
+default, con il tasto 'LEGGI PARAMETRI' si acquisiscono i parametri S direttamente dalla memoria della RT e,
+infine, con il tasto 'INVIA PARAMETRI S' si inviano alla RT i valori dei parametri S impostati nella finestra.
+Per le RT di seconda generazione l’I/F grafica è ridotta. Sono presenti 4 selezioni generali, 4 campi di
+massimali e il campo ‘Intensità di stampa’.
+Categorie:
+nel pannello dedicato alle Categorie è possibile
+impostare la Descrizione delle 20 categorie previste
+nella stampante e inviarle tramite il tasto ‘INVIA
+CATEGORIE’. E’ possibile leggere le categorie
+memorizzate nella RT tramite il tasto ‘LEGGI
+CATEGORIE’. Tramite il tasto ‘CANCELLA’ è possibile
+svuotare il pannello di visualizzazione delle categorie.
+Le categorie sono utilizzate quando si ha l’esigenza di
+dividere i Reparti in gruppi. Nella configurazione dei
+Reparti è infatti presente un campo che consente
+l’associazione del Reparto ad una specifica Categoria.
+Le descrizioni delle Categorie sono gestite fino ad un massimo di 20 caratteri.
+Gestione configurazione Terminali POS:
+La gestione dei Pagamenti Elettronici tramite
+terminali POS (protocollo i17 ingenico) è attiva
+solo sulle RT con Firmware serie 2 – G100.
+Con il nuovo tasto ‘ Terminali POS’ è avviata la finestra
+di configurazione dei terminali di pagamento
+elettronico. E’ possibile configurare fino ad un
+massimo di 3 Terminali POS. Si ricorda che un comando
+di pagamento elettronico configurato nella gestione
+dei pagamenti è associabile ad un solo Terminale POS
+(1 o 2 o 3). Nei quadranti di configurazione indicare la
+descrizione del Terminale POS, il suo indirizzo IP e la
+porta TCPIP per la comunicazione via ethernet, l’ID del terminale e l’ID della cassa se configurati nel terminale
+POS. Si ricorda che normalmente il default di configurazione prevede valore ‘00000000’ per entrambi i campi.
+Questi 2 campi sono utilizzati solo se si vuole aumentare il livello di sicurezza limitando così la comunicazione
+ai soli ID configurati. Infine è possibile configurare un Timeout in secondi per la gestione dell’attesa della
+risposta dal terminale POS. Il default sul terminale POS è di 60 secondi ed è consigliato impostare il Timeout
+sulla RT uguale o maggiore del Timeout impostato sul terminale POS.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+26
+
+--- Pagina 27 ---
+Gestione configurazione parametri modulo WIFI:
+La gestione dei parametri del modulo WIFI è attiva solo sulle RT con Firmware serie 2 – G100 per
+i modelli Aura, RT21, RT22 e RT30.
+La finestra dedicata alla configurazione del modulo WIFI prevede l’inserimento dei seguenti parametri:
+1) SSID
+2) PASSPHRASE
+3) PER DHCP DISATTIVO: Indirizzo IP, Subnet Mask, Gateway, DNS.
+4) PORTA TCPIP
+5) TIMEOUT PORTA TCPIP in secondi: è l’intervallo dopo il quale il modulo WIFI chiude l’eventuale
+comunicazione aperta. L’impostazione a valore 0 delega alla RT l’applicazione di un TIMEOUT di
+default di 2 minuti.
+6) ATTIVAZIONE WIFI: sono possibili le seguenti selezioni:
+a) WIFI DISATTIVO: il modulo WIFI è completamente disabilitato
+b) WIFI ATTIVO PER TRASMISSIONE CORRISPETTIVI: il modulo WIFI è abilitato ma utilizzato per la
+sola trasmissione dei file dei corrispettivi all’A.d.E.
+c) WIFI ATTIVO PER COMUNICAZIONE E TRASMISSIONE CORRISPETTIVI: il modulo WIFI è abilitato e
+utilizzato sia per la comunicazione tra RT e applicazioni gestionali che per la trasmissione dei file
+dei corrispettivi all’A.d.E.
+All’avvio della funzione ‘Configurazione WIFI’ sono automaticamente visualizzati i parametri WIFI al
+momento impostati sulla RT. Utilizzare i tasti INVIA e LEGGI per modificare e verificare l’impostazione dei
+parametri.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+27
+
+--- Pagina 28 ---
+Finestra USO come ECR
+Attenzione: la finestra USO com ECR è disponibile solo per per le RT con firmware serie 1. Per le RT
+con firmware serie 2 G100, sulla pressione del tasto ‘USO Come ECR’, è prevista l’apertura diretta
+tramite browser del servizio WEB dedicato sulla RT connessa. Le funzioni successivamente
+descritte sono così applicabili direttamente nell’interfaccia grafica messa a disposizione dalla RT
+nella finestra del browser.
+è possibile utilizzare l'applicazione axonFPiD_Pro_v7 come ECR remoto utilizzando la finestra dedicata
+tramite pressione del tasto 'Uso come ECR' o all'avvio dell'applicazione configurando la 'Modalità di
+Esecuzione' .
+Attenzione! L'accesso alla finestra USO come ECR comporta la pausa del Server di Stampa dopo
+conferma da parte dell’operatore.
+La tastiera visualizzata in USO come ECR è immagine della tastiera della specifica stampante. Solo per la
+stampante Hydra è prevista la possibile sostituzione della tastiera con una tastiera generica. Il cambio tastiera
+è avviato tramite la pressione del tasto ‘Tastiera Generica Hydra’ posto nel gruppo dei tasti di funzione alla
+sinistra della finestra. Accanto alla tastiera delle stampanti Hydra, Helios e Edoplus sono presente dei tasti
+per la programmazione automatica del tasto RESO MERCE e del tasto ANNULLO.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+28
+
+--- Pagina 29 ---
+Scontrino Parlante:
+alla pressione del tasto ‘Scontrino Parlante’ è visualizzato nella parte
+bassa della finestra un box che consente l’inserimento del Codice Fiscale
+dell’utente e l’invio alla stampante tramite la pressione del tasto ‘OK’. Il
+comando inviato alla stampante sarà inserito dall’operatore al momento
+dell’invio nello scontrino digitato tramite la tastiera remota e causerà
+sulla stampante la produzione di uno scontrino parlante.
+Annullo Scontrino:
+alla pressione del tasto ‘Annullo Scontrino’ è visualizzato nella parte
+bassa della finestra un box che consente all’operatore l’inserimento dei
+dati necessari all’ANNULLO di un documento fiscale. L’annullo può
+essere eseguito in presenza di un Documento di Vendita di riferimento
+o in assenza di questo documento con le selezioni alternative ‘POS’ o
+‘Vuoto a rendere’ o Altro. In presenza di documento di riferimento è
+necessario inserire la Data di emissione del Documento di vendita, il
+Numero di Azzeramento, il Numero del Documento, la Matricola della
+stampante che ha emesso il Documento di Vendita ma solo nel caso di
+stampante diversa da quella da cui si sta effettuando l’Annullo e, in presenza di partecipazione alla Lotteria,
+il Codice Lotteria del cliente. Nei casi POS, Vuoto a rendere o Altro è invece necessario inserire la sola Data
+di Vendita e specificare nel pannello sulla destra l’importo da annullare, il Reparto per tutte le Aliquote IVA
+movimentate nella Vendita. Nel caso in cui l’Annullo ha nel dettaglio presenza di Aliquota IVA a 0%, è
+necessario indicare anche la Natura di esenzione. L’Annullo va inviato alla stampante tramite la pressione del
+tasto ‘CONFERMA’. Sulla risposta della stampante l’applicazione segnala all’operatore l’esito dell’ANNULLO.
+Reso Merce:
+alla pressione del tasto ‘Reso Merce’ è visualizzato nella parte bassa
+della finestra un box che consente all’operatore l’inserimento dei dati
+necessari al RESO MERCE. Va selezionato se il RESO MERCE è eseguito in
+presenza di un Documento di riferimento di Vendita o, in caso di assenza
+del documento, una delle tre alternative ovvero ‘POS’, ‘Vuoto a rendere’,
+o ALTRO. Nel caso di selezione del Documento di riferimento è
+necessario inserire la Data di emissione del Documento di vendita, il
+Numero di Azzeramento, il Numero del Documento, la Matricola della
+stampante che ha emesso il Documento di Vendita ma solo nel caso di
+stampante diversa da quella da cui si sta effettuando l’Annullo e, in presenza di partecipazione alla Lotteria,
+il Codice Lotteria del cliente. Nei casi POS, Vuoto a rendere o Altro è invece necessario inserire la sola Data
+di Vendita e specificare nel pannello sulla destra l’importo da rendere, il Reparto per tutte le Aliquote IVA
+movimentate nella Vendita. Nel caso in cui il reso è associato a IVA 0%, è necessario selezionare la Natura di
+Esenzione. Il reso merce va inviato alla stampante tramite la pressione del tasto ‘CONFERMA’. Sulla risposta
+della stampante l’applicazione segnala all’operatore l’esito del RESO. Dalla versione 3.4.8 è necessario
+indicare per Reso Merce su Documento di Vendita emesso dalla stessa RT, in caso di presenza di pagamento
+NON RISCOSSO SERVIZI o NON RISCOSSO FATTURE associati agli articoli resi, l’importo del pagamento da
+rendere in box dedicati attivando i box tramite apposita spunta.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+29
+
+--- Pagina 30 ---
+Invia Chiusura Giornaliera:
+sulla pressione del tasto ‘Invia Chiusura Giornaliera’ è proposto all’operatore un messaggio di richiesta di
+conferma. A conferma avvenuta l’applicazione invia alla stampante il comando di Chiusura Giornaliera.
+Stampa Totali Venduto:
+sulla pressione del tasto ‘Stampa Totali Venduto’ è proposto all’operatore un messaggio di richiesta di
+conferma. A conferma avvenuta l’applicazione invia alla stampante il comando di Stampa Totali Venduto.
+Ristampa Ultimo Scontrino:
+sulla pressione del tasto ‘Ristampa Ultimo Scontrino’ è proposto all’operatore un messaggio di richiesta di
+conferma. A conferma avvenuta l’applicazione invia alla stampante i comandi necessari per avviare la
+ristampa dell’ultimo documento fiscale prodotto nella giornata aperta, se presente.
+Inserisci Codice Lotteria:
+alla pressione del tasto ‘Inserisci Codice Lotteria’ è visualizzato nella
+parte bassa della finestra un box che consente l’inserimento del Codice
+Cliente per la partecipazione alla Lotteria. Il codice deve essere di 8
+caratteri e è inviato alla stampante tramite la pressione del tasto ‘OK’. Il
+comando inviato alla stampante sarà inserito dall’operatore al momento
+dell’invio nello scontrino digitato tramite la tastiera remota e causerà
+sulla stampante l’associazione del documento fiscale al Codice cliente
+con la presenza dello stesso nel documento stampato.
+Finestra Scontrino Elettronico
+Attenzione: la finestra dedicata ai test
+dello Scontrino Elettronico è disponibile
+solo per per le RT con firmware serie 2
+G100 visto che la gestione di questa
+funzionalità è prevista solo nelle RT di
+seconda generazione.
+Nel pannello dedicato è possibile nella parte
+alta inserire nello scontrino nella RT il
+comando di selezione dello scontrino
+elettronico dematerializzato (APRI
+TRANSAZIONE). Nella parte sottostante si
+possono inserire, per eseguire il test della funzionalità, i dati Codice dello scontrino e nominativo utente per
+generare su PDF il QR code dedicato per una successiva rilettura (GENERA QR CODE SU FILE PDF) e per
+eseguire il download dalla RT del PDF dematerializzato per il salvataggio dello stesso sulla cartella di test
+dell’app ovvero “…\Scontrini_Elettronici” (SCARICA SCONTRINO SU FILE PDF).
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+30
+
+--- Pagina 31 ---
+Finestra Lettura DFGE
+Attenzione! L'accesso alla finestra Lettura DFGE comporta la pausa del Server di Stampa dopo conferma
+da parte dell’operatore.
+La funzione Lettura DFGE consente la ricerca, la visualizzazione, la ristampa e l’esportazione su file TXT dei
+documenti memorizzati nella stampante. La ricerca può essere eseguita per Numero di Chiusura Fiscale o per
+periodo con impostazione del campo Data iniziale e del campo Data finale in un range di massimo 4 giorni o
+può essere effettuata nella giornata aperta. Indicare nella parte alta della finestra il metodo di ricerca e i
+campi associati al metodo. Avviare la ricerca tramite la pressione del tasto ‘AVVIA RICERCA SU DFGE’. La
+ricerca è effettuata tramite acquisizione dalla stampante dei documenti associati al metodo di ricerca
+impostato tramite lettura riga per riga del contenuto ASCII memorizzato nella stampante. Il buffer di ricerca
+acquisito è poi diviso nella lista di sinistra per tipologia di documento tramite il riconoscimento dell’inizio e
+della fine dei documenti. I documenti sono visualizzati nella lista di destra, come singolo documento
+selezionato nella lista di sinistra o tutti insieme per selezione della voce ‘TUTTI I DOCUMENTI’ nella lista di
+sinistra. Per stampanti con installate vecchie versioni firmware l’applicazione acquisisce comunque i
+documenti ma potrebbe non riuscire a dividerli per mancanza dei TAG divisori. In questo caso la lista di
+sinistra è lasciata vuota e i documenti trovati sono visualizzati tutti insieme nella lista di destra.
+La selezione nella lista di sinistra, oltre a visualizzare il documento nella lista di destra, imposta i campi posti
+nella parte bassa della finestra consentendo l’eventuale ristampa del documento tramite pressione del tasto
+‘RISTAMPA DOCUMENTO’. Per lista di sinistra vuota o per scelta diversa del documento è comunque possibile
+valorizzare manualmente i campi e avviare la ristampa. Premere il tasto ‘ESPORTA DOCUMENTO’ per avviare
+l’esportazione su file TXT del contenuto della lista di destra.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+31
+
+--- Pagina 32 ---
+Finestra Trasmissione dei Corrispettivi
+Attenzione: la finestra Trasmissioni Corrispettivi è la stessa per le RT con FW serie 1 e per le RT con
+FW serie 2 G100. Per RT con FW serie 2 G100 sono però assenti alcuni tasti funzione.
+Attenzione! L'accesso alla finestra Trasmissione dei Corrispettivi comporta la pausa del Server di Stampa
+dopo conferma da parte dell’operatore.
+La funzione Trasmissione dei Corrispettivi consente la ricerca degli azzeramenti fiscali, la visualizzazione delle
+info di trasmissione telematica degli azzeramenti ricercati, il salvataggio degli XML dei corrispettivi degli
+azzeramenti, la trasmissione manuale dei corrispettivi all’agenzia delle entrate, il cambio di stato dei
+corrispettivi non trasmessi dalla stampante da stato di NON TRASMESSO a stato ESPORTATO (solo RT con FW
+serie 1), il salvataggio delle info di trasmissione degli azzeramenti in elenco su file CSV.
+La ricerca degli azzeramenti fiscali è avviata selezionando nella parte alta della finestra il metodo di ricerca
+ovvero ricerca per azzeramento fiscale dall’azzeramento iniziale all’azzeramento finale o, in alternativa,
+ricerca per data nel range Data iniziale / Data Finale. Per ricerca per azzeramento è consentita la selezione di
+un massimo di 30 azzeramenti, per ricerca per DATA è consentito un intervallo massimo di 10 giorni. L’elenco
+degli azzeramenti visualizzati può essere condizionato dalla selezione TUTTI o SOLO AZZERAMENTI
+TRASMESSI o SOLO AZZERAMENTI NON TRASMESSI o SOLO AZZERAMENTI ESPORTATI (azzeramenti non
+trasmessi dalla stampante a cui si è cambiato stato inviandoli manualmente o cambiando solo lo stato). Una
+volta popolato l’elenco di ricerca degli azzeramenti è poi possibile attivare le seguenti funzioni tramite
+pressione dei tasti posti alla sinistra della finestra:
+Leggi e Salva Trasmesso o non Trasmesso selezionato: (attiva per RT con FW serie 1 e serie 2 G100)
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+32
+
+--- Pagina 33 ---
+dopo conferma da parte dell’operatore, l’applicazione acquisisce dalla stampante il file XML dei corrispettivi
+dell’azzeramento Trasmesso o non Trasmesso selezionato nell’elenco e il file XML della risposta dell’agenzia
+delle entrate contenente l’esito (solo per gli azzeramenti trasmessi) e li salva nella cartella ‘\XML\Matricola’
+posta sotto la cartella di installazione dell’applicazione.
+Leggi Salva e Trasmetti non Trasmesso selezionato: (attiva solo per RT con FW serie 1)
+dopo conferma da parte dell’operatore, l’applicazione acquisisce dalla stampante il file XML dei corrispettivi
+dell’azzeramento non Trasmesso selezionato nell’elenco, lo salva nella cartella ‘\XML\Matricola’ posta sotto
+la cartella di installazione dell’applicazione, lo trasmette al cloud della agenzia delle entrate, ne cambia lo
+stato da non Trasmesso a Esportato evitando successivi tentativi di trasmissione da parte della stampante,
+riceve e salva nella stessa cartella il file XML di risposta dell’agenzia delle entrate contenente l’esito della
+trasmissione.
+Cambia Stato Azzeramento da non Trasmesso a Esportato: (attiva solo per RT con FW serie 1)
+dopo conferma da parte dell’operatore, l’applicazione invia alla stampante fiscale un comando per il cambio
+di stato dello specifico azzeramento con stato di non Trasmesso selezionato in elenco e visualizza l’esito di
+risposta della stampante. In caso di esito positivo lo stato dell’azzeramento selezionato in elenco è cambiato
+da NON TRASMESSO a ESPORTATO. Verificare l’effettivo cambiamento con una nuova ricerca tramite
+pressione del tasto ‘AVVIA RICERCA’.
+Invia Singolo Azzeramento Esportato: (attiva per RT con FW serie 1 e serie 2 G100)
+dopo conferma da parte dell’operatore, l’applicazione acquisisce dalla stampante fiscale l’XML dei
+corrispettivi dell’azzeramento selezionato in elenco con stato in ESPORTATO, lo salva nella cartella
+‘\XML\Matricola’ posta sotto la cartella di installazione dell’applicazione, lo invia al cloud dell’agenzia delle
+entrate e riceve e salva nella stessa cartella gli XML di risposta dell’agenzia delle entrate contenenti l’esito.
+Salva Azzeramenti in elenco su file CSV: (attiva per RT con FW serie 1 e serie 2 G100)
+questa funzione è utile per memorizzare le date di trasmissione e gli ID assegnati dalla agenzia delle entrate
+alle trasmissioni telematiche dei corrispettivi associati agli azzeramenti. In particolare il salvataggio è utile
+per gli azzeramenti inviati manualmente e non dalla stampante visto che i dati di risposta dell’agenzia delle
+entrate ovvero data di trasmissione e ID sono memorizzati nell’elenco temporaneamente, visto che la
+successiva ricerca degli stessi azzeramenti ripristina i dati acquisiti dalla stampante dove gli azzeramenti
+continuano ad essere nello stato di ESPORTATO.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+33
+
+--- Pagina 34 ---
+Finestra Trasmissione Lotteria
+Attenzione: la finestra Trasmissioni Lotteria è disponibile con funzioni diversificate sia per RT con
+FW serie 1 che per le RT con FW serie 2 G100. Sotto sono visualizzate le 2 finestre grafiche dedicate
+Per RT con firmware serie 1
+Attenzione! L'accesso alla finestra Trasmissione Lotteria comporta la pausa del Server di Stampa dopo
+conferma da parte dell’operatore.
+Con questa funzione è possibile leggere dalla stampante gli XML DCL10 Lotteria ovvero i file XML di riepilogo
+dei documenti associati a Codici clienti Lotteria sia Trasmessi che non Trasmessi, Esportati, in coda di
+Trasmissione o ancora aperti nella giornata aperta. Questi XML possono poi essere utilizzati per verificare gli
+esiti di risposta dell’agenzia delle entrate analizzando in dettaglio i documenti accettati e quelli scartati per
+errore. Sono disponibili funzioni di Trasmissione manuale degli XML, di cambio di stato da NON TRASMESSO
+a ESPORTATO e di salvataggio dei dati visualizzati in elenco su file CSV.
+Un file XML DCL10 Lotteria può contenere al massimo i dettagli di 100 documenti di vendita. Per questo il
+nome del file XML è numerato dalla stampante a partire da 01 a seguire. Se per esempio nello specifico
+azzeramento sono stati prodotti 130 documenti fiscali associati alla Lotteria, la stampante ha prodotto 2 file
+XML DCL10 ovvero il file 01 e 02. Il nome del file è poi completato dall’indicazione dello stato del file XML. In
+dettaglio:
+1) Solo nome numerico (esempio: 01) – il file è in coda di trasmissione in attesa di essere trasmesso.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+34
+
+--- Pagina 35 ---
+2) Numerico + _RESP (esempio: 01_RESP) – file di risposta dell’AdE contenente l’esito.
+3) Numerico + _O (esempio: 01_O) – il file è aperto nella giornata odierna (meno di 100 documenti).
+4) Numerico + _S (esempio: 01_S) – file trasmesso all’AdE con esito AC (tutti documenti OK).
+5) Numerico + _F (esempio: 01_F) – File trasmesso all’AdE con esito in ERRORE ovvero SC o SE.
+SC = intero file XML scartato per errore di struttura
+SE = alcuni documenti in Errore – verificarli visualizzando il dettaglio del file XML
+Selezionare nella parte alta della finestra il metodo di ricerca ovvero ricerca per range di Azzeramento Fiscale
+(dall’azzeramento iniziale all’azzeramento finale) o in alternativa ricerca nella giornata aperta dove è
+possibile verificare la sola presenza di file XML DCL10 in coda di trasmissione o del file ancora aperto nella
+giornata odierna. Avviare la ricerca tramite la pressione del tasto ‘AVVIA RICERCA’. In presenza di file XML
+DCL10 Lotteria associati al metodo di ricerca selezionato, l’elenco verrà popolato con le seguenti informazioni:
+numero dell’Azzeramento, numero del DFGE, nome del file XML DCL10, descrizione dello stato del file XML,
+nome del file XML di risposta dell’AdE se presente, esito della trasmissione (AC = trasmissione OK, SC = file
+XML respinto totalmente per errore di struttura, SE = file XML contenente documenti in ERRORE), ID
+Operazione (sempre presente se presente il file di risposta indipendentemente dall’esito), Data e Ora
+risposta AdE (presente se presente il file di risposta), numero di documenti contenuti nell’XML DCL10.
+L’elenco dei file XML DCL10 può essere filtrati in visualizzazione per TUTTI i file XML, per i soli XML IN CODA
+DI TRASMISSIONE, per i soli file XML TRASMESSI OK, per i soli XML TRASMESSI CON ERRORE SC o SE o per i
+soli XML ESPORTATI. Per gli XML in elenco è possibile:
+Leggi e Salva XML DCL10 Lotteria selezionato:
+acquisisce dalla stampante l’XML Lotteria del file XML selezionato in elenco e lo salva nella cartella
+‘\XML_Lotteria\Matricola’ posta sotto la cartella di installazione dell’applicazione. Se il file XML selezionato
+è stato TRASMESSO, indipendentemente dall’esito, è salvato nella stessa cartella anche il file di risposta.
+Esempio file XML 01_S: nome XML: lotteria_DCL10_81_01_S_TX_2020-10-02.xml
+nome XML risposta: lotteria_DCL10_81_01_ESITO_2020-10-02.xml
+Leggi e Salva tutti gli XML DCL10 Lotteria in elenco:
+acquisisce dalla stampante tutti gli XML Lotteria in elenco escluso eventuali file nello stato OPEN e li salva nei
+file TX e nei file ESITO nella cartella ì\XML_Lotteria\Matricola’.
+Trasmetti XML DCL10 Lotteria non Trasmesso selezionato:
+acquisisce dalla stampante l’XML Lotteria del file XML selezionato in elenco con stato IN CODA DI
+TRASMISSIONE, lo salva nella cartella ‘\XML_Lotteria\Matricola’ posta sotto la cartella di installazione
+dell’applicazione e lo invia al cloud dell’agenzia delle entrate. Riceve inoltre il file XML di risposta contenente
+l’esito e lo salva nella stessa cartella.
+Esempio file XML 01: nome XML: lotteria_DCL10_85_01_TX_2020-10-05.xml
+nome XML risposta: lotteria_DCL10_85_01_ESITO_2020-10-05.xml
+Trasmetti XML DCL10 Lotteria Esportato selezionato:
+acquisisce dalla stampante l’XML Lotteria del file XML selezionato in elenco con stato ESPORTATO, lo salva
+nella cartella ‘\XML_Lotteria\Matricola’ posta sotto la cartella di installazione dell’applicazione e lo invia al
+cloud dell’agenzia delle entrate. Riceve inoltre il file XML di risposta contenente l’esito e lo salva nella stessa
+cartella.
+Esempio file XML 01: nome XML: lotteria_DCL10_77_01_E_TX_2020-09-27.xml
+nome XML risposta: lotteria_DCL10_77_01_ESITO_2020-09-27.xml
+Cambia da non Trasmesso a Esportato XML DCL10 Lotteria:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+35
+
+--- Pagina 36 ---
+invia alla stampante il comando per cambiare lo stato dell’XML DCL10 selezionato in elenco da IN CODA DI
+TRASMISSIONE a ESPORTATO e visualizza un messaggio all’operatore contenente l’esito dell’operazione. Per
+verificare con certezza il cambio di stato avviare una nuova ricerca con il tasto ‘AVVIA RICERCA’.
+Vedi Dettaglio XML DCL10 Lotteria selezionato (solo RT con FW di prima generazione):
+Per i file XML DCL10 Trasmessi con ricezione del file XML di risposta dall’AdE è prevista una funzione per la
+visualizzazione del dettaglio relativo ai documenti contenuti nel file XML e alle informazioni associate al
+singolo documento contenute nella risposta. In dettaglio:
+nella parte alta sono visualizzate le info generali ovvero Nome del File trasmesso, Nome del file di risposta,
+Esito dell’AdE, ID operazione, stato dell’XML, Data e Ora del file, Numero documenti contenuti nel file XML.
+Nella parte bassa è visualizzata la lista di dettaglio dei singoli documenti contenuti nell’XML con in evidenza
+l’ID Lotteria del cliente, il numero di azzeramento / numero del documento fiscale, la Data Ora di generazione
+del documento, l’importo del documento, la tipologia del pagamento (PC = pagamento contanti, PE =
+pagamento elettronico, NR = non riscosso), lo stato del documento ovvero OK o in ERRORE, la descrizione
+dell’eventuale errore che ha motivato la non accettazione dell’AdE. L’elenco dei documenti può essere
+filtrato per inserimento di un ID cliente o del numero del documento (senza azzeramento) o dalla
+visualizzazione dei soli documenti in errore tramite il pannello nella parte centrale della finestra.
+Salva elenco degli XML DCL10 Lotteria su file CSV:
+tramite questa funzione è possibile salvare le info dei file XML DCL10 Lotteria contenuti nell’elenco popolato
+dall’avvio della ricerca su un file CSV.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+36
+
+--- Pagina 37 ---
+Per RT con firmware serie 2 G100
+Per le RT con Firmware serie 2 G100 sono disponibili le sole funzioni:
+1) Leggi e Salva XML DCL10 Lotteria selezionato
+2) Salva elenco degli XML DCL10 Lotteria su file CSV
+Per il dettaglio delle operatività delle 2 funzioni disponibili fare riferimento alle stesse funzioni presenti nella
+finestra grafica dedicata alle RT con Firmware serie 1.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+37
+
+--- Pagina 38 ---
+Finestra Pannello del Tecnico
+Per le RT con firmware di prima generazione è presente nella finestra Pannello del Tecnico la tastiera
+semplificata posta vicino al Display emulatore della RT. La tastiera è invece non presente nella finestra
+Pannello del Tecnico dedicata alle RT con firmware di seconda generazione in quanto tutte le funzionalità
+tastiera sono demandate al servizio WEB della RT nelle finestre visualizzate tramite browser.
+Attenzione! L'accesso alla finestra Pannello del Tecnico comporta la pausa del Server di Stampa dopo
+conferma da parte dell’operatore.
+Inserimento Password Tecnico:
+sulla pressione del tasto ‘Pannello del Tecnico’ per un
+primo accesso al pannello è visualizzato la richiesta
+dell’inserimento della Password a protezione delle
+funzioni previste per il personale tecnico. La Password
+iniziale è ‘campo vuoto’. Nel pannello del tecnico è poi
+possibile inserire la propria password di sicurezza e
+condizionare i tasti funzione della finestra principale
+dell’axonFPiD_Pro, attivandoli o disattivandoli in
+funzione di quello che si vuole associare al profilo degli
+operatori che utilizzeranno l’app axonFPiD_Pro_v7.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+38
+
+--- Pagina 39 ---
+Elenco funzioni disponibili per il personale tecnico:
+Procedura di Collaudo:
+la funzione propone al tecnico una procedura di collaudo distribuita su
+6 step dove vengono prodotti documenti di stampa, effettuate verifiche
+sulla memoria fiscale e sul giornale elettronico. Al termine dei 6 step è
+visualizzato un resoconto dell’esito dei test e visualizzate le informazioni
+acquisite dalla stampante. Per una procedura corretta è importante
+avviare la procedura dopo una chiusura fiscale. Un messaggio che
+ricorda la necessità della chiusura fiscale è visualizzato sulla pressione
+del tasto ‘Procedura di Collaudo’.
+Step 1 di 6 – Stampa Documento Fiscale
+nel primo pannello è proposta la stampa di un documento fiscale di vendita con un importo proposto di 0,10
+Euro ma modificabile, su Reparto 1 con pagamento in CONTANTI. Al termine della stampa dello scontrino il
+tecnico è invitato a controllarne il contenuto e a confermare l'esito positivo per passare poi allo Step
+successivo.
+Step 2 di 6 – Stampa Documento Fiscale
+nel secondo pannello è proposta al tecnico la stampa di un documento fiscale di vendita con un importo
+proposto di 0,20 Euro ma modificabile, su Reparto 1 con pagamento selezionabile tra ‘integrale di tipo
+CREDITI’ o in alternativa ‘di tipo CONTANTI’. Al termine della stampa dello scontrino il tecnico è invitato a
+controllarne il contenuto e a confermare l'esito positivo per passare poi allo Step successivo.
+Step 3 di 6 – Chiusura Fiscale
+nel terzo pannello è proposta al tecnico l’esecuzione di una Chiusura Fiscale associata ai 2 scontrini emessi
+nello Step 1 e nello Step 2. Terminata la stampa del documento di Chiusura Fiscale, il tecnico è invitato a
+verificare che il contenuto sia congruo con i dati dei 2 scontrini precedentemente emessi e a confermare
+l'esito positivo per passare poi allo Step successivo.
+Step 4 di 6 – Lettura Memoria Fiscale
+nel quarto pannello è proposta al tecnico l’esecuzione della lettura della memoria fiscale con la scelta tra
+lettura della memoria fiscale degli ultimi 10 azzeramenti fiscali o, in alternativa, la lettura della memoria
+fiscale dell’ultimo azzeramento fiscale. Nel caso di selezione degli ultimi 10 azzeramenti la procedura verifica
+sulla stampante la presenza degli azzeramenti. Nel caso di un numero di azzeramenti presenti inferiore a 10,
+la procedura avvierà la lettura di tutti gli azzeramenti presenti. Al termine della lettura il
+tecnico è invitato a confermare l'esito positivo.
+Step 5 di 6 – Lettura del Giornale Elettronico
+nel quinto pannello è proposta al tecnico l’esecuzione della lettura del giornale elettronico dei documenti
+emessi negli Step 1, 2, 3, 4 ovvero la ristampa dei documenti. Al termine della ristampa dei documenti, il
+tecnico è invitato a controllare che la ristampa sia congrua con la prima stampa dei documenti. Sulla
+conferma dell'esito positivo, la procedura passa all'ultimo Step ovvero all'esito del collaudo.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+39
+
+--- Pagina 40 ---
+Step 6 di 6 – Esito del collaudo
+nell'ultimo pannello sulla sinistra è presente il riepilogo e l'esito degli Step operativi eseguiti. Nella parte
+destra della finestra sono invece visualizzate alcune informazioni del dispositivo fiscale: Modello, Matricola,
+Versione del Firmware installato, Versione del Firmware Fiscale installato, Data di fine del giornale elettronico,
+giorni rimanenti del giornale elettronico, spazio disponibile del giornale elettronico, numero dell'ultimo
+azzeramento fiscale eseguito, numero delle chiusure fiscali rimanenti (il massimo numero di chiusure
+consentite è 2200).
+Se tutti gli Step sono stati eseguiti correttamente il tasto TERMINA COLLAUDO sarà attivo. Sulla pressione
+del tasto la procedura di collaudo sarà chiusa.
+Leggi Configurazione Stampante:
+sulla pressione del tasto ‘Leggi Configurazione Stampante’ è
+richiesto al tecnico di selezionare nel pannello in basso i
+parametri di configurazione da salvare ovvero: Configurazione
+generale e comunicazioni (sempre salvata), Loghi grafici
+(selezionabile ma non attiva per stampante Helios),
+Configurazione Tastiera (selezionabile) e Configurazione
+parametri di vendita (selezionabile). Sulla pressione del tasto
+‘AVVIA LETTURA’ è richiesta la selezione di una cartella di
+appoggio per il salvataggio dei file TXT di Configurazione e degli
+eventuali file BMP grafici. Sulla selezione della cartella, eseguiti
+i controlli di connessione e di corretta identificazione della
+stampante, l’applicazione crea, se non presente nella cartella selezionata, una nuova cartella con nome
+uguale alla Matricola della stampante e avvia la procedura di lettura automatica delle info necessarie al
+salvataggio ovvero: Intestazioni, Denominazione, Codici ATECO, Piè di Scontrino, Ventilazione IVA, Aliquote
+IVA, Categorie, Reparti, Pagamenti, Messaggi, Parametri S, Parametri rete ethernet salvati nel file
+Configurazione.TXT. I parametri di Vendita sono invece salvati nel file Configurazione_Vendita.TXT, quelli
+relativi alla tastiera nel file Configurazione_Tastiera.TXT. Per le stampanti Hydra, Edoplus, Aura è prevista
+anche la lettura via FTP (RT dotate di FTP) o via comando SF20 e il salvataggio di eventuali bitmap (loghi)
+presenti nella memoria della stampante. Al termine della composizione dei file di configurazione TXT è
+proposto al tecnico un messaggio che visualizza l’esito positivo e il nome e il percorso dei file.
+Attenzione: per RT con FW di seconda generazione la lettura della Configurazione non prevede la gestione
+di Configurazioni Tastiera e parametri di vendita essendo queste gestite nel servizio WEB offerto dalla RT.
+Invia Configurazione Stampante:
+sulla pressione del tasto ‘Invia Configurazione Stampante’ è
+richiesto al tecnico la selezione del file TXT di configurazione
+base ‘Configurazione.TXT’. Sulla selezione l’applicazione
+identifica la presenza degli altri file di configurazione e degli
+eventuali BMP dei loghi grafici, visualizzando in basso l’elenco
+delle configurazioni che possono essere inviate alla stampante.
+Dalla lettura del primo file di configurazione l’applicazione
+controlla la compatibilità della configurazione verificando il
+Modello della stampante e la versione v6 o v7 dell’app
+axonFPiD_Pro. Non è possibile utilizzare file v6 per stampanti
+v7 e viceversa, non è possibile utilizzare file di Modelli diversi.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+40
+
+--- Pagina 41 ---
+Superati i controlli l’applicazione avvia la lettura e l’invio dei parametri di configurazioni relativi a Intestazioni,
+Piè di Scontrino, Denominazione, Codici ATECO, Ventilazione IVA, Aliquote IVA, Categorie, Reparti, Pagamenti,
+Messaggi, Parametri S, Parametri rete ethernet. In successione, se selezionati, sono poi inviati i parametri
+contenuti nei file Configurazione_Vendita.TXT e Configurazione_Tastiera.TXT. Per stampanti Hydra, Edoplus,
+Aura, RT30 in presenza di bitmap salvati e selezione da parte dell’operatore, è avviata la copia dei bitmap
+nella memoria della stampante di destinazione. Al termine dell’invio viene proposto al tecnico un messaggio
+di esito positivo.
+Invia Chiusura Giornaliera, Stampa Totali Venduto, Invia Avviso su Display:
+sulla pressione dei tasti che inviano Chiusura Giornaliera, Totali Venduto o avvisi su display è richiesta al
+tecnico una conferma. Sulla conferma i comandi sono inviati alla stampante. L’esito è poi visualizzato in un
+messaggio di chiusura.
+Stampa Scontrini di test:
+sulla richiesta è visualizzata una finestra dove è
+possibile selezionare tra una serie di Scontrini di
+esempio. Sulla sinistra sono visualizzati i comandi del
+protocollo SF20 necessari per la stampa dello
+Scontrino, sulla destra l’immagine della stampa dello
+Scontrino. Esempi di Scontrino:
+1) Beni in sospeso – ACCONTO
+2) Beni in sospeso – CONSEGNA BENE
+3) Acconto senza individuazione del bene
+4) Bene CONSEGNATO
+5) Servizi NON RISCOSSO
+6) NON RISCOSSO Segue FATTURA
+7) OMAGGIO
+8) SCONTO A PAGARE
+9) Arrotondamento DL50/2017 – DIFETTO
+10) Arrotondamento DL50/2017 – ECCESSO
+11) Buoni MONOUSO
+12) Buono MONOUSO – Utilizzo
+13) Buoni MULTIUSO
+14) Buono MULTIUSO – Utilizzo
+15) Buono MULTIUSO – Celiachia
+16) TICKET Restaurant
+17) Non Riscosso DCR a SSN
+18) Lotteria - Sconto a Pagare
+19) Reso Prestazione Servizi – Acconto / Saldo
+Sulla pressione del tasto STAMPA l’app axonFPiD_Pro_v7 verifica l’esistenza dei Reparti / Pagamenti utilizzati
+negli esempi modificando automaticamente il puntamento al Reparto e al Pagamento in caso di
+configurazione della stampante diversa dal Default utilizzato dagli esempi di test. In caso di non presenza
+della tipologia del Reparto o Pagamento l’app segnala l’impossibilità di stampa e la sola possibilità di
+visualizzazione.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+41
+
+--- Pagina 42 ---
+Allinea Orario Stampante:
+sulla pressione del tasto ‘Allinea Orario Stampante’ è visualizzata al tecnico una richiesta di conferma. Sulla
+conferma è inviato il comando di allineamento orario alla stampante e visualizzato un messaggio che descrive
+l’esito dell’invio.
+Gestisci Numero Fattura:
+sulla pressione del tasto ‘Gestisci Numero Fattura’ è visualizzato nella
+finestra un pannello e avviata alla stampante la richiesta dell’ultimo
+numero di Fattura utilizzato. Le info di risposta sono visualizzate nella
+parte alta del pannello. Il tecnico può inserire nella parte bassa del
+pannello i campi Prefisso, Numero Fattura e Suffisso. L’invio del numero
+di Fattura è avviato sulla pressione del tasto ‘IMPOSTA FATTURA’. Un
+messaggio con l’esito è visualizzato per il tecnico.
+Invia Comandi SF20 o File TXT:
+sulla pressione del tasto ‘Invia Comandi SF20 o File TXT’ è visualizzato
+nella parte bassa della finestra il pannello che consente al tecnico di
+inserire manualmente nel box Comando un Comando SF20, di inviarlo
+alla stampante premendo il tasto ‘INVIA’ e di verificare la risposta della
+stampante nel box Risposta / Esito. La risposta può essere salvata su file
+TXT premendo il tasto ‘SALVA SU TXT’. Il salvataggio può essere
+necessario in caso di stringa di risposta troppo lunga e quindi tagliata in
+visualizzazione. E’ possibile pulire il box Risposta / Esito con il tasto
+‘PULISCI’. Il tecnico può inoltre inviare alla stampante un file esterno
+contenente un documento fiscale per avviare una stampa e verificare i comandi contenuti nel file. Selezionare
+il file con il tasto contenente l’immagine di una cartella e inviarlo alla stampante con il tasto ‘INVIA FILE’.
+Attiva Disattiva Cloud Sync:
+sulla pressione del tasto ‘Attiva Disattiva Cloud Sync’ è visualizzato nella
+parte bassa della finestra il pannello che consente al tecnico, in
+alternativa alla configurazione diretta su RT, di acquisire l’attuale stato
+della funzione Cloud Sync tramite il tasto ‘LEGGI STATO CLOUD SYNC’ e
+di modificarlo tramite il tasto ‘CAMBIA STATO CLOUD SYNC’.
+Attenzione: si ricorda che la funzione Cloud Sync sulla stampante
+RT deve essere attivata e gestita solo dopo previa registrazione
+sul portale ‘cloud.apesse.com’.
+Cambio Endpoint TX Corrispettivi:
+funzione attiva solo su RT con FW serie 1 e serie 2 G100 che la prevedono.
+In caso di FW di versione non adeguata viene visualizzato un messaggio
+che indica di aggiornare la RT. La funzione consente il cambio nella RT
+dell’Endpoint di invio dei corrispettivi dal default Agenzia delle Entrate a
+Sanità e viceversa. Si ricorda che il passaggio a Sanità è da considerarsi
+ad uso esclusivo dei soggetti tenuti all’invio dei dati al Sistema Tessera
+Sanitaria. Sulla selezione del tasto funzione è automaticamente
+visualizzata l’attuale configurazione della RT. Se necessita, modificare la
+selezione sulla RT con CAMBIA ENDPOINT TX CORRISPETTIVI SU RT.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+42
+
+--- Pagina 43 ---
+Aggiornamento Firmware (solo per RT con firmware serie 1 di prima generazione):
+Alla pressione del tasto ‘Aggiornamento Firmware’ l’applicazione verifica automaticamente lo stato della
+stampante per controllare che la giornata fiscale non sia aperta. In caso di giornata aperta è visualizzato
+un messaggio che chiede al tecnico di effettuare una chiusura fiscale e poi riprovare.
+Nella finestra dedicata all’aggiornamento firmware nella parte alta è visualizzato il display della stampante
+che fornisce al tecnico la visualizzazione delle fasi dell’aggiornamento durante la connessione al cloud di
+riferimento. Nella parte in alto a destra è presente il pannello per l’inserimento dei dati del tecnico /
+laboratorio necessari per la richiesta e l’attivazione dell’aggiornamento FW ovvero Codice Fiscale del tecnico
+e Partita IVA del laboratorio. Una volta impostati, i 2 campi informativi possono essere salvati con il tasto
+‘SALVA DATI’. Nella parte centrale sinistra è presente il pannello contenente la tastiera originale del modello
+di stampante. La tastiera può essere nascosta o visualizzata con l’apposito tasto. L’utilizzo della tastiera è
+consigliato solo per interruzioni della procedura automatica di aggiornamento. Nella parte centrale sulla
+destra è presente il tasto ‘AVVIA UPDATE DEL FIRMWARE’ da utilizzare per avviare la verifica della presenza
+sul cloud dell’aggiornamento, il suo download e l’installazione automatica sulla stampante. Per il primo
+aggiornamento della stampante fiscale da v6 a v7 è richiesto l’inserimento di una CHIAVE DI ATTIVAZIONE
+che sarà memorizzata dalla stampante. Se non si dispone della CHIAVE DI ATTIVAZIONE rivolgersi al supporto
+tecnico per il rilascio della stessa. Durante l’aggiornamento, nelle fasi di cancellazione della memoria e
+installazione del nuovo FW, il display può non essere più aggiornato dalla stampante impegnata nella
+sovrascrittura dei dati. Al termine dell’aggiornamento utilizzare il tasto ‘AGGIORNA DISPLAY’ per riallineare
+il display della finestra al display della stampante. L’operazione di aggiornamento sarà completata da un
+messaggio per il tecnico con l’esito della operazione e dalla trasmissione telematica della comunicazione
+all’AdE dell’avvenuto aggiornamento. Attendere la fine della Trasmissione per riprendere le attività sull’app.
+Dalla versione 5.4.0 di axonFPiD_Pro_v7 è disponibile una funzione di migrazione del FW della RT dalla
+serie 1 (prima generazione) al FW serie 2 G100 (seconda generazione). La funzione è avviata tramite la
+pressione di un apposito tasto visualizzato nella finestra di aggiornamento. La MIGRAZIONE comporta una
+sequenza di operazioni che il tecnico deve eseguire seguendo le indicazioni dell’app. In breve:
+1) Verifica dell’attivazione su cloud AP.esse della richiesta di migrazione per la specifica RT.
+2) Acquisizione e salvataggio dei parametri di configurazione della RT.
+3) Avvio del download del FW serie 2 G100 dal cloud AP.esse
+4) Inserimento manuale sulla tastiera della RT dei parametri del tecnico e completamento del
+download con invio telematico della relativa chiusura fiscale.
+5) Ripristino dei parametri di configurazione della RT inviati dall’app axonFPiD_Pro_v7 alla RT.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+43
+
+--- Pagina 44 ---
+Abilitazioni Attività:
+alla pressione del tasto ‘Abilitazioni Attività’ è proposto
+al tecnico nella parte bassa della finestra un pannello
+per l’attivazione / disattivazione dei tasti funzione
+previsti nella finestra principale dell’applicazione per
+poter gestire le attività consentite agli operatori che
+utilizzano l’applicazione. In particolare si ricorda che
+l’uscita dalla finestra principale dell’applicazione
+comporta dopo conferma dell’operatore l’arresto del
+Server di stampa. Ogni singolo tasto della finestra
+principale può essere disabilitato per bloccarne
+l’utilizzo agli operatori.
+Cambio Password Tecnico:
+alla pressione del tasto ‘Cambio Password Tecnico’ è
+proposto al tecnico nella parte bassa della finestra un
+pannello per l’inserimento della nuova password. Per
+l’attivazione della nuova password è richiesto
+l’inserimento del campo Conferma Password e la
+pressione del tasto ‘SALVA PASSWORD’. Si ricorda che
+la prima password attiva al momento dell’installazione
+dell’applicazione axon_FPiD_Pro è nessuna password
+ovvero campo vuoto.
+RISTAMPA SCONTRINI - FATTURE - NOTE CREDITO da DFGE o Giornata Aperta
+La funzione descritta in questo paragrafo consente la RISTAMPA DOCUMENTI direttamente da 'codice'
+ovvero tramite comandi MACRO da inserire in file testo da accodare nella cartella di ascolto del Server di
+stampa dell'axonFPiD_Pro_v7.
+Un file per la Ristampa dei Documenti deve contenere un unico comando MACRO. Non è possibile inserire
+il comando MACRO in file contenenti i comandi SF20 per la stampa dei documenti su stampante fiscale. I
+file contenenti comandi MACRO con struttura errata sono ignorati e rimossi dall'axonFPiD_Pro_v7 che, in
+caso di LOG Verbose attivo, segnala l'errore di struttura nel file di LOG. I File contenenti comandi MACRO
+di struttura corretta avviano la Ristampa dei documenti richiesti e sono poi rimossi dall'axonFPiD_Pro_v7
+che, in caso di LOG Verbose attivo, segnala l'esito positivo nel file di LOG.
+Di seguito sono riportate le strutture dei COMANDI MACRO accettati per la ristampa dei documenti:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+44
+
+--- Pagina 45 ---
+Ristampa Ultimo Scontrino emesso (giornata aperta):
+REPRINT:US:
+Ristampa Ultima Fattura emessa (giornata aperta):
+REPRINT:UF:
+Ristampa Ultimi X Scontrini emessi (giornata aperta):
+REPRINT:USx:
+dove x è il numero di scontrini da ristampare con valore da 1 a max 10.
+ESEMPIO per ristampa ultimi 10 scontrini: REPRINT:US10:
+Valori 0 o maggiori di 10 non sono accettati e danno segnalazione nel LOG. Numero di scontrini richiesti
+maggiore del numero attuale di scontrini stampati produce la ristampa di tutti gli scontrini stampati.
+Ristampa Scontrino per DATA dal DFGE:
+REPRINT:SCONTRINOx:DATAggmmaaaa:
+dove x è il numero di Scontrino e ggmmaaaa è la data nel formato giorno a 2 cifre, mese a 2 cifre, anno a 4
+cifre senza separatori per un totale fisso di 8 cifre.
+Esempio di ristampa dello Scontrino 11 del giorno 8 agosto 2017: REPRINT:SCONTRINO11:DATA08082017:
+Ristampa Scontrino per CHIUSURA GIORNALIERA dal DFGE:
+REPRINT:SCONTRINOx:CHIUSURAy:
+dove x è il numero di Scontrino e y è il numero di Chiusura Giornaliera.
+Esempio di ristampa dello Scontrino 11 della chiusura 225: REPRINT:SCONTRINO11:CHIUSURA225:
+Ristampa Fattura per DATA dal DFGE:
+REPRINT:FATTURAx:DATAggmmaaaa:
+dove x è il numero di Fattura e ggmmaaaa è la data nel formato giorno a 2 cifre, mese a 2 cifre, anno a 4 cifre
+senza separatori per un totale fisso di 8 cifre.
+Esempio di ristampa della Fattura 2 del giorno 23 luglio 2017: REPRINT:FATTURA2:DATA23072017:
+Ristampa Fattura per CHIUSURA GIORNALIERA dal DFGE:
+REPRINT:FATTURAx:CHIUSURAy:
+dove x è il numero di Fattura e y è il numero di Chiusura Giornaliera.
+Esempio di ristampa della Fattura 25 della chiusura 118: REPRINT:FATTURA25:CHIUSURA118:
+Ristampa Nota di Credito per DATA dal DFGE:
+REPRINT:NOTACREDITOx:DATAggmmaaaa:
+dove x è il numero di Nota di Credito e ggmmaaaa è la data nel formato giorno a 2 cifre, mese a 2 cifre, anno
+a 4 cifre senza separatori per un totale fisso di 8 cifre.
+Esempio di ristampa della NdC 8 del giorno 12 maggio 2017: REPRINT:NOTACREDITO8:DATA12052017:
+Ristampa Nota di Credito per CHIUSURA GIORNALIERA dal DFGE:
+REPRINT:NOTACREDITOx:CHIUSURAy:
+dove x è il numero di Nota di Credito e y è il numero di Chiusura Giornaliera.
+Esempio di ristampa della NdC 27 della chiusura 106: REPRINT:NOTACREDITO27:CHIUSURA106:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+45
+
+--- Pagina 46 ---
+Ristampa tutte le Fatture dalla Data... alla Data... dal DFGE:
+REPRINT:FATTURE:DATAggmmaaaa:DATAggmmaaaa:
+La prima Data è la data iniziale, la seconda è la data finale. In caso di data finale inferiore alla data iniziale il
+comando è ignorato ed è segnalato un errore nel LOG (se attivo).
+Questo comando ristampa solo le FATTURE.
+Esempio di ristampa Fatture dal / al: REPRINT:FATTURE:DATA13102017:DATA18102018:
+Ristampa tutte le Fatture per Chiusura dal DFGE:
+REPRINT:FATTURE:CHIUSURA:x:
+dove x è il numero della chiusura fiscale
+Questo comando ristampa solo le FATTURE.
+Esempio di ristampa Fatture per Chiusura: REPRINT:FATTURE:CHIUSURA121:
+Ristampa tutti i Documenti Fiscali dalla Data... alla Data... dal DFGE:
+REPRINT:SCONTRINI:DATAggmmaaaa:DATAggmmaaaa:
+La prima Data è la data iniziale, la seconda è la data finale. In caso di data finale inferiore alla data iniziale il
+comando è ignorato ed è segnalato un errore nel LOG (se attivo).
+Questo comando ristampa SCONTRINI / FATTURE / NOTE DI CREDITO / CHIUSURE GIORNALIERE.
+Esempio di ristampa documenti dal / al: REPRINT:SCONTRINI:DATA13102017:DATA18102018:
+Ristampa tutti i Documenti Fiscali per Chiusura dal DFGE:
+REPRINT:SCONTRINI:CHIUSURAx:
+dove x è il numero della chiusura fiscale
+Esempio di ristampa Documenti fiscali per Chiusura: REPRINT:SCONTRINI:CHIUSURA121:
+In tutti i comandi MACRO il carattere ':' è utilizzato sia come separatore che come chiusura della stringa di
+comando e deve essere presente per evitare errori di struttura segnalati nel LOG.
+SALVA SCONTRINI - FATTURE - NOTE CREDITO da DFGE o Giornata Aperta su file TXT
+La funzione descritta consente il SALVATAGGIO DEI DOCUMENTI direttamente da 'codice' su file TXT ovvero
+tramite comandi MACRO da inserire in file testo da accodare nella cartella di ascolto dell'axonFPiD_Pro_v7.
+La cartella e il nome del file TXT di salvataggio sono indicati nella struttura del comando subito dopo il
+comando di apertura SAVEDOC: e delimitati dal separatore ‘|’ (pipe) (vedi strutture sotto descritte).
+Un file per il salvataggio dei Documenti su file TXT deve contenere un unico comando SAVEDOC. Non è
+possibile inserire il comando SAVEDOC in file contenenti i comandi SF20 per la stampa dei documenti su
+stampante fiscale. I file contenenti comandi SAVEDOC con struttura errata sono ignorati e rimossi
+dall'axonFPiD_Pro_v7 che, in caso di LOG Verbose attivo, segnala l'errore di struttura nel file di LOG. I File
+contenenti comandi SAVEDOC di struttura corretta avviano il salvataggio dei documenti richiesti in un
+unico file TXT e sono poi rimossi dall'axonFPiD_Pro_v7 che, in caso di LOG Verbose attivo, segnala l'esito
+positivo nel file di LOG.
+Di seguito sono riportate le strutture dei COMANDI SAVEDOC accettati per il salvataggio dei documenti:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+46
+
+--- Pagina 47 ---
+Salva Ultimo Scontrino emesso (giornata aperta) su file TXT:
+SAVEDOC:Path\Nome File.TXT|US:
+Esempio: SAVEDOC:C:\Cartella\File.txt|US:
+Salva Ultima Fattura emessa (giornata aperta) su file TXT:
+SAVEDOC:Path\Nome File.TXT|UF:
+Esempio: SAVEDOC:C:\Cartella\File.txt|UF:
+Salva Ultimi X Scontrini emessi (giornata aperta) su file TXT:
+SAVEDOC:Path\Nome File.TXT|USx:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di scontrini da salvare con valore da 1 a max 10.
+ESEMPIO per salvataggio ultimi 10 scontrini: SAVEDOC:C:\Cartella\File.txt|US10:
+Valori 0 o maggiori di 10 non sono accettati e danno segnalazione nel LOG. Numero di scontrini richiesti
+maggiore del numero attuale di scontrini stampati produce il salvataggio di tutti gli scontrini stampati.
+Salva Scontrino per DATA dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|SCONTRINOx:DATAggmmaaaa:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di Scontrino e ggmmaaaa è la data nel formato giorno a 2 cifre, mese a 2 cifre, anno a 4
+cifre senza separatori per un totale fisso di 8 cifre.
+Esempio di salvataggio dello Scontrino 11 del giorno 8 agosto 2017:
+SAVEDOC:C:\Cartella\File.txt|SCONTRINO11:DATA08082017:
+Salva Scontrino per CHIUSURA GIORNALIERA dal DFGE su file TXT:
+SAVEDOC:Path\Nime File.TXT|SCONTRINOx:CHIUSURAy:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di Scontrino e y è il numero di Chiusura Giornaliera.
+Esempio di salvataggio dello Scontrino 11 della chiusura 225:
+SAVEDOC:C:\Cartella\File.txt|SCONTRINO11:CHIUSURA225:
+Salva Fattura per DATA dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|FATTURAx:DATAggmmaaaa:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di Fattura e ggmmaaaa è la data nel formato giorno a 2 cifre, mese a 2 cifre, anno a 4 cifre
+senza separatori per un totale fisso di 8 cifre.
+Esempio di salvataggio della Fattura 2 del giorno 23 luglio 2017:
+SAVEDOC:C:\Cartella\File.txt|FATTURA2:DATA23072017:
+Salva Fattura per CHIUSURA GIORNALIERA dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|FATTURAx:CHIUSURAy:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di Fattura e y è il numero di Chiusura Giornaliera.
+Esempio di salvataggio della Fattura 25 della chiusura 118:
+SAVEDOC:C:\Cartella\File.txt|FATTURA25:CHIUSURA118:
+Salva Nota di Credito per DATA dal DFGE su file TXT:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+47
+
+--- Pagina 48 ---
+SAVEDOC:Path\Nome File.TXT|NOTACREDITOx:DATAggmmaaaa:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di Nota di Credito e ggmmaaaa è la data nel formato giorno a 2 cifre, mese a 2 cifre, anno
+a 4 cifre senza separatori per un totale fisso di 8 cifre.
+Esempio di salvataggio della Nota di Credito 8 del giorno 12 maggio 2017:
+SAVEDOC:C:\Cartella\File.txt|NOTACREDITO8:DATA12052017:
+Salva Nota di Credito per CHIUSURA GIORNALIERA dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|NOTACREDITOx:CHIUSURAy:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero di Nota di Credito e y è il numero di Chiusura Giornaliera.
+Esempio di salvataggio della Nota di Credito 27 della chiusura 106:
+SAVEDOC:C:\Cartella\File.txt|NOTACREDITO27:CHIUSURA106:
+Salva tutte le Fatture dalla Data... alla Data... dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|FATTURE:DATAggmmaaaa:DATAggmmaaaa:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove la prima Data è la data iniziale, la seconda è la data finale. In caso di data finale inferiore alla data iniziale
+il comando è ignorato ed è segnalato un errore nel LOG (se attivo).
+Questo comando avvia il salvataggio delle sole FATTURE.
+Esempio di salvataggio Fatture dal / al:
+SAVEDOC:C:\Cartella\File.txt|FATTURE:DATA13102017:DATA18102018:
+Salva tutte le Fatture per Chiusura dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|FATTURE:CHIUSURAx:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero della chiusura fiscale.
+Esempio di salvataggio Fatture per Chiusura fiscale:
+SAVEDOC:C:\Cartella\File.txt|FATTURE:CHIUSURA141:
+Salva tutti i Documenti Fiscali dalla Data... alla Data... dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|SCONTRINI:DATAggmmaaaa:DATAggmmaaaa
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove la prima Data è la data iniziale, la seconda è la data finale. In caso di data finale inferiore alla data iniziale
+il comando è ignorato ed è segnalato un errore nel LOG (se attivo).
+Questo comando avvia il salvataggio di SCONTRINI / FATTURE / NOTE DI CREDITO / CHIUSURE GIORNALIERE.
+Esempio di salvataggio documenti dal / al:
+SAVEDOC:C:\Cartella\File.txt|SCONTRINI:DATA13102017:DATA18102018:
+Salva tutti i Documenti Fiscali per Chiusura dal DFGE su file TXT:
+SAVEDOC:Path\Nome File.TXT|SCONTRINI:CHIUSURAx:
+dove Path\Nome File.TXT è il path e il nome del file txt di salvataggio
+dove x è il numero della chiusura fiscale..
+Questo comando avvia il salvataggio di SCONTRINI / FATTURE / NOTE DI CREDITO / CHIUSURE GIORNALIERE.
+Esempio di salvataggio documenti per Chiusura fiscale:
+SAVEDOC:C:\Cartella\File.txt|SCONTRINI:CHIUSURA171:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+48
+
+--- Pagina 49 ---
+SALVA CORRISPETTIVI PER CHIUSURA FISCALE su file XML
+Dalla versione 3.4.5 di axonFPiD_Pro_v7 è possibile salvare su file XML i corrispettivi della specifica chiusura
+fiscale (azzeramento). Il comando MACRO SAVEDOC dedicato a questa funzione va salvato in un file TXT e
+accodato nella cartella di ascolto del Server di Stampa.
+Un file per il salvataggio dei corrispettivi su file XML deve contenere un unico comando SAVEDOC. Non è
+possibile inserire il comando SAVEDOC in file contenenti i comandi SF20 per la stampa dei documenti su
+stampante RT. I file contenenti comandi SAVEDOC con struttura errata sono ignorati e rimossi
+dall'axonFPiD_Pro_v7 che, in caso di LOG Verbose attivo, segnala l'errore di struttura nel file di LOG. I File
+contenenti comandi SAVEDOC di struttura corretta avviano il salvataggio dei corrispettivi su file XML nella
+cartella e con il nome indicati nel comando SAVEDOC. Al nome indicato è aggiunta una estensione indicante
+lo stato ovvero _Trasmissione_OK o _Non_trasmesso o _Esportato. In caso di corrispettivi trasmessi dalla
+RT all’Agenzia delle Entrate è salvato anche un secondo file XML contenente l’esito della trasmissione
+ricevuto in risposta dall’AdE. Il file di esito è salvato nella stessa cartella indicata per l’XML dei corrispettivi
+con il nome indicato più l’estensione nel nome _Esito. In caso di LOG Verbose attivo, l’app segnala l'esito
+positivo nel file di LOG.
+Esempio di struttura SAVEDOC:
+SAVEDOC:C:\Cartella\File_Chiusura125.XML|CORRISPETTIVI:CHIUSURA125:
+dove: C:\Cartella = cartella di salvataggio, File_Chiusura125.XML = nome file XML, 125 = esempio di numero
+di chiusura. Il file XML avrà nome File_Chiusura125_Trasmesso_OK o File_Chiusura125_Non_Trasmesso o
+File_Chiusura125_Esportato. In caso di Trasmesso OK sarà salvato il file File_Chiusura12_Esito.XML
+contenente l’Esito e l’ID assegnato dalla Agenzia delle Entrate.
+In tutti i comandi SAVEDOC il carattere ‘|’ è utilizzato come separatore di chiusura del path e nome file TXT
+di salvataggio, il carattere ':' è utilizzato sia come separatore dei successivi campi che come chiusura della
+stringa di comando. Entrambi devono essere presenti per evitare errori di struttura segnalati nel LOG.
+ACQUISISCI DA RT SCONTRINO ELETTRONICO E SALVA SU PDF
+Dalla versione 5.5.0 è possibile acquisire dalle RT abiltate alla funzione ‘Scontrino Elettronico
+(dematerializzato)’ il file PDF tramite il richiamo della SAVEDOC:DEMA: passando alla RT le seguenti info:
+SAVEDOC:DEMA:Cartella\Nome file PDF|Numero Azzeramento|Numero Scontrino elettronico|
+SAVEDOC:DEMA: struttura fissa del comando
+Cartella: il percorso dove si vuole salvare il file PDF
+Nome file PDF: nome del file PDF da salvare in Cartella
+Numero Azzeramento: il numero della chiusura fiscale associata allo scontrino elettronico
+Numero Scontrino elettronico: il numero del documento fiscale dematerializzato
+In caso di mancata generazione del file PDF nella cartella selezionata verificare l’indicazione dell’errore
+segnalato attivando il LOG verbose dell’app axonFPiD_Pro_v7.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+49
+
+--- Pagina 50 ---
+Richiesta Informazioni a stampante MF / RT tramite comando READINFO:
+la funzione descritta in questo paragrafo consente la richiesta di informazioni alla stampante tramite
+l'implementazione di un comando MACRO dedicato. Il comando è descritto sotto insieme alla descrizione
+del file di uscita contenente le informazioni. Dalla versione 2.11.1 la ricerca dello stato degli azzeramenti
+compresa nella struttura di risposta del comando READINFO FULL (F) e COMPATTO (C ) è limitata agli ultimi
+10 giorni di attività della stampante per contenere i tempi di risposta.
+Struttura del comando:
+READINFO:x;path e nome file di uscita;
+il comando è composto dall'identificativo del comando ovvero READINFO:, da un campo successivo di un
+carattere 'x' che deve essere uguale a 'C' per file di ritorno 'COMPATTO' (poche informazioni) o uguale a 'F'
+per file di ritorno 'FULL' (tutte le informazioni), 'S' per file di ritorno SMALL ovvero con sola Matricola, ultimo
+numero di Scontrino, prossimo Azzeramento., da un secondo campo che invece contiene la cartella e il nome
+del file di uscita. Possono essere indicate come estensioni del file l' estensione 'TXT' che ritorna un file ASCII
+(TXT) o in alternativa l'estensione 'XML' che ritorna un file XML. I due campi del comando devono
+necessariamente essere chiusi dal carattere separatore ';' (punto e virgola).
+ESEMPI DI COMANDO E RELATIVO FILE DI RISPOSTA:
+READINFO:C;C:\cartella\nomefile.txt; fornisce un file TXT compatto con la seguente struttura:
+MATRICOLA = 8AMTN001083
+STATO = IN SERVIZIO (IN SERVIZIO - CEDUTA - DISMESSA)
+FILE XML PENDENTI = 0
+OCCUPAZIONE DFGE = 0.33%
+PROSSIMO AZZERAMENTO = 132
+ULTIMO SCONTRINO FISCALE = 12
+READINFO:F;C:\cartella\nomefile.txt; fornisce un file TXT full con la seguente struttura:
+VERSIONE AXONFPID_PRO = 2.09.1
+MODELLO = Hydra RT
+MATRICOLA = 8AMTN001083
+DATA ATTIVAZIONE = (campo presente solo se presente Data Attivazione RT)
+VERSIONE FIRMWARE = V2 R1 B6 F056
+STATO = IN SERVIZIO
+FILE XML INVIATI = 13
+FILE XML PENDENTI = 0
+FILE XML ESPORTATI = 0
+NUMERO DFGE = 002
+DATA FINE DFGE = 13/09/2022
+GIORNI RIMANENTI DFGE = 1187
+OCCUPAZIONE DFGE = 0.33%
+STATO MEMORIA FISCALE = FISCALIZZATA
+TOTALE AZZERAMENTI = 131 DI 2200
+PROSSIMO AZZERAMENTO = 132
+AZZERAMENTI RIMANENTI = 2069
+ULTIMO SCONTRINO FISCALE = 12
+READINFO:S;C:\cartella\nomefile.txt; fornisce un file TXT small con la seguente struttura:
+MATRICOLA = 8AMTN001083
+PROSSIMO AZZERAMENTO = 132
+ULTIMO SCONTRINO FISCALE = 12
+READINFO:C;C:\cartella\nomefile.xml; fornisce un file XML compatto con la seguente struttura:
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+50
+
+--- Pagina 51 ---
+<?xml version="1.0" encoding="utf-8"?>
+<InfoStampante>
+<Matricola>8AMTN001083</Matricola>
+<Stato>IN SERVIZIO</Stato>
+<FileXMLpendenti>0</FileXMLpendenti>
+<OccupazioneDFGE>0.33%</OccupazioneDFGE>
+<ProssimoAzzeramento>132</ProssimoAzzeramento>
+<UltimoScontrinoFiscale>12</UltimoScontrinoFiscale>
+</InfoStampante>
+READINFO:F;C:\cartella\nomefile.xml; fornisce un file XML full con la seguente struttura:
+<?xml version="1.0" encoding="utf-8"?>
+<InfoStampante>
+<VersioneAxonFPiD_Pro>2.09.1</VersioneAxonFPiD_Pro>
+<DatiStampante>
+<Modello>Hydra RT</Modello>
+<Matricola>8AMTN001083</Matricola>
+<DataAttivazione></DataAttivazione> (se presente Data Attivazione RT)
+<VersioneFirmware> V2 R1 B6 F056</VersioneFirmware>
+<Stato>IN SERVIZIO</Stato>
+</DatiStampante>
+<DatiTrasmissione>
+<FileXMLinviati>13</FileXMLinviati>
+<FileXMLpendenti>0<FileXMLpendenti>
+<FileXMLesportati>0</FileXMLesportati>
+</DatiTrasmissione>
+<DatiDFGE>
+<Numero>002</Numero>
+<DataFine>13/09/2022</DataFine>
+<GiorniRimanenti>1187</GiorniRimanenti>
+<Occupazione>0.33%</Occupazione>
+</DatiDFGE>
+<DatiMF>
+<StatoMF>FISCALIZZATA</StatoMF>
+<TotaleAzzeramenti>131 DI 2200</TotaleAzzeramenti>
+<ProssimoAzzeramento>132</ProssimoAzzeramento>
+<AzzeramentiRimanenti>2069</AzzeramentiRimanenti>
+<UltimoScontrinoFiscale>12</UltimoScontrinoFiscale>
+</DatiMF>
+</InfoStampante>
+READINFO:S;C:\cartella\nomefile.xml; fornisce un file XML small con la seguente struttura:
+<?xml version="1.0" encoding="utf-8"?>
+<InfoStampante>
+<Matricola>8AMTN001083</Matricola>
+<ProssimoAzzeramento>132</ProssimoAzzeramento>
+<UltimoScontrinoFiscale>12</UltimoScontrinoFiscale>
+</InfoStampante>
+Possibili ERRORI:
+1) errore di struttura (campo 1 diverso da c o C o f o F o s o S, campo 2 vuoto, separatori errati)
+2) Cartella File di uscita inesistente
+3) Estensione File uscita non accettata (diversa da TXT o XML)
+4) Errore nell'acquisizione dei dati dalla stampante
+5) Operazione abbandonata per stampante in stato FINE CARTA
+6) Operazione abbandonata per stampante in stato SPORTELLO APERTO
+7) Operazione abbandonata per stampante in stato DISPLAY DISCONNESSO
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+51
+
+--- Pagina 52 ---
+8) Operazione abbandonata per ricezione errore da stampante (viene indicata la descrizione errore)
+9) Errore in scrittura del file di uscita.
+Gli errori comportano la mancata creazione del file di uscita e sono segnalati nel LOG verbose
+dell'axonFPiD_Pro_v7, se abilitato, e tramite la creazione del file READINFO_ERROR.TXT contenente la
+descrizione dell'errore. Il file READINFO_ERROR.TXT è generato automaticamente sotto la cartella
+impostata per il salvataggio dei file di LOG.
+ATTENZIONE: il tempo di creazione del file di uscita è condizionato dai tempi di risposta della stampante,
+in particolar modo per quanto riguarda i contatori dello stato degli azzeramenti trasmessi, non trasmessi
+e esportati. Per questo si consiglia di attendere la creazione del file di uscita con un timeout adeguato.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+52
+
+--- Pagina 53 ---
+Elenco Comandi SF20 gestiti con risposta nel file Response_Documentoxxx.xml:
+Comandi presenti dalle versioni precedenti di axonFPiD_Pro_v7:
+t/ leggi Data e Ora dalla stampante
+X/ leggi stato, ultimo numero Scontrino, ultimo numero non fiscale, ultimo numero Fattura,
+ultimo numero Nota di Credito, suffisso Fattura.
+0/ leggi totali del giorno
+9/ leggi totali aliquota IVA, ultimo numero scontrino o scontrino aperto, totali
+Dalla versione 2.11.1 sono stati aggiunti i seguenti comandi:
+d/x/ leggi info del Reparto x
+:/x/ leggi info del Reparto x
+{/x/ leggi info del Pagamento x
+i/ leggi i dati dell’ultimo azzeramento
+,/10/ leggi lo stato della stampante
+a/ leggi dati di identificazione della ECR
+v/ leggi versione FW e info dalla stampante
+z/x/y/2/ leggi dati degli azzeramenti nel range x / y
+z/x//3/ leggi stato trasmissione, data azzeramento, data trasmissione, ID AdE
+Dalla versione 2.14.1 è stato aggiunto il seguente comando:
+0/1/ leggi i totali del giorno
+Dalla versione 3.3.1 sono stati aggiunti i seguenti comandi:
+0/2/ leggi i totali per tutte le Aliquote IVA, Natura di esenzione, Ventilazione IVA se attiva.
+0/2/XX/ leggi i totali per la singola Aliquota IVA o per la singola Natura di esenzione o per la
+Ventilazione IVA se attiva. Esempio: 0/2/V1/ o 0/2/V2/ o 0/2/V3/ o 0/2/V4 o 0/2/V5/
+o 0/2/N1/ o 0/2/N2/ o 0/2/N3/ o 0/2/N4/ o 0/2/N5/ o 0/2/N6/ o 0/2/VE/
+Dalla versione 3.4.3 è stato aggiunto il seguente comando:
+0/3/ leggi i totali dell’ultimo documento emesso al lordo dell’imposta
+Dalla versione 3.4.5 sono stati aggiunti i seguenti comandi:
+e/ leggi la tabella delle Aliquote IVA
+,/18/ leggi i 12 Codici Ateco configurabili
+Dalla versione 5.5.0 è stato aggiunto il seguente comando (solo per RT con FW serie 2 G100):
+0/4/num. Z/num. Scontrino/ leggi i totali dello specifico scontrino
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+53
+
+--- Pagina 54 ---
+TABELLA REPLY CODE e POST ACTION
+Codice Reply Descrizione Post Action
+0 tutte Comando Elaborato correttamente 0
+1 tutte Campi del comando insufficienti 2
+2 tutte Presente campo comando in eccesso o troppo 2
+lungo
+3 tutte Un campo del comando e' troppo corto 2
+4 tutte Controllare i campi del comando 2
+5 tutte Controllare i campi del comando 2
+6 tutte Comando non supportato 2
+7 tutte Il PLU non esiste 2
+8 tutte Il reparto non esiste 2
+9 tutte Aliquota IVA errata. Controllare 2
+corrispondenza aliquota IVA - Reparto
+10 tutte Numero operatore inesistente 2
+11 tutte Password operatore errata 2
+12 tutte Pagamento inesistente 2
+13 tutte Record fiscale richiesto inesistente 2
+14 tutte Tipo di record fiscale richiesto inesistente 2
+15 tutte Errore nel tipo di stampa 2
+16 tutte Giornata aperta, effettuare azzeramento Z1 2
+17 tutte Disconnettere i jumper prima 2
+18 tutte Data-Ora errata 2
+19 tutte Impossibile effettuare Vendite 2
+20 tutte Scontrino fiscale aperto, chiudere scontrino 2
+21 tutte Pagamento non valido 2
+22 tutte Entrate - prelievi in corso 2
+23 tutte Aliquota IVA errata. Controllare IVA - Reparto 2
+24 tutte Errore Prezzo 2
+25 tutte Protocollo Online attivo 2
+26 tutte Stampante BUSY, reinviare il comando 1
+27 tutte Operazione di vendita non valida 2
+28 tutte Sconto - aumento non valido 2
+29 tutte Raggiunto limite massimo Intestazioni 9
+Scontrino
+30 tutte Un Report Utente è aperto 2
+31 tutte Un Report Utente è aperto 2
+Codice Reply Descrizione Post Action
+32 tutte Nessuna transazione nella memoria Fiscale 2
+33 tutte Numero sconto - aumento non valido 2
+34 tutte Raggiunto limite massimo PLU registrabili 2
+35 tutte Errore nell'invio dei dati BMP 2
+36 tutte Numero indice BMP inesistente 2
+37 tutte Numero categoria inesistente 2
+38 tutte Errato indice ID stampante 2
+39 tutte Errato tipo di stampante 2
+40 tutte Indice ID unità errato 2
+41 tutte Impossibile effettuare ulteriori vendite 2
+42 tutte Errore Tastiera - Tastiera scollegata 9
+43 tutte Problema Batteria tampone 9
+44 tutte Carta Finita 4
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+54
+
+--- Pagina 55 ---
+45 tutte Errore Taglierina 9
+46 tutte Stampante scollegata 9
+47 tutte Stampante surriscaldata 9
+48 tutte Memoria Fiscale scollegata 9
+49 tutte Errore Fatale 9
+50 tutte Jumper ancora inseriti. Rimuovere Jumper 9
+51 tutte Sportello rotolo aperto 4
+52 tutte Raggiunto limite massimo Aliquote IVA 9
+programabili
+53 tutte Nessuna altra linea 2
+54 tutte Into Menu - premere CL su tastiera 2
+55 tutte Nessun sconto ticket 2
+56 tutte Non supportato 2
+57 tutte Accesso non consentito per l'operatore 2
+corrente
+58 tutte Velocità porta errata 2
+59 tutte PLU inattivo 2
+60 tutte Giornale Elettronico pieno 9
+61 tutte Valore troppo grande 2
+62 tutte Aggiunta - Rimozione parametri non valida 2
+63 tutte Dipartimento inattivo 2
+64 tutte Impossibile aprire il cassetto 2
+65 tutte Non c'è uno scontrino aperto 2
+66 tutte Errore in report SD 2
+67 tutte Superato limite di sconto - markup 2
+68 tutte Zero sconto - markup 2
+69 tutte Descrizione vuota 2
+70 tutte Codice chiave errato 2
+71 tutte Errore di indice Cliente 2
+72 tutte Codice Cliente errato 2
+73 tutte Bonus oltre i limiti 2
+74 tutte Errato indice di link Promozione 2
+75 tutte Parola non consentita (TOTALE) 2
+76 tutte Errore nei dati del Barcode 2
+77 tutte Cambiamento non consentito per il tipo di 2
+pagamento
+78 tutte Si deve inserire il totale Pagamento 2
+79 tutte Stesse linee di Header 2
+80 tutte Errore Messaggio In 2
+81 tutte Dati SD non trovati 2
+82 tutte Non ci sono altri dati da leggere dalla SD 2
+83 tutte Impostare il limite per leggere i dati da SD 2
+84 tutte Totale Scontrino negativo 2
+85 tutte Superato Importo Scontrino Fiscale 2
+86 tutte Superato Importo delle Vendite giornaliere 2
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+55
+
+--- Pagina 56 ---
+Codice Reply Descrizione Post Action
+87 tutte SD piena 9
+88 tutte SD vecchia 9
+89 tutte Superato limite SD 9
+90 tutte Fiscal COMM problemi 9
+91 tutte Impossibile inviare mail in questo momento 4
+92 tutte Un Report EJ è già in corso 4
+93 tutte Un Report della Memoria Fiscale è già in corso 4
+94 tutte Scontrino aperto da Tastiera 4
+95 tutte Giornale Elettronico in trasferimento 4
+96 tutte Non è possibile trasferire il Pagamento 3
+97 tutte Display Disconnesso 4
+98 tutte Disconnessione DGFE 4
+99 tutte Errore Batteria 4
+100 tutte Totale Scontrino a zero 4
+101 tutte In esecuzione comando FTP 4
+102 tutte T i p o di pagamento del credito 2
+103 Hydra Errore Numero di Indice del Bonus 2
+103 altre RT Numero di Fattura non valido 2
+104 Hydra Nessun altro Cliente 2
+104 altre RT Numero massimo Fattura 2
+105 Hydra Cliente in black list 2
+105 altre RT Testo Fattura errato 2
+106 Hydra Selezionare prima il Cliente 2
+106 altre RT Ethernet disattivo 2
+107 Hydra Credito non consentito per cliente selezionato 2
+107 altre RT ECR in modalita trasferimento 2
+108 Hydra Limite di credito del cliente superato 2
+108 altre RT Impossibile aprire Annullamento 2
+109 Hydra Numero di Fattura non valido 2
+109 altre RT Impossibile aprire Reso Merce 2
+110 Hydra Numero massimo Fattura 2
+110 altre RT ECR disattivato 9
+111 Hydra In batch procedura aggiornamento cliente 2
+111 altre RT CERTIFICATO DISPOSITIVO scaduto 9
+112 Hydra Massimo totale giornaliero 2
+112 altre RT Risposta stato RT PERIODO INATTIVO 4
+113 Hydra Testo Fattura errato 2
+113 Aura Serial Number errato 4
+113 altre RT Codice errato per abilitare la funzionalita RT 4
+114 Hydra Ethernet disattivo 2
+114 Aura Scontrino gia in Reso Merce o gia Annullato 2
+114 altre RT Serial Number errato 4
+115 Hydra ECR in modalita trasferimento 2
+115 Aura Scontrino non presente per Reso Merce o 2
+Annullo
+115 altre RT Scontrino gia in Reso Merce o gia Annullato 2
+116 Hydra Impossibile aprire Annullamento 2
+116 Aura Il totale Reso Merce supera il max consentito 2
+116 altre RT Scontrino non presente per Reso Merce o 2
+Annullo
+117 Hydra Impossibile aprire Reso Merce 2
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+56
+
+--- Pagina 57 ---
+117 Aura Reso Merce o Annullo importo errato 2
+117 altre RT Il totale Reso Merce supera il max consentito 2
+118 Hydra ECR disattivato 9
+118 Aura File indice DFGE non accessibile per Reso 2
+Merce o Annullo
+118 altre RT Reso Merce o Annullo importo errato 2
+119 Hydra CERTIFICATO DISPOSITIVO scaduto 9
+119 Aura Data non valida scontrino richiesto (num. Z o 2
+num. Scontrino o Data)
+119 altre RT File indice DFGE non accessibile per Reso 2
+Merce o Annullo
+120 Hydra Risposta stato RT PERIODO INATTIVO 4
+120 Aura Codice non riconosciuto 2
+120 altre RT Data non valida scontrino richiesto (num. Z o 2
+num. Scontrino o Data)
+121 Hydra Codice errato per abilitare la funzionalita RT 4
+122 Hydra S e r i a l Number errato 4
+123 Hydra Scontrino gia in Reso Merce o gia Annullato 2
+124 Hydra Scontrino non presente per Reso Merce o 2
+Annullo
+125 Hydra Il totale Reso Merce supera il max consentito 2
+126 Hydra Reso Merce/Annullamento importo errato 2
+127 Hydra File Indice DFGE non accessibile per Reso 2
+Merce o Annullo
+128 Hydra Data non valida scontrino richiesto (num. Z o 2
+num. Scontrino o Data)
+150 tutte Errore Numero di Indice del Bonus 2
+151 tutte Nessun altro Cliente 2
+152 tutte Cliente in black list 2
+153 tutte Selezionare prima il cliente 2
+154 tutte Credito non consentito per il Cliente 2
+selezionato
+155 tutte Limite di credito del Cliente superato 2
+156 tutte Numero di Fattura non valido 2
+157 tutte Numero massimo Fattura 2
+158 tutte In batch procedura aggiornamento cliente 2
+159 tutte Massimo totale giornaliero 2
+160 tutte Testo Fattura errato 2
+161 tutte Ethernet disattivo 2
+162 tutte ECR in modalita trasferimento 2
+163 tutte Impossibile aprire Annullamento 2
+164 tutte Impossibile aprire Reso Merce 2
+165 tutte ECR disattivato 9
+166 tutte CERTIFICATO DISPOSITIVO scaduto 9
+167 tutte Risposta stato RT PERIODO INATTIVO 4
+168 tutte Codice errato per abilitare la funzionalita RT 4
+169 tutte Serial Number errato 4
+170 tutte Scontrino gia in Reso Merce o gia Annullato 2
+171 tutte Scontrino non presente per Reso Merce o 2
+Annullo
+172 tutte Il totale Reso Merce supera il max consentito 2
+173 tutte Reso Merce o Annullo importo errato 2
+174 tutte File indice DFGE non accessibile per Reso 2
+Merce o Annullo
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+57
+
+--- Pagina 58 ---
+175 tutte Data non valida scontrino richiesto (num. Z o 2
+num. Scontrino o Data)
+176 tutte I n dice POS inesistente
+TABELLA DESCRIZIONE POST ACTION
+Post Action Descrizione
+1 Ripete il Comando eseguito.
+2 Continua ignorando l'errore.
+3 Ciclo di attesa, verifica lo stato stampante, se lo
+stato della stampante è tornato OK (Reply Code = 00)
+procede con il comando successivo ignorando il comando
+corrente.
+4 Ciclo di attesa, verifica lo stato stampante, se lo
+stato della stampante è tornato OK (Reply Code = 00)
+procede ripetendo il comando corrente.
+5 Ripete subito il comando.
+9 Errore Grave! Uscita immediata dal ciclo di invio
+Comandi.
+A.P.esse S.p.A. - axonFPiD_Pro_v7
+58

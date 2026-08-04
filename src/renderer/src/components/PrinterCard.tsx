@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { DriverPicker } from './DriverPicker'
 import { ConnectionForm } from './ConnectionForm'
 import { DeptMapping } from './DeptMapping'
+import { AxonProbePanel } from './AxonProbePanel'
 import { LabelTemplatePanel } from './LabelTemplatePanel'
 import type { PrinterConfig, PrinterRole } from '../../../main/config'
 import type { PaperConfig } from '../../../main/drivers/interface'
@@ -14,7 +15,7 @@ const ROLES: Array<{ value: PrinterRole; label: string }> = [
 
 // Driver sensati per ruolo: la UI filtra, il server resta la vera guardia (409)
 const DRIVERS_BY_ROLE: Record<PrinterRole, string[]> = {
-  fiscal: ['epson-fpmate', 'ditron-keycode', 'ditron-streamwec'],
+  fiscal: ['epson-fpmate', 'ditron-keycode', 'ditron-streamwec', 'axon-fpid'],
   label: ['os-printer', 'escpos-network', 'zpl-network'],
   receipt: ['escpos-network', 'os-printer'],
 }
@@ -158,9 +159,23 @@ export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper
         onChange={(c) => onChange({ ...printer, connection: c })}
         onTest={() => runTest('status')}
         showTestButton={false}
-        mode={printer.driver === 'os-printer' ? 'system' : 'network'}
+        mode={
+          printer.driver === 'os-printer'
+            ? 'system'
+            : printer.driver === 'axon-fpid'
+              ? 'spool'
+              : 'network'
+        }
         onPaperDetected={onPatchPaper}
       />
+
+      {printer.driver === 'axon-fpid' && (
+        <AxonProbePanel
+          printerId={printer.id}
+          existingDeptMapping={printer.deptMapping}
+          onApplyDeptMapping={(deptMapping) => onChange({ ...printer, deptMapping })}
+        />
+      )}
 
       {printer.role === 'fiscal' && (
         <DeptMapping
