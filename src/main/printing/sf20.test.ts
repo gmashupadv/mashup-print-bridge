@@ -177,17 +177,49 @@ describe('buildReceipt', () => {
     expect(commands.at(-1)).toBe('5/1/0////PC//')
   })
 
-  it('rifiuta lo sconto sul totale: sintassi non verificata sulla stampante', () => {
-    expect(() =>
+  it('riproduce la sequenza con sconto validata sulla RT30 il 29/07/2026', () => {
+    // File inviato dal Pannello del Tecnico: 0,20 meno 0,10 ha stampato 0,10.
+    expect(
       buildReceipt(
         {
-          items: [{ description: 'A', quantity: 1, unitPrice: 10, department: 1, vatRate: 22 }],
-          discount: 5,
+          items: [
+            { description: 'TEST SCONTO', quantity: 1, unitPrice: 0.2, department: 1, vatRate: 22 },
+          ],
+          discount: 0.1,
           payments: [cash],
         },
         '1'
       )
-    ).toThrow(/sconto di RIGA/)
+    ).toEqual([
+      '3/S/TEST SCONTO//1/0.20/1/22///0/',
+      'U/',
+      '4/0.10/Sconto//0/0/1/',
+      '5/1/0////PC//',
+    ])
+  })
+
+  it('mette lo sconto DOPO il subtotale: prima sarebbe uno sconto di riga', () => {
+    const commands = buildReceipt(
+      {
+        items: [{ description: 'A', quantity: 1, unitPrice: 10, department: 1, vatRate: 22 }],
+        discount: 5,
+        payments: [cash],
+      },
+      '1'
+    )
+    expect(commands.indexOf('U/')).toBeLessThan(commands.findIndex((c) => c.startsWith('4/')))
+  })
+
+  it('non emette la riga di sconto quando lo sconto e` zero', () => {
+    const commands = buildReceipt(
+      {
+        items: [{ description: 'A', quantity: 1, unitPrice: 10, department: 1, vatRate: 22 }],
+        discount: 0,
+        payments: [cash],
+      },
+      '1'
+    )
+    expect(commands.some((c) => c.startsWith('4/'))).toBe(false)
   })
 
   it('rifiuta una riga con IVA 0% senza natura di esenzione', () => {

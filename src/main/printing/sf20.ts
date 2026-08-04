@@ -125,6 +125,30 @@ const SALE_IS_GOOD = '0'
 const SUBTOTAL = 'U/'
 
 /**
+ * Sconto a valore sul subtotale:
+ *
+ *   4/0.10/Sconto//0/0/1/
+ *   │  │      │   │ │ └── vedi sotto
+ *   │  │      │   └─┴──── tipo (0 = sconto) e calcolo (0 = a valore)
+ *   │  │      └────────── seconda riga di descrizione
+ *   │  └───────────────── descrizione stampata sullo scontrino
+ *   └──────────────────── comando di sconto
+ *
+ * La differenza fra sconto di riga e sconto sul totale sta nella POSIZIONE, non
+ * nei campi: gli scontrini di esempio lo mostrano subito dopo una riga di
+ * vendita (sconto di riga), mentre dopo U/ agisce sul subtotale. Verificato
+ * sulla RT30 della cliente il 29/07/2026 con 0,20 meno 0,10 = 0,10.
+ *
+ * L'ultimo campo resta 1 in entrambe le posizioni. Non sappiamo se sia
+ * "applicazione" o il codice di uno sconto programmato sulla RT: la posizione
+ * discrimina comunque, quindi non serve saperlo.
+ *
+ * Su uno scontrino con aliquote miste la ripartizione dello sconto fra le
+ * aliquote la esegue la RT, che è il dispositivo certificato per farlo.
+ */
+const DISCOUNT_DESCRIPTION = 'Sconto'
+
+/**
  * Pagamento:
  *
  *   5/1/200////PC//
@@ -187,15 +211,11 @@ export function paymentLine(paymentType: number, value: number | null): string {
   return ['5', String(code), value == null ? '0' : amount(value), '', '', '', kind, '', ''].join('/')
 }
 
+export function subtotalDiscountLine(value: number): string {
+  return ['4', amount(value), DISCOUNT_DESCRIPTION, '', '0', '0', '1', ''].join('/')
+}
+
 export function buildReceipt(data: ReceiptData, _operatorId: string): string[] {
-  if (data.discount > 0) {
-    throw new Sf20CommandUnavailableError(
-      'sconto sul totale',
-      'Gli scontrini di test mostrano il comando 4/ solo come sconto di RIGA, applicato ' +
-        'subito dopo una riga di vendita; la forma per lo sconto sul subtotale non e\' stata ' +
-        'verificata sulla stampante e non va indovinata su un documento fiscale'
-    )
-  }
   if (data.items.length === 0) {
     throw new Error('Scontrino senza righe di vendita')
   }
@@ -217,6 +237,10 @@ export function buildReceipt(data: ReceiptData, _operatorId: string): string[] {
   }
 
   commands.push(SUBTOTAL)
+
+  // Dopo U/: agisce sul subtotale. Prima di U/, lo stesso comando sarebbe uno
+  // sconto di riga sull'ultimo articolo.
+  if (data.discount > 0) commands.push(subtotalDiscountLine(data.discount))
 
   const payments = data.payments.length > 0 ? data.payments : [{ description: '', amount: 0, paymentType: 0 }]
   payments.forEach((payment, i) => {

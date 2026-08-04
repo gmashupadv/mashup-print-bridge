@@ -113,6 +113,23 @@ Codici di fabbrica (`sf20.txt`): 1 Contante, 2 Crediti (non riscosso), 3 Ticket,
 contanti e 4/`PE` per carta. Verificabili con `{/x/` o con la stampa "lista
 pagamenti".
 
+### Sconto sul totale
+
+```
+3/S/TEST SCONTO//1/0.20/1/22///0/
+U/
+4/0.10/Sconto//0/0/1/
+5/1/0////PC//
+```
+
+Validato sulla stessa RT30: 0,20 meno 0,10 ha stampato 0,10.
+
+Quello che discrimina fra sconto di riga e sconto sul totale è la **posizione**,
+non i campi. Lo stesso comando `4/…/0/0/1/` messo subito dopo una riga di vendita
+sconta quella riga (è la forma degli scontrini di esempio); messo dopo `U/`
+sconta il subtotale. Su uno scontrino con aliquote miste la ripartizione dello
+sconto fra le aliquote la esegue la RT.
+
 ### Cosa resta da ricavare
 
 Queste operazioni rispondono ancora con un errore che rimanda a questa sezione,
@@ -122,8 +139,7 @@ perché non comparivano negli scontrini di test:
 |---|---|
 | **Chiusura giornaliera** (`/daily-close`) | comando di azzeramento Z1 ignoto |
 | **Apertura cassetto** (`/open-drawer`) | comando ignoto |
-| **Sconto sul totale** | il comando `4/` compare solo come sconto di **riga**, subito dopo una riga di vendita; la forma sul subtotale non è verificata |
-| **Righe con IVA 0%** | richiedono la natura di esenzione (N1..N6), che `ReceiptItem` non trasporta |
+| **Righe con IVA 0%** | richiedono la natura di esenzione (N1..N6). Non è un problema aperto sulla RT della cliente: la sua tabella IVA (4, 10, 22…22) non ha alcuno slot a 0, quindi non può emettere righe esenti finché non viene riprogrammata. La natura è un attributo del **reparto** — la sonda legge già `CMD_d_DPT_NATURAESENZIONE` — quindi quando servirà basterà programmare sulla RT uno slot a 0 con la sua natura e associarlo a un reparto |
 
 Per ricavarle: **Pannello del Tecnico → Invia Comandi SF20 o File TXT** consente
 di mandare un comando e leggerne la risposta prima di scriverlo nel codice.
