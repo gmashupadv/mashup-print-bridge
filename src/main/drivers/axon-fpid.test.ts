@@ -501,29 +501,79 @@ describe('sonda in volo attraverso una connect() a cartelle diverse (finding 3)'
 })
 
 describe('probeConfig', () => {
-  const PROBE_RESPONSE = `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
+  // Risposta modellata sul Response XML reale della RT30 della cliente: axonFPiD
+  // scrive ogni TAG CMD_* UNA SOLA VOLTA, quindi un job puo` trasportare al piu`
+  // un reparto. MASSIMOREPARTI dice al driver quanti job di reparto fare.
+  const IDENTITY = `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
 <DEVICE_STATUS>00</DEVICE_STATUS><FISCAL_STATUS>02</FISCAL_STATUS>
-<CMD_v_ECR_VERSIONEFW>V2 R1 B7 F064</CMD_v_ECR_VERSIONEFW>
-<CMD_a_ECR_MATRICOLA>8A014141</CMD_a_ECR_MATRICOLA>
-<CMD_a_ECR_CODICEMODELLO>TN</CMD_a_ECR_CODICEMODELLO>
-<CMD_e_VAT_A>4</CMD_e_VAT_A><CMD_e_VAT_B>10</CMD_e_VAT_B>
-<CMD_e_VAT_C>22</CMD_e_VAT_C><CMD_e_VAT_D>0</CMD_e_VAT_D><CMD_e_VAT_E>0</CMD_e_VAT_E>
-<CMD_d_DPT_NUMERO>1</CMD_d_DPT_NUMERO><CMD_d_DPT_DESCRIZIONE>ALIMENTARI</CMD_d_DPT_DESCRIZIONE>
-<CMD_d_DPT_ALIQUOTAIVA>1</CMD_d_DPT_ALIQUOTAIVA>
-<CMD_d_DPT_NUMERO>2</CMD_d_DPT_NUMERO><CMD_d_DPT_DESCRIZIONE>BEVANDE</CMD_d_DPT_DESCRIZIONE>
-<CMD_d_DPT_ALIQUOTAIVA>3</CMD_d_DPT_ALIQUOTAIVA></RESPONSE>`
+<CMD_a_ECR_MATRICOLA>8A013756</CMD_a_ECR_MATRICOLA>
+<CMD_a_ECR_CODICEMODELLO>GE</CMD_a_ECR_CODICEMODELLO>
+<CMD_v_ECR_VERSIONEFW>V2 R1 B7 G100.137</CMD_v_ECR_VERSIONEFW>
+<CMD_v_ECR_MASSIMOREPARTI>2</CMD_v_ECR_MASSIMOREPARTI>
+<CMD_e_VAT_A>4.00</CMD_e_VAT_A><CMD_e_VAT_B>10.00</CMD_e_VAT_B>
+<CMD_e_VAT_C>22.00</CMD_e_VAT_C><CMD_e_VAT_D>22.00</CMD_e_VAT_D>
+<CMD_e_VAT_E>22.00</CMD_e_VAT_E></RESPONSE>`
 
-  it('ricostruisce identità, tabella IVA e reparti', async () => {
+  const department = (n: string, desc: string, vat: string): string =>
+    `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
+<DEVICE_STATUS>00</DEVICE_STATUS><FISCAL_STATUS>02</FISCAL_STATUS>
+<CMD_d_DPT_NUMERO>${n}</CMD_d_DPT_NUMERO>
+<CMD_d_DPT_DESCRIZIONE>${desc}</CMD_d_DPT_DESCRIZIONE>
+<CMD_d_DPT_ALIQUOTAIVA>${vat}</CMD_d_DPT_ALIQUOTAIVA></RESPONSE>`
+
+  /** Serve una risposta diversa per ogni job, nell'ordine in cui arrivano. */
+  async function serveSequence(responses: string[]): Promise<string[]> {
+    const seen: string[] = []
+    for (const response of responses) seen.push(await serveOnce(() => response))
+    return seen
+  }
+
+  it('interroga un reparto per job e ricostruisce identita`, IVA e reparti', async () => {
     const driver = await connect()
-    const served = serveOnce(() => PROBE_RESPONSE)
+    const served = serveSequence([
+      IDENTITY,
+      department('1', 'REPAR-1', '3'),
+      department('2', 'REPAR-2', '1'),
+    ])
+    const probe = await driver.probeConfig()
+    const files = await served
+
+    // Un solo d/x/ per file: e` il vincolo imposto da axonFPiD.
+    expect(files[1]).toBe('d/1/\r\n')
+    expect(files[2]).toBe('d/2/\r\n')
+
+    expect(probe.serial).toBe('8A013756')
+    expect(probe.model).toBe('GE')
+    expect(probe.vatTable).toEqual({ A: '4.00', B: '10.00', C: '22.00', D: '22.00', E: '22.00' })
+    expect(probe.departments).toEqual([
+      { number: '1', description: 'REPAR-1', vatCode: '3' },
+      { number: '2', description: 'REPAR-2', vatCode: '1' },
+    ])
+  })
+
+  it('salta i reparti che non restituiscono TAG invece di inventarli', async () => {
+    const driver = await connect()
+    const empty = `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
+<DEVICE_STATUS>00</DEVICE_STATUS><FISCAL_STATUS>02</FISCAL_STATUS></RESPONSE>`
+    const served = serveSequence([IDENTITY, department('1', 'REPAR-1', '3'), empty])
     const probe = await driver.probeConfig()
     await served
-    expect(probe.firmware).toBe('V2 R1 B7 F064')
-    expect(probe.serial).toBe('8A014141')
-    expect(probe.vatTable).toEqual({ A: '4', B: '10', C: '22', D: '0', E: '0' })
-    expect(probe.departments).toEqual([
-      { number: '1', description: 'ALIMENTARI', vatCode: '1' },
-      { number: '2', description: 'BEVANDE', vatCode: '3' },
+    expect(probe.departments).toEqual([{ number: '1', description: 'REPAR-1', vatCode: '3' }])
+  })
+
+  it('segnala l`avanzamento a ogni reparto letto', async () => {
+    const driver = await connect()
+    const served = serveSequence([
+      IDENTITY,
+      department('1', 'REPAR-1', '3'),
+      department('2', 'REPAR-2', '1'),
+    ])
+    const progress: Array<[number, number]> = []
+    await driver.probeConfig((done, total) => progress.push([done, total]))
+    await served
+    expect(progress).toEqual([
+      [1, 2],
+      [2, 2],
     ])
   })
 })

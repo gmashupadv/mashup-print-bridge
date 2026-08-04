@@ -4,7 +4,8 @@ import {
   amount,
   sanitize,
   buildCommandFile,
-  buildProbe,
+  PROBE_IDENTITY,
+  buildDepartmentProbe,
   buildReceipt,
   buildDailyClose,
   buildOpenDrawer,
@@ -73,14 +74,15 @@ describe('buildCommandFile', () => {
   })
 })
 
-describe('buildProbe', () => {
-  it('contiene solo comandi di interrogazione', () => {
-    const commands = buildProbe(3)
-    expect(commands).toEqual(['v/', 'a/', ',/10/', 'X/', 'e/', 'd/1/', 'd/2/', 'd/3/'])
+describe('sonda di configurazione', () => {
+  it('il primo passo contiene solo comandi di interrogazione', () => {
+    expect(PROBE_IDENTITY).toEqual(['v/', 'a/', ',/10/', 'X/', 'e/'])
   })
 
-  it('interroga 60 reparti per default', () => {
-    expect(buildProbe()).toHaveLength(65)
+  it('interroga un solo reparto per job', () => {
+    // axonFPiD scrive ogni TAG CMD_* una sola volta nel Response XML: un file
+    // con piu` d/x/ restituirebbe soltanto l'ultimo reparto interrogato.
+    expect(buildDepartmentProbe(7)).toEqual(['d/7/'])
   })
 })
 

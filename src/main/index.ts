@@ -302,13 +302,22 @@ ipcMain.handle('dialog:pick-folder', async () => {
 // sempre un PrinterStatus mentre qui la struttura di ritorno è diversa.
 ipcMain.handle('driver:probe', async (_e, printerId: string) => {
   const driver = drivers.get(printerId)
-  if (!driver) throw new Error(`Driver not found: ${printerId}`)
-  const probe = (driver as { probeConfig?: () => Promise<unknown> }).probeConfig
+  if (!driver) throw new Error(`Stampante non trovata: ${printerId}`)
+  const probe = (
+    driver as {
+      probeConfig?: (onProgress?: (done: number, total: number) => void) => Promise<unknown>
+    }
+  ).probeConfig
   if (typeof probe !== 'function') {
     throw new Error('Questo driver non supporta la sonda di configurazione')
   }
-  const result = await probe.call(driver)
-  emitLog(`Sonda di configurazione eseguita [${printerId}]`)
+  // La lettura dei reparti è un job per reparto: senza avanzamento la finestra
+  // resta muta per decine di secondi e sembra bloccata.
+  emitLog(`Sonda di configurazione avviata [${printerId}]`)
+  const result = await probe.call(driver, (done, total) => {
+    if (done === total || done % 10 === 0) emitLog(`Sonda: letti ${done}/${total} reparti`)
+  })
+  emitLog(`Sonda di configurazione completata [${printerId}]`)
   return result
 })
 

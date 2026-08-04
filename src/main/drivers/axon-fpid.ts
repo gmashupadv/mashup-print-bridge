@@ -24,7 +24,10 @@ import * as sf20 from '../printing/sf20'
 // pannello React del renderer li importa direttamente da printing/axon-probe
 // (non da qui): questo file trascina node:fs/promises e node:path, non
 // bundlabili lato browser.
-import type { AxonProbe } from '../printing/axon-probe'
+import type { AxonProbe, AxonDepartment } from '../printing/axon-probe'
+
+/** Tetto di sicurezza sui reparti da interrogare, se la RT non lo dichiara. */
+const MAX_DEPARTMENTS = 60
 
 const POLL_INTERVAL_MS = 250
 const STATUS_CACHE_MS = 10_000
@@ -297,36 +300,57 @@ export class AxonFpidDriver implements PrinterDriver {
     }
   }
 
-  /** Legge dalla stampante identità, tabella IVA e reparti programmati. */
-  async probeConfig(): Promise<AxonProbe> {
-    const res = await this.submit(sf20.buildProbe())
-    const numbers = res.tags['CMD_d_DPT_NUMERO'] ?? []
-    const descriptions = res.tags['CMD_d_DPT_DESCRIZIONE'] ?? []
-    const vatCodes = res.tags['CMD_d_DPT_ALIQUOTAIVA'] ?? []
+  /**
+   * Legge dalla stampante identità, tabella IVA e reparti programmati.
+   *
+   * Un job per reparto: axonFPiD scrive ogni TAG CMD_* una sola volta nel
+   * Response XML, sovrascrivendolo, quindi un file con più d/x/ restituisce
+   * soltanto l'ultimo reparto interrogato. Il numero di reparti da leggere
+   * arriva dalla stampante stessa (CMD_v_ECR_MASSIMOREPARTI).
+   *
+   * onProgress, se passato, viene invocato dopo ogni reparto letto: la lettura
+   * completa sono decine di round-trip attraverso la coda seriale e senza un
+   * segnale di avanzamento la UI sembra bloccata.
+   */
+  async probeConfig(onProgress?: (done: number, total: number) => void): Promise<AxonProbe> {
+    const identity = await this.submit(sf20.PROBE_IDENTITY)
 
-    // Raccogliamo ogni CMD_e_VAT_* presente invece di chiedere cinque lettere
-    // fisse: le RT serie 1 rispondono CMD_e_VAT_A..E, quelle serie 2 G100 hanno
-    // dodici aliquote e possono numerarle. La chiave della tabella è il suffisso
-    // del TAG, e resolveVatRate in axon-probe.ts prova sia il numero sia la lettera.
+    // Le RT serie 1 rispondono CMD_e_VAT_A..E. Raccogliamo qualunque suffisso
+    // invece di chiedere cinque lettere fisse: resolveVatRate prova sia la
+    // chiave numerica sia la lettera, quindi regge anche altre etichettature.
     const VAT_TAG_PREFIX = 'CMD_e_VAT_'
     const vatTable: Record<string, string> = {}
-    for (const [tag, values] of Object.entries(res.tags)) {
+    for (const [tag, values] of Object.entries(identity.tags)) {
       if (tag.startsWith(VAT_TAG_PREFIX)) {
         vatTable[tag.slice(VAT_TAG_PREFIX.length)] = values[0] ?? ''
       }
     }
 
+    const declared = Number(firstTag(identity, 'CMD_v_ECR_MASSIMOREPARTI'))
+    const total = Number.isInteger(declared) && declared > 0 ? Math.min(declared, MAX_DEPARTMENTS) : MAX_DEPARTMENTS
+
+    const departments: AxonDepartment[] = []
+    for (let n = 1; n <= total; n++) {
+      const res = await this.submit(sf20.buildDepartmentProbe(n))
+      const number = firstTag(res, 'CMD_d_DPT_NUMERO')
+      // Un reparto inesistente non produce i TAG: saltarlo, non inventarlo.
+      if (number !== '') {
+        departments.push({
+          number,
+          description: firstTag(res, 'CMD_d_DPT_DESCRIZIONE'),
+          vatCode: firstTag(res, 'CMD_d_DPT_ALIQUOTAIVA'),
+        })
+      }
+      onProgress?.(n, total)
+    }
+
     return {
-      firmware: firstTag(res, 'CMD_v_ECR_VERSIONEFW'),
-      serial: firstTag(res, 'CMD_a_ECR_MATRICOLA'),
-      model: firstTag(res, 'CMD_a_ECR_CODICEMODELLO'),
-      lastReceiptNumber: firstTag(res, 'CMD_X_ULTIMO_NUMERO_SCONTRINO'),
+      firmware: firstTag(identity, 'CMD_v_ECR_VERSIONEFW'),
+      serial: firstTag(identity, 'CMD_a_ECR_MATRICOLA'),
+      model: firstTag(identity, 'CMD_a_ECR_CODICEMODELLO'),
+      lastReceiptNumber: firstTag(identity, 'CMD_X_ULTIMO_NUMERO_SCONTRINO'),
       vatTable,
-      departments: numbers.map((number, i) => ({
-        number,
-        description: descriptions[i] ?? '',
-        vatCode: vatCodes[i] ?? '',
-      })),
+      departments,
     }
   }
 

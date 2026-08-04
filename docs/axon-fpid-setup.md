@@ -54,6 +54,16 @@ Premere **Testa connessione**. Il messaggio d'errore distingue i casi:
 
 ## 4. Sonda di configurazione
 
+> **Un TAG per Response.** axonFPiD scrive ogni TAG `CMD_*` **una sola volta** nel
+> Response XML: se un file contiene più comandi che producono lo stesso TAG, resta
+> solo il valore dell'ultimo. Verificato su file reale — `d/1/`, `d/2/` e `d/60/`
+> nello stesso file hanno prodotto un unico blocco `CMD_d_DPT_*`, quello del
+> reparto 60. Per questo la sonda legge **un reparto per job** e la lettura
+> completa richiede decine di secondi: l'avanzamento compare nel log.
+>
+> Chi estende la sonda con nuove interrogazioni deve tenerne conto: comandi che
+> condividono lo stesso TAG non possono stare nello stesso file.
+
 Premere **Sonda configurazione**. Legge dalla stampante versione FW, matricola,
 tabella delle aliquote IVA e i 60 reparti con la rispettiva aliquota.
 

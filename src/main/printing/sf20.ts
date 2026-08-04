@@ -66,19 +66,25 @@ export function buildCommandFile(commands: string[]): string {
 }
 
 /**
- * Sonda di configurazione: versione FW, identità, stato, ultimi documenti,
- * tabella IVA e tutti i reparti. Sole interrogazioni, nessuna scrittura.
+ * Primo passo della sonda: identità, stato, ultimo documento e tabella IVA.
+ *
+ * ATTENZIONE — axonFPiD, nel Response XML, scrive ogni TAG CMD_* UNA SOLA VOLTA,
+ * sovrascrivendolo se il file contiene più comandi che producono lo stesso TAG.
+ * Verificato su file reale: un file con d/1/, d/2/ e d/60/ ha prodotto un solo
+ * blocco CMD_d_DPT_*, quello del reparto 60. Di conseguenza un singolo job può
+ * trasportare al massimo UN reparto, e i reparti vanno letti uno per job.
  */
-export function buildProbe(departmentCount = 60): string[] {
-  const commands: string[] = [
-    QUERY.firmware,
-    QUERY.identity,
-    QUERY.status,
-    QUERY.lastDocuments,
-    QUERY.vatTable,
-  ]
-  for (let n = 1; n <= departmentCount; n++) commands.push(QUERY.department(n))
-  return commands
+export const PROBE_IDENTITY: string[] = [
+  QUERY.firmware,
+  QUERY.identity,
+  QUERY.status,
+  QUERY.lastDocuments,
+  QUERY.vatTable,
+]
+
+/** Secondo passo: un job per reparto, per il motivo spiegato sopra. */
+export function buildDepartmentProbe(n: number): string[] {
+  return [QUERY.department(n)]
 }
 
 // ---------------------------------------------------------------------------
