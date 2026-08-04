@@ -16,6 +16,7 @@ import type {
   PrinterStatus,
   PrintResult,
   ReceiptData,
+  NonFiscalDoc,
 } from './interface'
 import { parseAxonResponse, describeFailure, firstTag } from '../printing/axon-response'
 import type { AxonResponse } from '../printing/axon-response'
@@ -69,7 +70,7 @@ function toPrintResult(res: AxonResponse): PrintResult {
 
 export class AxonFpidDriver implements PrinterDriver {
   readonly name = 'axon-fpid'
-  readonly capabilities: Capability[] = ['fiscal-receipt', 'daily-close', 'drawer']
+  readonly capabilities: Capability[] = ['fiscal-receipt', 'non-fiscal', 'daily-close', 'drawer']
 
   private spoolDir = ''
   private logDir = ''
@@ -362,6 +363,16 @@ export class AxonFpidDriver implements PrinterDriver {
       sf20.QUERY.lastDocuments,
       sf20.QUERY.identity,
     ]
+    return toPrintResult(await this.submit(commands))
+  }
+
+  async printNonFiscal(doc: NonFiscalDoc): Promise<PrintResult> {
+    // Solo a/ in coda, per la matricola. NON X/: quel comando restituisce
+    // l'ultimo numero di scontrino FISCALE, che qui sarebbe un numero
+    // sbagliato spacciato per il numero di questo documento. Il documento
+    // gestionale ha una sua numerazione, che la RT stampa ma non ci
+    // restituisce in un TAG noto.
+    const commands = [...sf20.buildNonFiscal(doc), sf20.QUERY.identity]
     return toPrintResult(await this.submit(commands))
   }
 

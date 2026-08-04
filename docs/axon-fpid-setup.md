@@ -140,6 +140,46 @@ sconta quella riga (è la forma degli scontrini di esempio); messo dopo `U/`
 sconta il subtotale. Su uno scontrino con aliquote miste la ripartizione dello
 sconto fra le aliquote la esegue la RT.
 
+### Documento gestionale (scontrino di cortesia)
+
+Sintassi catturata il **04/08/2026** dal LOG verbose di axonFPiD mentre il
+gestionale **Danea** stampava uno scontrino di cortesia sulla RT30 della
+cliente. Ogni comando ha risposto `00/00/02/75`:
+
+```
+7/1/1/VanityRose di Rosa Paparo/
+7/1/1//
+7/1/1/Scontrino di cortesia 2428/
+...
+m/
+```
+
+Non esiste comando di apertura: il **primo `7/` apre** il documento gestionale,
+**`m/` lo chiude e lo stampa**. Numerazione (`DOC. GESTIONALE N. 0185-0002`),
+data, matricola e righe `*** DOCUMENTO GESTIONALE ***` le aggiunge la RT.
+
+I due campi `1/1` fra comando e testo valgono sempre così in tutte le righe
+della cattura, comprese le vuote: il loro significato resta ignoto e non
+proviamo a variarli. Per lo stesso motivo `bold`, `size` e `align` di
+`NonFiscalLine` sono **ignorati**.
+
+Il testo è troncato a **32 caratteri**, la riga più lunga accettata nella
+cattura. Per alzare il limite serve una prova sulla stampante: una riga troppo
+lunga fa fallire l'intero documento con REPLY 2.
+
+### Come catturare altri comandi
+
+Il metodo che ha risolto questo caso, senza Wireshark:
+
+1. In axonFPiD attivare **LOG VERBOSE**.
+2. Far eseguire l'operazione al gestionale che già la sa fare.
+3. Leggere `FPiD AAAAMMGG.log` nella cartella LOG: registra ogni comando
+   inviato (`Elaboro comando <…>`) e la risposta della RT.
+
+In alternativa si **disattiva il Server di Stampa**: il file `.TXT` resta nella
+cartella di ascolto e si legge com'è. Ricordarsi di cancellarlo prima di
+riattivare, altrimenti viene stampato in ritardo.
+
 ### Cosa resta da ricavare
 
 Queste operazioni rispondono ancora con un errore che rimanda a questa sezione,
@@ -147,8 +187,8 @@ perché non comparivano negli scontrini di test:
 
 | Operazione | Stato |
 |---|---|
-| **Chiusura giornaliera** (`/daily-close`) | comando di azzeramento Z1 ignoto |
-| **Apertura cassetto** (`/open-drawer`) | comando ignoto |
+| **Chiusura giornaliera** (`/daily-close`) | comando di azzeramento Z1 ignoto — catturabile col metodo qui sopra facendo eseguire la chiusura a Danea |
+| **Apertura cassetto** (`/open-drawer`) | comando ignoto — idem |
 | **Righe con IVA 0%** | richiedono la natura di esenzione (N1..N6). Non è un problema aperto sulla RT della cliente: la sua tabella IVA (4, 10, 22…22) non ha alcuno slot a 0, quindi non può emettere righe esenti finché non viene riprogrammata. La natura è un attributo del **reparto** — la sonda legge già `CMD_d_DPT_NATURAESENZIONE` — quindi quando servirà basterà programmare sulla RT uno slot a 0 con la sua natura e associarlo a un reparto |
 
 Per ricavarle: **Pannello del Tecnico → Invia Comandi SF20 o File TXT** consente
@@ -167,7 +207,7 @@ axon-fpid per ogni `/print`, `/daily-close` o `/open-drawer` che arriva
 **senza** `printerId` esplicito: è la prima stampante con la capability
 richiesta, in ordine di configurazione.
 
-Per `/print` oggi questo va bene. Per `/daily-close` e `/open-drawer`, finché i
+Per `/print` e `/print-courtesy` oggi questo va bene. Per `/daily-close` e `/open-drawer`, finché i
 relativi comandi non sono noti, il risultato è un errore invece dell'operazione
 attesa dall'altra fiscale: tenere axon-fpid come **unica** stampante fiscale
 configurata, oppure far sì che il POS invii sempre un `printerId` esplicito.

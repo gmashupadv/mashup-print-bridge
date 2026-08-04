@@ -603,6 +603,49 @@ describe('printReceipt', () => {
   })
 })
 
+describe('printNonFiscal', () => {
+  const NON_FISCAL_RESPONSE = `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
+<DEVICE_STATUS>00</DEVICE_STATUS><FISCAL_STATUS>02</FISCAL_STATUS>
+<CMD_X_ULTIMO_NUMERO_SCONTRINO>124</CMD_X_ULTIMO_NUMERO_SCONTRINO>
+<CMD_a_ECR_MATRICOLA>8AIGE013756</CMD_a_ECR_MATRICOLA></RESPONSE>`
+
+  it('deposita le righe 7/ chiuse da m/ e restituisce la matricola', async () => {
+    const driver = await connect()
+    const served = serveOnce(() => NON_FISCAL_RESPONSE)
+    const result = await driver.printNonFiscal({
+      lines: [{ text: 'VanityRose di Rosa Paparo' }, { text: '' }, { text: 'RT 8AIGE013756' }],
+    })
+    const commands = (await served).split('\r\n').filter(Boolean)
+
+    expect(commands).toEqual([
+      '7/1/1/VanityRose di Rosa Paparo/',
+      '7/1/1//',
+      '7/1/1/RT 8AIGE013756/',
+      'm/',
+      'a/',
+    ])
+    expect(result.success).toBe(true)
+    expect(result.printerSerial).toBe('8AIGE013756')
+  })
+
+  it('non accoda X/, che riporterebbe il numero dell`ultimo scontrino FISCALE', async () => {
+    const driver = await connect()
+    // Senza X/ nel job, axonFPiD non emette il TAG del numero scontrino.
+    const served = serveOnce(
+      () => `<RESPONSE><ESITO>OK</ESITO><REPLY>00</REPLY>
+<DEVICE_STATUS>00</DEVICE_STATUS><FISCAL_STATUS>02</FISCAL_STATUS>
+<CMD_a_ECR_MATRICOLA>8AIGE013756</CMD_a_ECR_MATRICOLA></RESPONSE>`
+    )
+    const result = await driver.printNonFiscal({ lines: [{ text: 'Cortesia' }] })
+    const commands = (await served).split('\r\n').filter(Boolean)
+
+    expect(commands).not.toContain('X/')
+    // Il numero del documento gestionale ha una sua serie: meglio vuoto che
+    // il numero di un altro documento spacciato per questo.
+    expect(result.receiptNumber).toBe('')
+  })
+})
+
 describe('operazioni non ancora implementabili', () => {
   it('dailyClose fallisce con un messaggio che indirizza alla procedura', async () => {
     const driver = await connect()

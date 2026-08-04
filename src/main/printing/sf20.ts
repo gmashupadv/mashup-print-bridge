@@ -4,7 +4,7 @@
 // I comandi di INTERROGAZIONE sono documentati nel manuale axonFPiD_Pro_v7,
 // sezione "Elenco Comandi SF20 gestiti con risposta nel file Response_...".
 // I comandi di VENDITA non lo sono: vedi il blocco in fondo al file.
-import type { ReceiptData, ReceiptItem } from '../drivers/interface'
+import type { NonFiscalDoc, ReceiptData, ReceiptItem } from '../drivers/interface'
 
 /** Comandi di interrogazione documentati. Non scrivono nulla sulla RT. */
 export const QUERY = {
@@ -256,6 +256,64 @@ export function buildReceipt(data: ReceiptData, _operatorId: string): string[] {
   })
 
   return commands
+}
+
+// ---------------------------------------------------------------------------
+// Documento gestionale (non fiscale)
+//
+// Sintassi catturata dal LOG verbose di axonFPiD_Pro_v7 6.1.2 il 04/08/2026,
+// mentre il gestionale Danea stampava uno scontrino di cortesia sulla RT30
+// della cliente. Ogni comando ha risposto 00/00/02/75 (REPLY 00 = elaborato
+// correttamente) e il documento e' uscito:
+//
+//   7/1/1/VanityRose di Rosa Paparo/
+//   7/1/1//
+//   7/1/1/Scontrino di cortesia 2428/
+//   ...
+//   m/
+//
+// Non esiste un comando di apertura: il primo 7/ apre il documento gestionale,
+// m/ lo chiude e lo stampa. Intestazione, numerazione ("DOC. GESTIONALE N.
+// 0185-0002"), data, matricola e riga di chiusura le aggiunge la RT.
+// ---------------------------------------------------------------------------
+
+/**
+ * I due campi fra il comando e il testo. Nella cattura valgono sempre 1/1 su
+ * tutte e 16 le righe, comprese quelle vuote, quindi non abbiamo alcun
+ * appiglio per dedurne il significato (plausibilmente font e allineamento).
+ * Restano costanti finche' non ne osserviamo altri valori: e' l'unica forma
+ * verificata sulla RT.
+ */
+const NON_FISCAL_FIELDS = ['1', '1']
+
+/**
+ * La riga piu' lunga della cattura, "MASCARA DIEGO DELLA PALMA MY TOY", e' di
+ * 32 caratteri ed e' stata accettata. Oltre non abbiamo evidenza: la RT
+ * risponderebbe REPLY 2 ("campo del comando troppo lungo") e perderemmo il
+ * documento intero, quindi tronchiamo. Alzare questo valore richiede una prova
+ * sulla stampante, non una deduzione.
+ */
+export const NON_FISCAL_MAX_CHARS = 32
+
+/** Riga di testo libero; testo vuoto = riga bianca (7/1/1//). */
+export function nonFiscalLine(text: string): string {
+  return ['7', ...NON_FISCAL_FIELDS, sanitize(text, NON_FISCAL_MAX_CHARS), ''].join('/')
+}
+
+/** Chiude e stampa il documento gestionale. */
+const NON_FISCAL_CLOSE = 'm/'
+
+/**
+ * Gli attributi di NonFiscalLine (bold, size, align) sono ignorati: nel
+ * protocollo SF20 non sappiamo dove andrebbero, e i due campi 1/1 sono gli
+ * unici osservati. Meglio stampare tutto in tondo che indovinare un campo su
+ * un documento che deve uscire dalla stampante di una cassa.
+ */
+export function buildNonFiscal(doc: NonFiscalDoc): string[] {
+  if (doc.lines.length === 0) {
+    throw new Error('Documento non fiscale senza righe')
+  }
+  return [...doc.lines.map((line) => nonFiscalLine(line.text)), NON_FISCAL_CLOSE]
 }
 
 export function buildDailyClose(_operatorId: string): string[] {

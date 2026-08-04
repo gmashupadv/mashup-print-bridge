@@ -7,6 +7,9 @@ import {
   PROBE_IDENTITY,
   buildDepartmentProbe,
   buildReceipt,
+  buildNonFiscal,
+  nonFiscalLine,
+  NON_FISCAL_MAX_CHARS,
   buildDailyClose,
   buildOpenDrawer,
   quantity,
@@ -241,6 +244,61 @@ describe('buildReceipt', () => {
     expect(() => buildReceipt({ items: [], discount: 0, payments: [cash] }, '1')).toThrow(
       /senza righe/
     )
+  })
+})
+
+describe('buildNonFiscal', () => {
+  it('riproduce la sequenza catturata dal LOG di Danea il 04/08/2026', () => {
+    // Righe 1, 6, 7 e 17 del file SCONTRINO.txt che ha prodotto il documento
+    // gestionale sulla RT30 della cliente: ogni comando ha risposto 00/00/02/75.
+    expect(
+      buildNonFiscal({
+        lines: [
+          { text: 'VanityRose di Rosa Paparo' },
+          { text: '' },
+          { text: 'Scontrino di cortesia 2428' },
+        ],
+      })
+    ).toEqual([
+      '7/1/1/VanityRose di Rosa Paparo/',
+      '7/1/1//',
+      '7/1/1/Scontrino di cortesia 2428/',
+      'm/',
+    ])
+  })
+
+  it('chiude sempre con m/, che e` il comando che stampa il documento', () => {
+    const commands = buildNonFiscal({ lines: [{ text: 'A' }, { text: 'B' }] })
+    expect(commands.at(-1)).toBe('m/')
+    expect(commands.filter((c) => c === 'm/')).toHaveLength(1)
+  })
+
+  it('ignora bold/size/align: nel protocollo non sappiamo dove andrebbero', () => {
+    expect(
+      buildNonFiscal({ lines: [{ text: 'Titolo', bold: true, size: 'double', align: 'center' }] })
+    ).toEqual(['7/1/1/Titolo/', 'm/'])
+  })
+
+  it('sanifica il testo: la barra separa i campi del protocollo', () => {
+    const line = nonFiscalLine('Reso entro 7/10 giorni')
+    expect(line).toBe('7/1/1/Reso entro 7 10 giorni/')
+    expect(line.split('/')).toHaveLength(5)
+  })
+
+  it('tronca alla larghezza massima verificata sulla RT', () => {
+    const line = nonFiscalLine('X'.repeat(60))
+    expect(line).toBe(`7/1/1/${'X'.repeat(NON_FISCAL_MAX_CHARS)}/`)
+  })
+
+  it('accetta la riga piu` lunga della cattura senza troncarla', () => {
+    // 32 caratteri, accettati dalla RT con REPLY 00.
+    const longest = 'MASCARA DIEGO DELLA PALMA MY TOY'
+    expect(longest).toHaveLength(NON_FISCAL_MAX_CHARS)
+    expect(nonFiscalLine(longest)).toBe(`7/1/1/${longest}/`)
+  })
+
+  it('rifiuta un documento senza righe', () => {
+    expect(() => buildNonFiscal({ lines: [] })).toThrow(/senza righe/)
   })
 })
 
