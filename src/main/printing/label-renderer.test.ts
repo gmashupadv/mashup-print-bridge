@@ -20,27 +20,29 @@ describe('renderLabelHtml', () => {
 
   it('omits missing optional fields without leaving empty blocks', () => {
     const html = renderLabelHtml({ name: 'X', price: 5 }, layout)
-    expect(html).not.toContain('class="variant"')
-    expect(html).not.toContain('class="sku"')
-    expect(html).not.toContain('class="compare"')
+    expect(html).not.toContain('data-type="variant"')
+    expect(html).not.toContain('data-type="sku"')
+    expect(html).not.toContain('data-type="compareAtPrice"')
     expect(html).not.toContain('<svg')
   })
 
   it('renders compareAtPrice struck-through when greater than price', () => {
     const html = renderLabelHtml({ name: 'X', price: 19.9, compareAtPrice: 29.9 }, layout)
-    expect(html).toContain('class="compare"')
+    expect(html).toContain('data-type="compareAtPrice"')
     expect(html).toContain('29,90')
     expect(html).toContain('line-through')
   })
 
   it('hides compareAtPrice when not greater than price', () => {
     expect(renderLabelHtml({ name: 'X', price: 19.9, compareAtPrice: 19.9 }, layout)).not.toContain(
-      'class="compare"'
+      'data-type="compareAtPrice"'
     )
     expect(renderLabelHtml({ name: 'X', price: 19.9, compareAtPrice: 9.9 }, layout)).not.toContain(
-      'class="compare"'
+      'data-type="compareAtPrice"'
     )
-    expect(renderLabelHtml({ name: 'X', price: 19.9 }, layout)).not.toContain('class="compare"')
+    expect(renderLabelHtml({ name: 'X', price: 19.9 }, layout)).not.toContain(
+      'data-type="compareAtPrice"'
+    )
   })
 
   it('escapes HTML in user data', () => {
@@ -67,22 +69,26 @@ describe('renderLabelHtml', () => {
     expect(() => renderLabelHtml({ name: 'X', price: 1, barcode: 'A\x01B' }, layout)).toThrow()
   })
 
-  // Fix #1: barcode never sacrificed — .name clamps to 3 lines (più spazio ai titoli lunghi)
-  it('.name style contains -webkit-line-clamp: 3', () => {
+  // Barcode mai sacrificato: sul layout automatico 50x30 il nome resta a 3 righe
+  it('il nome del layout automatico si ferma a 3 righe', () => {
     const html = renderLabelHtml({ name: 'A', price: 1 }, layout)
-    expect(html).toContain('-webkit-line-clamp: 3')
+    expect(html).toContain('-webkit-line-clamp:3')
   })
 
-  // Fix #1: barcode never sacrificed — .barcode has flex-shrink: 0
-  it('.barcode style contains flex-shrink: 0', () => {
+  // Barcode mai sacrificato: è un riquadro ancorato in basso, non un blocco in flusso
+  it('il barcode del layout automatico è ancorato sotto il prezzo', () => {
     const html = renderLabelHtml({ name: 'A', price: 1, barcode: '8001234567897' }, layout)
-    expect(html).toContain('flex-shrink: 0')
+    const bcTop = /class="el bc" style="left:[\d.]+mm;top:([\d.]+)mm/.exec(html)
+    const priceTop = /data-type="price" style="left:[\d.]+mm;top:([\d.]+)mm/.exec(html)
+    expect(bcTop).not.toBeNull()
+    expect(priceTop).not.toBeNull()
+    expect(Number(bcTop![1])).toBeGreaterThan(Number(priceTop![1]))
   })
 
-  // Fix #5: .price is not breakable
-  it('.price style contains white-space: nowrap', () => {
+  // Il prezzo su una riga sola non va mai a capo
+  it('il prezzo a riga singola non va a capo', () => {
     const html = renderLabelHtml({ name: 'A', price: 1 }, layout)
-    expect(html).toContain('white-space: nowrap')
+    expect(html).toContain('white-space:nowrap')
   })
 
   // New: @page contains exactly size: 50mm 30mm with default layout
@@ -125,8 +131,162 @@ describe('renderLabelHtml', () => {
       }
     )
     expect(html).not.toContain('NaN')
-    // default marginsMm = { top:1, right:2, bottom:1, left:2 }; top overridden to 2
-    expect(html).toContain('padding: 2mm 2mm 1mm 2mm')
+    // default marginsMm = { top:1, right:2, bottom:1, left:2 }; top forzato a 2 →
+    // il layout automatico parte dall'angolo (left 2mm, top 2mm)
+    expect(html).toContain('data-type="name" style="left:2.00mm;top:2.00mm')
+  })
+
+  // --- Modello a elementi (layout personalizzato) ---
+
+  it('con elements espliciti stampa SOLO gli elementi elencati', () => {
+    const html = renderLabelHtml(
+      { name: 'Matita', price: 1.5, sku: 'MAT-1', barcode: '8001234567897' },
+      {
+        paper: { widthMm: 30, heightMm: 12 },
+        template: {
+          version: 2,
+          elements: [
+            { id: 'p', type: 'price', xMm: 1, yMm: 2, wMm: 28, hMm: 7, fontMm: 5, align: 'center' },
+          ],
+        },
+      }
+    )
+    expect(html).toContain('1,50')
+    expect(html).not.toContain('Matita')
+    expect(html).not.toContain('MAT-1')
+    expect(html).not.toContain('<svg')
+  })
+
+  it('salta gli elementi con visible: false', () => {
+    const html = renderLabelHtml(
+      { name: 'Matita', price: 1.5 },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [
+            { id: 'n', type: 'name', xMm: 1, yMm: 1, wMm: 40, hMm: 4, visible: false },
+            { id: 'p', type: 'price', xMm: 1, yMm: 6, wMm: 40, hMm: 5 },
+          ],
+        },
+      }
+    )
+    expect(html).not.toContain('Matita')
+    expect(html).toContain('1,50')
+  })
+
+  it('fontScale moltiplica il corpo di tutti gli elementi', () => {
+    const template = {
+      version: 2 as const,
+      fontScale: 2,
+      elements: [{ id: 'p', type: 'price' as const, xMm: 1, yMm: 1, wMm: 40, hMm: 8, fontMm: 3 }],
+    }
+    const html = renderLabelHtml({ name: 'A', price: 1 }, { paper: DEFAULT_LABEL_PAPER, template })
+    expect(html).toContain('font-size:6.00mm')
+  })
+
+  it('il campo text fa da formato tramite il segnaposto {value}', () => {
+    const html = renderLabelHtml(
+      { name: 'A', price: 1, sku: 'AB-12' },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [{ id: 's', type: 'sku', xMm: 1, yMm: 1, wMm: 40, hMm: 4, text: 'Cod. {value}' }],
+        },
+      }
+    )
+    expect(html).toContain('Cod. AB-12')
+  })
+
+  it('un testo fisso viene stampato anche senza dati prodotto', () => {
+    const html = renderLabelHtml(
+      { name: 'A', price: 1 },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [{ id: 't', type: 'static', xMm: 1, yMm: 1, wMm: 40, hMm: 4, text: 'SALDI' }],
+        },
+      }
+    )
+    expect(html).toContain('SALDI')
+  })
+
+  it('la rotazione a 90° emette la transform CSS ancorata a (x, y)', () => {
+    const html = renderLabelHtml(
+      { name: 'A', price: 1 },
+      {
+        paper: { widthMm: 12, heightMm: 40 },
+        template: {
+          version: 2,
+          elements: [
+            { id: 'p', type: 'price', xMm: 2, yMm: 2, wMm: 30, hMm: 6, rotate: 90 },
+          ],
+        },
+      }
+    )
+    expect(html).toContain('transform:translate(6.00mm,0) rotate(90deg)')
+  })
+
+  it('showHri false toglie le cifre sotto le barre', () => {
+    const withHri = renderLabelHtml(
+      { name: 'A', price: 1, barcode: '8001234567897' },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [{ id: 'b', type: 'barcode', xMm: 1, yMm: 1, wMm: 40, hMm: 12 }],
+        },
+      }
+    )
+    const noHri = renderLabelHtml(
+      { name: 'A', price: 1, barcode: '8001234567897' },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [
+            { id: 'b', type: 'barcode', xMm: 1, yMm: 1, wMm: 40, hMm: 12, showHri: false },
+          ],
+        },
+      }
+    )
+    expect(withHri).toContain('8001234567897</text>')
+    expect(noHri).toContain('<svg')
+    expect(noHri).not.toContain('</text>')
+  })
+
+  it('la larghezza del riquadro barcode determina la larghezza delle barre', () => {
+    const make = (wMm: number) =>
+      renderLabelHtml(
+        { name: 'A', price: 1, barcode: '8001234567897' },
+        {
+          paper: { widthMm: 60, heightMm: 30 },
+          template: {
+            version: 2,
+            elements: [{ id: 'b', type: 'barcode', xMm: 1, yMm: 1, wMm, hMm: 12 }],
+          },
+        }
+      )
+    const narrow = /<svg[^>]*width="([\d.]+)mm"/.exec(make(20))
+    const wide = /<svg[^>]*width="([\d.]+)mm"/.exec(make(40))
+    expect(Number(narrow![1])).toBeCloseTo(20, 1)
+    expect(Number(wide![1])).toBeCloseTo(40, 1)
+  })
+
+  it('una linea diventa un rettangolo pieno', () => {
+    const html = renderLabelHtml(
+      { name: 'A', price: 1 },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [{ id: 'l', type: 'line', xMm: 2, yMm: 10, wMm: 46, hMm: 0.4 }],
+        },
+      }
+    )
+    expect(html).toContain('class="el line" style="left:2.00mm;top:10.00mm;width:46.00mm;height:0.40mm')
   })
 })
 

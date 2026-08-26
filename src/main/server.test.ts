@@ -416,7 +416,8 @@ describe('POST /print-label', () => {
     await app.inject({ method: 'POST', url: '/print-label', payload })
     const [, layoutArg] = (driver.printLabel as ReturnType<typeof vi.fn>).mock.calls[0]
     expect(layoutArg.paper.widthMm).toBeGreaterThan(0)
-    expect(layoutArg.template.preset).toBe('product-price')
+    expect(layoutArg.template.showBarcode).toBe(true)
+    expect(layoutArg.template.fontScale).toBe(1)
   })
 
   it('prints N copies', async () => {

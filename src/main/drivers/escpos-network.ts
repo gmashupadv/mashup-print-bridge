@@ -8,6 +8,7 @@ import type {
 } from './interface'
 import { encodeNonFiscal, encodeRaster, type MonoBitmap } from '../printing/escpos-encoder'
 import { renderLabelHtml } from '../printing/label-renderer'
+import { scaleLayout } from '../printing/label-template'
 
 const DOTS_PER_MM = 8 // 203 dpi
 
@@ -119,7 +120,12 @@ export class EscPosNetworkDriver implements PrinterDriver {
     try {
       const printableMm = PRINTABLE_MM[layout.paper.widthMm] ?? layout.paper.widthMm
       const widthPx = Math.round(printableMm * DOTS_PER_MM)
-      const printableLayout = { ...layout, paper: { ...layout.paper, widthMm: printableMm } }
+      // Layout automatico: basta restringere la carta, gli elementi si ricalcolano.
+      // Layout disegnato a mano: le coordinate sono assolute, quindi va riscalato
+      // tutto insieme o gli elementi a destra finiscono fuori dall'area stampabile.
+      const printableLayout = layout.template?.elements?.length
+        ? scaleLayout(layout, printableMm / Number(layout.paper.widthMm))
+        : { ...layout, paper: { ...layout.paper, widthMm: printableMm } }
       const html = renderLabelHtml(label, printableLayout)
       const bitmap = await this.deps.rasterize(html, widthPx)
       const payload = Buffer.concat([

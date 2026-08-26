@@ -3,9 +3,20 @@
 // Output HTML autocontenuto (misure in mm, barcode SVG inline, nessuna risorsa esterna):
 // - os-printer lo stampa direttamente (silent print)
 // - escpos-network lo rasterizza a bitmap (html-to-bitmap.ts)
+// - la finestra di configurazione lo usa come anteprima WYSIWYG dell'editor
+//
+// Il layout viene dal modello a elementi di label-template.ts: ogni elemento è
+// un riquadro in millimetri assoluti, reso con position:absolute. Lo stesso
+// modello guida zpl.ts, così anteprima e stampa Zebra coincidono.
 import type { LabelData, LabelLayout, NonFiscalDoc } from '../drivers/interface'
-import { barcodeSvg } from './barcode'
-import { DEFAULT_LABEL_PAPER } from './defaults'
+import { barcodeSvg, barcodeModuleCount } from './barcode'
+import {
+  barcodeValue,
+  elementText,
+  resolveElements,
+  resolvePaper,
+  type ResolvedElement,
+} from './label-template'
 
 function esc(s: string): string {
   return s
@@ -15,74 +26,92 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-function eurIt(n: number): string {
-  return `€ ${n.toFixed(2).replace('.', ',')}`
+function mm(n: number): string {
+  return `${n.toFixed(2)}mm`
+}
+
+// Rotazione oraria attorno all'angolo alto-sinistro, poi ritraslata così che il
+// riquadro ruotato resti ancorato a (x, y) ed estenda verso destra/basso —
+// stessa convenzione dei campi ruotati ZPL (^A0R/^A0I/^A0B).
+function rotationCss(el: ResolvedElement): string {
+  switch (el.rotate) {
+    case 90:
+      return `transform:translate(${mm(el.hMm)},0) rotate(90deg);`
+    case 180:
+      return `transform:translate(${mm(el.wMm)},${mm(el.hMm)}) rotate(180deg);`
+    case 270:
+      return `transform:translate(0,${mm(el.wMm)}) rotate(-90deg);`
+    default:
+      return ''
+  }
+}
+
+function boxCss(el: ResolvedElement): string {
+  return (
+    `left:${mm(el.xMm)};top:${mm(el.yMm)};width:${mm(el.wMm)};height:${mm(el.hMm)};` + rotationCss(el)
+  )
+}
+
+function renderElement(el: ResolvedElement, label: LabelData): string {
+  if (el.type === 'line') {
+    return `<div class="el line" style="${boxCss(el)}"></div>`
+  }
+
+  if (el.type === 'barcode') {
+    const value = barcodeValue(el, label)
+    if (!value) return ''
+    // hMm è l'altezza dell'INTERO blocco (barre + cifre): il riquadro che si
+    // trascina nell'editor è esattamente quello che finisce sull'etichetta.
+    const hriH = el.showHri ? el.fontMm + 0.8 : 0
+    const barsH = Math.max(1, el.hMm - hriH)
+    // Senza moduleMm esplicito la larghezza del modulo si ricava dalla larghezza
+    // voluta: ridimensionare il riquadro allarga/stringe le barre.
+    const moduleMm = el.moduleMm ?? Math.max(0.125, el.wMm / barcodeModuleCount(value))
+    const svg = barcodeSvg(value, {
+      heightMm: barsH,
+      moduleMm,
+      fontMm: el.fontMm,
+      hri: el.showHri,
+    })
+    return `<div class="el bc" style="${boxCss(el)}text-align:${el.align};">${svg}</div>`
+  }
+
+  const text = elementText(el, label)
+  if (text === null) return ''
+  const styles = [
+    boxCss(el),
+    `font-size:${mm(el.fontMm)}`,
+    `text-align:${el.align}`,
+    `-webkit-line-clamp:${el.maxLines}`,
+    el.bold ? 'font-weight:700' : 'font-weight:400',
+    el.strikethrough ? 'text-decoration:line-through' : '',
+    el.maxLines === 1 ? 'white-space:nowrap' : '',
+  ]
+    .filter(Boolean)
+    .join(';')
+  return `<div class="el txt" data-type="${el.type}" style="${styles}">${esc(text)}</div>`
 }
 
 export function renderLabelHtml(label: LabelData, layout: LabelLayout): string {
-  const { paper, template } = layout
-  // Fix: numeric coercion guards CSS/HTML injection from unvalidated IPC inputs
-  const w = Number(paper.widthMm)
-  const h = Number(paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!)
-  if (!Number.isFinite(w) || !Number.isFinite(h)) {
-    throw new Error(`Dimensioni etichetta non valide: ${paper.widthMm}x${paper.heightMm}`)
-  }
-  // Fix: merge per-field so a partial marginsMm never produces NaN or undefined
-  const dm = DEFAULT_LABEL_PAPER.marginsMm!
-  const pm = paper.marginsMm ?? dm
-  const m = {
-    top: Number(pm.top ?? dm.top),
-    right: Number(pm.right ?? dm.right),
-    bottom: Number(pm.bottom ?? dm.bottom),
-    left: Number(pm.left ?? dm.left),
-  }
-  const fs = template.fontScale || 1
-  const innerW = w - m.left - m.right
-  const innerH = h - m.top - m.bottom
-
-  const barcodeMarkup =
-    template.showBarcode && label.barcode
-      ? barcodeSvg(label.barcode, {
-          heightMm: Math.min(8, innerH * 0.25),
-          // Fix #4: 0.375mm = 3 dot esatti a 203dpi — evita barre anti-aliased nella rasterizzazione ESC/POS
-          moduleMm: 0.375,
-        })
-      : ''
-
-  const parts: string[] = []
-  parts.push(`<div class="name">${esc(label.name)}</div>`)
-  if (label.variant) parts.push(`<div class="variant">${esc(label.variant)}</div>`)
-  // Prezzo di confronto barrato: reso solo se è un numero valido e maggiore del prezzo di vendita.
-  const cmp = Number(label.compareAtPrice)
-  const compareMarkup =
-    Number.isFinite(cmp) && cmp > label.price
-      ? `<span class="compare">${eurIt(cmp)}</span>`
-      : ''
-  parts.push(
-    `<div class="row"><span class="prices"><span class="price">${eurIt(label.price)}</span>${compareMarkup}</span>` +
-      (label.sku ? `<span class="sku">${esc(label.sku)}</span>` : '') +
-      `</div>`
-  )
-  if (barcodeMarkup) parts.push(`<div class="barcode">${barcodeMarkup}</div>`)
+  const paper = resolvePaper(layout.paper)
+  const elements = resolveElements(layout.template, paper)
+  const body = elements.map((el) => renderElement(el, label)).join('')
+  const w = paper.widthMm
+  const h = paper.heightMm
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 @page { size: ${w}mm ${h}mm; margin: 0; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: ${w}mm; height: ${h}mm; }
 body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; color: #000;
-  padding: ${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm; overflow: hidden; }
-.inner { width: ${innerW}mm; height: ${innerH}mm; display: flex; flex-direction: column; }
-.name { font-size: ${(2.9 * fs).toFixed(2)}mm; font-weight: 700; line-height: 1.1;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.variant { font-size: ${(2.4 * fs).toFixed(2)}mm; }
-.row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.5mm; }
-.prices { display: flex; align-items: baseline; gap: 1.2mm; min-width: 0; }
-.price { font-size: ${(3.4 * fs).toFixed(2)}mm; font-weight: 700; white-space: nowrap; }
-.compare { font-size: ${(2.8 * fs).toFixed(2)}mm; text-decoration: line-through; color: #555; white-space: nowrap; }
-.sku { font-size: ${(2.2 * fs).toFixed(2)}mm; font-family: monospace; }
-.barcode { margin-top: auto; text-align: center; flex-shrink: 0; }
-.barcode svg { max-width: ${innerW}mm; }
-</style></head><body><div class="inner">${parts.join('')}</div></body></html>`
+  position: relative; overflow: hidden; }
+.el { position: absolute; overflow: hidden; transform-origin: 0 0; }
+.txt { display: -webkit-box; -webkit-box-orient: vertical; line-height: 1.1;
+  overflow-wrap: break-word; }
+.line { background: #000; }
+.bc { line-height: 0; }
+.bc svg { display: inline-block; max-width: 100%; max-height: 100%; }
+</style></head><body>${body}</body></html>`
 }
 
 export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number, heightMm?: number): string {

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { writeFile, mkdir } from 'node:fs/promises'
 import * as path from 'node:path'
-import type { PaperConfig, LabelTemplate } from './drivers/interface'
+import type { PaperConfig, LabelTemplate, LabelPreset } from './drivers/interface'
 
 export type PrinterRole = 'fiscal' | 'label' | 'receipt'
 
@@ -33,6 +33,12 @@ export interface AppConfig {
   autostart: boolean
   port: number
   logLevel: 'error' | 'warn' | 'info' | 'debug'
+  /**
+   * Layout etichetta riusabili, salvati dall'utente o importati da file.
+   * Vivono qui e non nella stampante perché il senso è riapplicarli altrove:
+   * stessa etichetta su più stampanti, o esportati per un altro cliente.
+   */
+  labelPresets?: LabelPreset[]
 }
 
 const DEFAULTS: AppConfig = {
@@ -50,6 +56,7 @@ const DEFAULTS: AppConfig = {
   autostart: true,
   port: 8765,
   logLevel: 'info',
+  labelPresets: [],
 }
 
 function migrate(raw: Record<string, unknown>): AppConfig {
@@ -89,7 +96,29 @@ function migrate(raw: Record<string, unknown>): AppConfig {
     ...p,
     role: VALID_ROLES.includes(p.role) ? p.role : ('fiscal' as PrinterRole),
   }))
+  // I preset arrivano anche da file importati: scarta quanto non ha la forma attesa
+  // invece di far esplodere l'editor più tardi.
+  merged.labelPresets = sanitizePresets(merged.labelPresets)
   return merged
+}
+
+/** Tiene solo i preset con id/nome/carta plausibili; il resto viene scartato. */
+export function sanitizePresets(raw: unknown): LabelPreset[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter((p): p is LabelPreset => {
+    if (!p || typeof p !== 'object') return false
+    const c = p as Partial<LabelPreset>
+    return (
+      typeof c.id === 'string' &&
+      c.id.length > 0 &&
+      typeof c.name === 'string' &&
+      c.name.length > 0 &&
+      !!c.paper &&
+      Number.isFinite(Number(c.paper.widthMm)) &&
+      !!c.template &&
+      typeof c.template === 'object'
+    )
+  })
 }
 
 export interface ConfigManager {
