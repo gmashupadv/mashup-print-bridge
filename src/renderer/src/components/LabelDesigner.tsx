@@ -6,7 +6,7 @@ import type {
   LabelRotation,
   PaperConfig,
 } from '../../../main/drivers/interface'
-import { resolvePaper } from '../../../main/printing/label-template'
+import { DEFAULT_MIN_FONT_MM, resolvePaper } from '../../../main/printing/label-template'
 
 const TYPE_LABELS: Record<LabelElementType, string> = {
   name: 'Nome prodotto',
@@ -365,7 +365,11 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div>
                 <label className="block text-[11px] text-gray-500 mb-0.5">
-                  {selected.type === 'barcode' ? 'Corpo cifre (mm)' : 'Corpo (mm)'}
+                  {selected.type === 'barcode'
+                    ? 'Corpo cifre (mm)'
+                    : selected.autoFit
+                      ? 'Corpo max (mm)'
+                      : 'Corpo (mm)'}
                 </label>
                 <input
                   type="number"
@@ -443,6 +447,41 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
                 />
               </label>
             </div>
+          )}
+
+          {selected.type !== 'line' && selected.type !== 'barcode' && (
+            <div className="flex items-center gap-4 mb-2 text-xs">
+              <label className="flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={selected.autoFit === true}
+                  onChange={(e) => patch(selected.id, { autoFit: e.target.checked || undefined })}
+                />
+                Adatta il testo al riquadro
+              </label>
+              {selected.autoFit && (
+                <label className="flex items-center gap-1.5">
+                  Corpo min (mm)
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.5"
+                    className="w-16 border border-gray-300 rounded px-1 py-0.5 text-xs"
+                    value={selected.minFontMm ?? DEFAULT_MIN_FONT_MM}
+                    onChange={(e) =>
+                      patch(selected.id, { minFontMm: Number(e.target.value) || DEFAULT_MIN_FONT_MM })
+                    }
+                  />
+                </label>
+              )}
+            </div>
+          )}
+
+          {selected.autoFit && (
+            <p className="text-[10px] text-gray-400 mb-2">
+              Il corpo scende fino al minimo per far entrare il testo nel riquadro; sotto il minimo
+              il testo resta tagliato.
+            </p>
           )}
 
           {selected.type === 'barcode' && (

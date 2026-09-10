@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderLabelHtml, renderNonFiscalHtml } from './label-renderer'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './defaults'
+import type { LabelLayout } from '../drivers/interface'
 
 const layout = { paper: DEFAULT_LABEL_PAPER, template: DEFAULT_LABEL_TEMPLATE }
 
@@ -356,5 +357,49 @@ describe('renderNonFiscalHtml', () => {
     expect(() =>
       renderNonFiscalHtml({ lines: [{ text: 'x' }] }, 'x' as unknown as number)
     ).toThrow(/non valide/)
+  })
+})
+
+// Layout con un solo elemento nome, per verificare l'adattamento del corpo.
+const nameOnly = (autoFit: boolean, extra: Record<string, unknown> = {}): LabelLayout => ({
+  paper: { widthMm: 50, heightMm: 30, marginsMm: { top: 1, right: 2, bottom: 1, left: 2 } },
+  template: {
+    version: 2,
+    elements: [
+      {
+        id: 'n',
+        type: 'name',
+        xMm: 2,
+        yMm: 2,
+        wMm: 26,
+        hMm: 4,
+        fontMm: 3,
+        maxLines: 1,
+        autoFit,
+        ...extra,
+      },
+    ],
+  },
+})
+
+describe('renderLabelHtml — adattamento del corpo', () => {
+  const long = { name: 'Rossetto liquido opaco', price: 9.9 }
+
+  it('senza autoFit tiene il corpo dichiarato', () => {
+    expect(renderLabelHtml(long, nameOnly(false))).toContain('font-size:3.00mm')
+  })
+
+  it('con autoFit riduce il corpo perché il nome entri nel riquadro', () => {
+    const html = renderLabelHtml(long, nameOnly(true))
+    expect(html).not.toContain('font-size:3.00mm')
+    const m = html.match(/data-type="name"[^>]*/)
+    const font = Number(/font-size:([\d.]+)mm/.exec(html)![1])
+    expect(m).toBeTruthy()
+    expect(font).toBeLessThan(3)
+    expect(font).toBeGreaterThanOrEqual(1.8)
+  })
+
+  it('un nome corto non viene rimpicciolito', () => {
+    expect(renderLabelHtml({ name: 'Matita', price: 2 }, nameOnly(true))).toContain('font-size:3.00mm')
   })
 })

@@ -48,6 +48,14 @@ export interface LabelElement {
   align?: LabelAlign
   /** Righe massime per il testo a capo (default 1). */
   maxLines?: number
+  /**
+   * Adatta il corpo al riquadro: se il testo non entra in `wMm` x `maxLines`,
+   * `fontMm` viene ridotto fino a `minFontMm`. Sotto quella soglia il testo
+   * resta tagliato come senza adattamento. Default false (opt-in dall'editor).
+   */
+  autoFit?: boolean
+  /** Corpo minimo in mm sotto cui l'adattamento non scende (default 1.8). */
+  minFontMm?: number
   rotate?: LabelRotation
   /**
    * 'static': il testo stesso. Altri tipi: formato con segnaposto {value}

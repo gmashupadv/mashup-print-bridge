@@ -39,7 +39,7 @@ Three Electron layers, each compiled by electron-vite into `out/`:
 - **`src/main/`** — Node.js main process. Entry `index.ts` owns app lifecycle: tray menu, the config window, the Fastify server, the updater, and a `Map<printerId, PrinterDriver>` of live driver instances. It wires config → drivers → server.
   - **`printing/`** — shared rendering/encoding helpers used by drivers:
     - `defaults.ts` — default label paper (50×30 mm), default template, sample label for previews, `BUILTIN_LABEL_PRESETS` (layout pronti: standard 50×30, solo prezzo 30×12 per matite/trucchi, prezzo+prezzo pieno 40×20, verticale 12×40 ruotata)
-    - `label-template.ts` — **modello di layout condiviso** fra i motori di stampa: `LabelElement[]` posizionati in mm assoluti, `resolvePaper`/`resolveElements` (coercizione numerica + guardia anti-iniezione), `defaultElementsFor` (layout automatico ricalcolato sulla carta), `elementText`/`barcodeValue` (formattazione dei valori), `materializeTemplate` (auto → elementi modificabili), `scaleLayout` (riscala un layout esplicito per le teste che non coprono tutta la carta)
+    - `label-template.ts` — **modello di layout condiviso** fra i motori di stampa: `LabelElement[]` posizionati in mm assoluti, `resolvePaper`/`resolveElements` (coercizione numerica + guardia anti-iniezione), `defaultElementsFor` (layout automatico ricalcolato sulla carta), `elementText`/`barcodeValue` (formattazione dei valori), `fitFontMm`/`linesNeeded` (adattamento del corpo al riquadro, condiviso HTML+ZPL), `materializeTemplate` (auto → elementi modificabili), `scaleLayout` (riscala un layout esplicito per le teste che non coprono tutta la carta)
     - `barcode.ts` — pure-SVG barcode rendering with auto-detection (`barcodeSvg`): 12/13 numeric digits → EAN-13, anything else → Code128 (subset B, alphanumeric SKUs); `assertPrintableBarcode` is the permissive server-side validator; `hri: false` toglie le cifre sotto le barre e `barcodeModuleCount(value)` dà il numero di moduli (serve a ricavare la larghezza del modulo da una larghezza voluta)
     - `label-renderer.ts` — `LabelData + LabelLayout` → self-contained HTML (also non-fiscal docs → HTML); ogni elemento è un `position:absolute` in mm, la rotazione usa `translate(...) rotate(...)` ancorata a (x, y)
     - `escpos-encoder.ts` — ESC/POS byte encoding: CP858 text, formatted non-fiscal lines, raster bitmaps
@@ -135,6 +135,8 @@ interface LabelElement {
   xMm: number; yMm: number; wMm: number; hMm?: number
   fontMm?: number; bold?: boolean; align?: 'left'|'center'|'right'
   maxLines?: number          // a capo del testo
+  autoFit?: boolean          // riduce fontMm finché il testo entra nel riquadro (default false)
+  minFontMm?: number         // pavimento dell'autoFit (default 1.8); sotto, il testo resta tagliato
   rotate?: 0|90|180|270      // ancorata a (x, y), estende verso destra/basso
   text?: string              // 'static': il testo; altri tipi: formato con {value}; 'barcode': codice fisso
   showHri?: boolean          // barcode: cifre sotto le barre
@@ -147,6 +149,7 @@ Regole trasversali ai due motori (HTML e ZPL):
 - se il campo prodotto è assente, l'elemento **sparisce** invece di lasciare un buco (`elementText` → `null`);
 - per il barcode `hMm` è l'altezza dell'**intero blocco** (barre + cifre) e `wMm` determina la larghezza del modulo — ridimensionare il riquadro allarga/stringe le barre;
 - `fontScale` resta un moltiplicatore globale dei corpi; `showBarcode: false` (campo legacy v1) resta un interruttore globale del barcode;
+- `autoFit` è opt-in per elemento: `fitFontMm()` (in `label-template.ts`) stima la larghezza del testo da una tabella di avanzamenti in em, simula l'a capo greedy e scala `fontMm` a passi di 0.05mm finché il testo entra in `wMm × maxLines × hMm`, fermandosi a `minFontMm`. Il calcolo sta nel modello **condiviso** e non nel browser perché la Zebra non sa misurare il testo: un fit lato HTML farebbe divergere anteprima e stampa ZPL;
 - ogni valore passa da `resolveElements()`, che coercizza i numeri: nessun `NaN` e nessuna iniezione di CSS/ZPL da input IPC.
 
 I preset (`AppConfig.labelPresets`) sono layout riusabili salvati dall'utente, esportabili/importabili in JSON via IPC (`label:export-preset` / `label:import-preset`); `BUILTIN_LABEL_PRESETS` sono quelli forniti con l'app (IPC `label:builtin-presets`). L'editor visuale è `renderer/components/LabelDesigner.tsx`: riquadri trascinabili e ridimensionabili sovrapposti all'anteprima HTML reale, più il pannello numerico; `LabelTemplatePanel.tsx` gestisce carta, libreria preset e il passaggio automatico ↔ personalizzato.

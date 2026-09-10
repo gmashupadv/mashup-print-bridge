@@ -13,6 +13,7 @@ import { barcodeSvg, barcodeModuleCount } from './barcode'
 import {
   barcodeValue,
   elementText,
+  fitFontMm,
   resolveElements,
   resolvePaper,
   type ResolvedElement,
@@ -78,9 +79,12 @@ function renderElement(el: ResolvedElement, label: LabelData): string {
 
   const text = elementText(el, label)
   if (text === null) return ''
+  // Corpo adattato al riquadro (se l'elemento ha autoFit): la stessa funzione la
+  // chiama zpl.ts, quindi l'anteprima resta fedele anche sulle Zebra.
+  const fontMm = fitFontMm(el, text)
   const styles = [
     boxCss(el),
-    `font-size:${mm(el.fontMm)}`,
+    `font-size:${mm(fontMm)}`,
     `text-align:${el.align}`,
     `-webkit-line-clamp:${el.maxLines}`,
     el.bold ? 'font-weight:700' : 'font-weight:400',

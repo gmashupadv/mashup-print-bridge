@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_LABEL_PAPER,
+  DEFAULT_MIN_FONT_MM,
   barcodeValue,
   defaultElementsFor,
   elementText,
+  fitFontMm,
+  linesNeeded,
   materializeTemplate,
   resolveElements,
   resolvePaper,
@@ -269,5 +272,96 @@ describe('scaleLayout', () => {
     expect(scaleLayout(layout, 1)).toBe(layout)
     expect(scaleLayout(layout, 0)).toBe(layout)
     expect(scaleLayout(layout, NaN)).toBe(layout)
+  })
+})
+
+describe('fitFontMm', () => {
+  const paper = resolvePaper(DEFAULT_LABEL_PAPER)
+  const el = (extra: Record<string, unknown> = {}) =>
+    resolveElements(
+      {
+        version: 2,
+        elements: [
+          {
+            id: 'n',
+            type: 'name',
+            xMm: 2,
+            yMm: 2,
+            wMm: 26,
+            hMm: 4,
+            fontMm: 3,
+            maxLines: 1,
+            ...extra,
+          },
+        ],
+      },
+      paper
+    )[0]
+
+  it('senza autoFit lascia il corpo invariato anche se il testo non entra', () => {
+    const e = el()
+    expect(fitFontMm(e, 'Rossetto liquido opaco lunga tenuta')).toBe(e.fontMm)
+  })
+
+  it('non tocca il corpo se il testo entra già nel riquadro', () => {
+    const e = el({ autoFit: true })
+    expect(fitFontMm(e, 'Matita')).toBe(3)
+  })
+
+  it('riduce il corpo quando il nome è più lungo del riquadro', () => {
+    const e = el({ autoFit: true })
+    const fitted = fitFontMm(e, 'Rossetto liquido opaco')
+    expect(fitted).toBeLessThan(3)
+    expect(fitted).toBeGreaterThanOrEqual(DEFAULT_MIN_FONT_MM)
+  })
+
+  it('più lungo è il nome, più piccolo è il corpo', () => {
+    const e = el({ autoFit: true })
+    expect(fitFontMm(e, 'Rossetto liquido opaco lunga tenuta')).toBeLessThan(
+      fitFontMm(e, 'Rossetto liquido')
+    )
+  })
+
+  it('non scende sotto minFontMm: sotto la soglia il testo resta tagliato', () => {
+    const e = el({ autoFit: true, minFontMm: 2.5 })
+    expect(fitFontMm(e, 'Rossetto liquido opaco lunga tenuta waterproof 24h')).toBe(2.5)
+  })
+
+  it('con più righe disponibili riduce meno', () => {
+    const one = el({ autoFit: true, maxLines: 1, hMm: 8 })
+    const two = el({ autoFit: true, maxLines: 2, hMm: 8 })
+    const text = 'Rossetto liquido opaco'
+    expect(fitFontMm(two, text)).toBeGreaterThan(fitFontMm(one, text))
+  })
+
+  it("tiene conto dell'altezza del riquadro, non solo della larghezza", () => {
+    // 3 righe consentite ma solo ~4mm di riquadro: due righe da 3mm non ci stanno.
+    const e = el({ autoFit: true, maxLines: 3, hMm: 4 })
+    expect(fitFontMm(e, 'Rossetto liquido opaco')).toBeLessThan(3)
+  })
+
+  it('un minFontMm maggiore del corpo non ingrandisce il testo', () => {
+    const e = el({ autoFit: true, fontMm: 2, minFontMm: 5 })
+    expect(fitFontMm(e, 'Rossetto liquido opaco lunga tenuta')).toBe(2)
+  })
+
+  it('regge larghezza zero e testo vuoto senza ciclare', () => {
+    expect(fitFontMm(el({ autoFit: true, wMm: 0 }), 'Matita')).toBe(3)
+    expect(fitFontMm(el({ autoFit: true }), '')).toBe(3)
+  })
+})
+
+describe('linesNeeded', () => {
+  it('manda a capo sugli spazi', () => {
+    expect(linesNeeded('Matita', 20, false)).toBe(1)
+    expect(linesNeeded('Rossetto liquido opaco', 6, false)).toBeGreaterThan(1)
+  })
+
+  it('spezza una parola più larga della riga', () => {
+    expect(linesNeeded('Antidisestablishmentarianism', 3, false)).toBeGreaterThan(2)
+  })
+
+  it('larghezza nulla non entra mai', () => {
+    expect(linesNeeded('Matita', 0, false)).toBe(Number.POSITIVE_INFINITY)
   })
 })

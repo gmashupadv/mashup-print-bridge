@@ -11,6 +11,7 @@ import { ean13Checksum, barcodeModuleCount } from './barcode'
 import {
   barcodeValue,
   elementText,
+  fitFontMm,
   resolveElements,
   resolvePaper,
   type ResolvedElement,
@@ -94,7 +95,9 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
 
     const text = elementText(el, label)
     if (text === null) continue
-    const fontDots = Math.max(6, dots(el.fontMm))
+    // Stesso adattamento del corpo dell'anteprima HTML: calcolato nel modello
+    // condiviso perché la stampante non sa misurare il testo.
+    const fontDots = Math.max(6, dots(fitFontMm(el, text)))
     const blockDots = Math.max(fontDots, dots(el.wMm))
     lines.push(
       `^FO${x},${y}^A0${o},${fontDots},${fontDots}` +

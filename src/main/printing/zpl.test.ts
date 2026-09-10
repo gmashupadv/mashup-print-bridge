@@ -178,3 +178,48 @@ describe('buildLabelZpl', () => {
     expect(zpl).toContain('^FDSALDI^FS')
   })
 })
+
+// Layout con un solo elemento nome, per verificare l'adattamento del corpo.
+const nameOnly = (autoFit: boolean, extra: Record<string, unknown> = {}): LabelLayout => ({
+  paper: { widthMm: 50, heightMm: 30, marginsMm: { top: 1, right: 2, bottom: 1, left: 2 } },
+  template: {
+    version: 2,
+    elements: [
+      {
+        id: 'n',
+        type: 'name',
+        xMm: 2,
+        yMm: 2,
+        wMm: 26,
+        hMm: 4,
+        fontMm: 3,
+        maxLines: 1,
+        autoFit,
+        ...extra,
+      },
+    ],
+  },
+})
+
+describe('buildLabelZpl — adattamento del corpo', () => {
+  const long: LabelData = { name: 'Rossetto liquido opaco', price: 9.9 }
+  const fontOf = (zpl: string): number => Number(/\^A0N,(\d+),/.exec(zpl)![1])
+
+  it('senza autoFit tiene il corpo dichiarato (3mm = 24 dot)', () => {
+    expect(fontOf(buildLabelZpl(long, nameOnly(false)))).toBe(24)
+  })
+
+  it('con autoFit riduce il corpo, come fa l anteprima HTML', () => {
+    const dots = fontOf(buildLabelZpl(long, nameOnly(true)))
+    expect(dots).toBeLessThan(24)
+    expect(dots).toBeGreaterThanOrEqual(Math.round(1.8 * 8))
+  })
+
+  it('non scende sotto minFontMm', () => {
+    const zpl = buildLabelZpl(
+      { name: 'Rossetto liquido opaco lunga tenuta waterproof 24h', price: 9.9 },
+      nameOnly(true, { minFontMm: 2.5 })
+    )
+    expect(fontOf(zpl)).toBe(Math.round(2.5 * 8))
+  })
+})

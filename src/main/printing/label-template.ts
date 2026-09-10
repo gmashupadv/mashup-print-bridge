@@ -47,6 +47,8 @@ export interface ResolvedElement {
   bold: boolean
   align: LabelAlign
   maxLines: number
+  autoFit: boolean
+  minFontMm: number
   rotate: LabelRotation
   text: string
   showHri: boolean
@@ -143,6 +145,96 @@ export function barcodeValue(el: ResolvedElement, label: LabelData): string | nu
   const v = el.text && !el.text.includes('{value}') ? el.text : label.barcode
   const s = v === undefined || v === null ? '' : String(v).trim()
   return s.length > 0 ? s : null
+}
+
+// --- Adattamento del corpo al riquadro ------------------------------------
+// Il corpo va deciso QUI, nel modello condiviso, non nel browser: la Zebra non
+// sa misurare il testo, quindi un fit calcolato lato HTML farebbe divergere
+// anteprima e stampa ZPL. La misura è stimata da una tabella di avanzamenti in
+// em — approssimativa ma identica per i due motori, che è ciò che conta.
+
+/** Corpo minimo di default: sotto ~1.8mm le teste a 203 dpi non sono leggibili. */
+export const DEFAULT_MIN_FONT_MM = 1.8
+
+// Interlinea di `.txt` in label-renderer.ts; ZPL ^FB usa lo stesso passo del corpo.
+const LINE_HEIGHT = 1.1
+// La stima a caratteri non coincide al millimetro con le metriche reali del font.
+const FIT_SAFETY = 0.97
+const FIT_STEP_MM = 0.05
+
+const NARROW = "iljI.,:;'`!|()[]{} "
+const SEMI_NARROW = 'ftr/\\-'
+const WIDE = 'mwMW@%'
+
+/** Avanzamento di un carattere in em. Tarato sui sans di sistema e su ^A0 (~0.6 em medio). */
+function charEm(ch: string): number {
+  if (NARROW.includes(ch)) return 0.28
+  if (SEMI_NARROW.includes(ch)) return 0.35
+  if (WIDE.includes(ch)) return 0.85
+  if (ch >= 'A' && ch <= 'Z') return 0.67
+  if (ch >= '0' && ch <= '9') return 0.56
+  return 0.55
+}
+
+function widthEm(text: string, bold: boolean): number {
+  let w = 0
+  for (const ch of text) w += charEm(ch)
+  return bold ? w * 1.04 : w
+}
+
+/**
+ * Righe occupate dal testo mandato a capo in `availEm` em di larghezza.
+ * A capo greedy sugli spazi; una parola più lunga della riga viene spezzata,
+ * come fa `overflow-wrap: break-word` nell'anteprima.
+ */
+export function linesNeeded(text: string, availEm: number, bold: boolean): number {
+  if (availEm <= 0) return Number.POSITIVE_INFINITY
+  const spaceEm = charEm(' ')
+  let lines = 1
+  let used = 0
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    let w = widthEm(word, bold)
+    const gap = used > 0 ? spaceEm : 0
+    if (used > 0 && used + gap + w > availEm) {
+      lines++
+      used = 0
+    } else {
+      used += gap
+    }
+    // Parola più larga dell'intera riga: si spezza, occupando righe piene.
+    while (w > availEm) {
+      w -= availEm
+      lines++
+    }
+    used += w
+  }
+  return lines
+}
+
+/**
+ * Corpo effettivo dell'elemento per questo testo. Senza `autoFit` è `fontMm`
+ * invariato; con `autoFit` scende a passi finché il testo entra nel riquadro
+ * (larghezza x righe x altezza), fermandosi a `minFontMm` — sotto quella soglia
+ * il testo resta tagliato, come senza adattamento.
+ */
+export function fitFontMm(el: ResolvedElement, text: string): number {
+  if (!el.autoFit || !text) return el.fontMm
+  const availMm = el.wMm * FIT_SAFETY
+  if (availMm <= 0) return el.fontMm
+  const min = Math.min(el.minFontMm, el.fontMm)
+  const fits = (font: number): boolean => {
+    const lines = linesNeeded(text, availMm / font, el.bold)
+    if (lines > el.maxLines) return false
+    // L'altezza conta quanto la larghezza: le righe oltre `hMm` le taglia
+    // l'overflow del riquadro (HTML) o il bordo dell'etichetta (ZPL).
+    return el.hMm <= 0 || lines * font * LINE_HEIGHT <= el.hMm
+  }
+  let font = el.fontMm
+  while (font > min) {
+    if (fits(font)) return font
+    font = Math.round((font - FIT_STEP_MM) * 100) / 100
+  }
+  return min
 }
 
 // --- Layout automatico ----------------------------------------------------
@@ -271,6 +363,8 @@ function coerce(el: LabelElement, i: number, paper: ResolvedPaper, fontScale: nu
     bold: el.bold === true,
     align: ALIGNS.includes(el.align as LabelAlign) ? (el.align as LabelAlign) : 'left',
     maxLines: Math.max(1, Math.round(num(el.maxLines, 1))),
+    autoFit: el.autoFit === true,
+    minFontMm: Math.max(0.5, num(el.minFontMm, DEFAULT_MIN_FONT_MM) * fontScale),
     rotate: ROTATIONS.includes(el.rotate as LabelRotation) ? (el.rotate as LabelRotation) : 0,
     text: typeof el.text === 'string' ? el.text : '',
     showHri: el.showHri !== false,
