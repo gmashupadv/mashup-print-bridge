@@ -21,24 +21,55 @@ export interface EscPosDeps {
   rasterize(html: string, widthPx: number): Promise<MonoBitmap>
 }
 
+// Quanto attendere che la stampante chiuda a sua volta dopo il nostro FIN: è la
+// conferma che ha accettato il job. Alcune teste tengono aperta la connessione
+// e non chiudono mai — dopo il linger si prosegue, i byte sono comunque partiti.
+const CLOSE_LINGER_MS = 400
+
+/**
+ * Invia un blocco di byte a una stampante raw su TCP (porta 9100) e chiude pulito.
+ *
+ * Due dettagli non negoziabili, entrambi causa di job scartati in passato:
+ *  - si DEVE leggere dal socket. Molte teste 9100 rispondono con byte di stato;
+ *    lasciarli nel buffer di ricezione fa sì che la chiusura emetta un RST invece
+ *    del FIN, e un RST con dati ancora in volo fa scartare il job alla stampante.
+ *  - non si chiude a forza subito dopo la scrittura: il callback di `end()` dice
+ *    solo che i byte sono nel buffer del kernel, non che la stampante li ha presi.
+ *    Si aspetta la chiusura del peer (o il linger) prima di mollare il socket.
+ */
 export async function sendTcp(host: string, port: number, timeout: number, data: Buffer): Promise<void> {
   return new Promise((resolve, reject) => {
     const socket = createConnection({ host, port })
-    const timer = setTimeout(() => {
+    let settled = false
+    let linger: NodeJS.Timeout | null = null
+
+    const finish = (err?: Error): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (linger) clearTimeout(linger)
       socket.destroy()
-      reject(new Error('Printer timeout'))
-    }, timeout)
+      if (err) reject(err)
+      else resolve()
+    }
+
+    const timer = setTimeout(() => finish(new Error('Printer timeout')), timeout)
+
+    let flushed = false
+    // Scarica i byte di stato: senza questo la destroy() finale diventa un RST.
+    socket.on('data', () => {})
     socket.on('connect', () => {
       socket.end(data, () => {
-        socket.destroy()
-        clearTimeout(timer)
-        resolve()
+        flushed = true
+        linger = setTimeout(() => finish(), CLOSE_LINGER_MS)
       })
     })
-    socket.on('error', (err) => {
-      clearTimeout(timer)
-      reject(err)
+    socket.on('close', () => {
+      // Chiusura dopo la scrittura: job accettato, si prosegue subito.
+      // Chiusura PRIMA: la stampante ci ha sbattuto la porta, il job non è partito.
+      finish(flushed ? undefined : new Error('Printer closed the connection before accepting the job'))
     })
+    socket.on('error', (err) => finish(err))
   })
 }
 

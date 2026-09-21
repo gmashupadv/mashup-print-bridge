@@ -187,3 +187,75 @@ describe('sendTcp (real loopback)', () => {
   // or a server that accepts but never reads — where a small payload may still flush
   // before the timer fires. Left intentionally untested.
 })
+
+describe('sendTcp — chiusura del socket', () => {
+  // Server finto sulla loopback: `onConn` decide come si comporta la "stampante".
+  function listen(onConn: (sock: net.Socket, chunks: Buffer[]) => void): Promise<{
+    port: number
+    received: () => Buffer
+    close: () => Promise<void>
+  }> {
+    const chunks: Buffer[] = []
+    const srv = net.createServer((sock) => {
+      sock.on('data', (c) => chunks.push(c))
+      onConn(sock, chunks)
+    })
+    return new Promise((resolve) => {
+      srv.listen(0, '127.0.0.1', () => {
+        const port = (srv.address() as net.AddressInfo).port
+        resolve({
+          port,
+          received: () => Buffer.concat(chunks),
+          close: () => new Promise((r) => srv.close(() => r())),
+        })
+      })
+    })
+  }
+
+  it('consegna tutti i byte a una stampante che risponde con dati di stato', async () => {
+    // Il caso che rompeva le copie: la testa manda stato, noi non leggevamo mai e
+    // la chiusura diventava un RST che faceva scartare il job.
+    const srv = await listen((sock) => {
+      sock.write(Buffer.from([0x14, 0x00])) // byte di stato non richiesti
+      sock.on('end', () => sock.end())
+    })
+    const payload = Buffer.from('^XA^FDtest^FS^XZ\n')
+    await expect(sendTcp('127.0.0.1', srv.port, 3000, payload)).resolves.toBeUndefined()
+    expect(srv.received().equals(payload)).toBe(true)
+    await srv.close()
+  })
+
+  it('non resta appeso se la stampante tiene aperta la connessione', async () => {
+    const srv = await listen(() => {
+      /* non chiude mai: si esce col linger, non col timeout */
+    })
+    const payload = Buffer.from('^XA^XZ\n')
+    const started = Date.now()
+    await expect(sendTcp('127.0.0.1', srv.port, 10_000, payload)).resolves.toBeUndefined()
+    expect(Date.now() - started).toBeLessThan(5_000)
+    expect(srv.received().equals(payload)).toBe(true)
+    await srv.close()
+  })
+
+  it('fallisce se non c\'è nessuno in ascolto (stampante spenta o IP sbagliato)', async () => {
+    // Porta presa e subito liberata: nessuno risponde.
+    const srv = await listen(() => {})
+    const { port } = srv
+    await srv.close()
+    await expect(sendTcp('127.0.0.1', port, 2000, Buffer.from('^XA^XZ\n'))).rejects.toThrow()
+  })
+
+  it('il timeout resta armato anche mentre si aspetta la chiusura', async () => {
+    // allowHalfOpen: il server non chiude dopo il nostro FIN. Con un timeout più
+    // corto del linger deve vincere il timeout, non un'attesa indefinita.
+    const open: net.Socket[] = []
+    const srv = net.createServer({ allowHalfOpen: true }, (sock) => open.push(sock))
+    const port = await new Promise<number>((r) =>
+      srv.listen(0, '127.0.0.1', () => r((srv.address() as net.AddressInfo).port))
+    )
+    await expect(sendTcp('127.0.0.1', port, 100, Buffer.from('^XA^XZ\n'))).rejects.toThrow(/timeout/i)
+    // Le connessioni half-open vanno chiuse a mano: srv.close() le aspetterebbe.
+    for (const sock of open) sock.destroy()
+    await new Promise<void>((r) => srv.close(() => r()))
+  })
+})

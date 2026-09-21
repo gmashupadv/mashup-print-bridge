@@ -178,6 +178,13 @@ export interface PrinterDriver {
   printReceipt?(data: ReceiptData): Promise<PrintResult>
   printNonFiscal?(doc: NonFiscalDoc): Promise<PrintResult>
   printLabel?(label: LabelData, layout: LabelLayout): Promise<PrintResult>
+  /**
+   * Stampa N copie in un invio solo, per le teste che sanno ripetere l'etichetta
+   * da sé (^PQ su ZPL). Opzionale e indipendente dalle capability: quando c'è, il
+   * server la preferisce al ciclo di N chiamate a `printLabel`, che sulla porta
+   * 9100 costringe a riaprire la connessione a ogni copia. Implica 'label'.
+   */
+  printLabelCopies?(label: LabelData, layout: LabelLayout, copies: number): Promise<PrintResult>
   dailyClose?(operatorId: string): Promise<PrintResult>
   openDrawer?(operatorId: string): Promise<void>
 }

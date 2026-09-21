@@ -57,7 +57,18 @@ function barcodeField(
   return { command: `^BY${moduleDots}^BC${o},${heightDots},${h},N,N`, data: v }
 }
 
-export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm = DOTS_PER_MM): string {
+/**
+ * ZPL di un'etichetta. `copies > 1` usa ^PQ, il contatore NATIVO della stampante:
+ * un solo formato inviato una sola volta, ripetuto dalla testa. È molto più
+ * affidabile che riaprire la 9100 N volte — le teste accettano una connessione
+ * per volta e un ciclo serrato di connect/write/close ne fa perdere pezzi.
+ */
+export function buildLabelZpl(
+  label: LabelData,
+  layout: LabelLayout,
+  dotsPerMm = DOTS_PER_MM,
+  copies = 1
+): string {
   const paper = resolvePaper(layout.paper)
   const elements = resolveElements(layout.template, paper)
   const dots = (v: number): number => Math.max(0, Math.round(v * dotsPerMm))
@@ -118,6 +129,10 @@ export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm =
       lines.push(`^FO${x + Math.max(0, offset)},${y + Math.round(fontDots / 2)}^GB${textW},2,2^FS`)
     }
   }
+
+  // ^PQ<quantità>,<pausa>,<replicate>,<override pausa> — subito prima di ^XZ.
+  const qty = Math.max(1, Math.min(9999, Math.trunc(Number(copies) || 1)))
+  if (qty > 1) lines.push(`^PQ${qty},0,0,N`)
 
   lines.push('^XZ')
   return lines.join('\n') + '\n'

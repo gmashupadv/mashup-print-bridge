@@ -258,11 +258,22 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
         paper: { ...DEFAULT_LABEL_PAPER, ...pc.paper },
         template: { ...DEFAULT_LABEL_TEMPLATE, ...pc.template },
       }
+      const driver = resolved.printer.driver
       let copiesPrinted = 0
       try {
+        // Copie native (^PQ su ZPL): un invio solo. Ripetere la connessione per
+        // ogni copia sulla porta 9100 fa perdere etichette alle teste lente.
+        if (driver.printLabelCopies) {
+          const res = await driver.printLabelCopies(label, layout, copies)
+          return {
+            ...res,
+            copiesRequested: rawCopies ?? 1,
+            copiesPrinted: res.success ? copies : 0,
+          }
+        }
         let last: PrintResult | null = null
         for (let i = 0; i < copies; i++) {
-          last = await resolved.printer.driver.printLabel!(label, layout)
+          last = await driver.printLabel!(label, layout)
           if (!last.success) break
           copiesPrinted++
         }

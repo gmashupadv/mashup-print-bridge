@@ -223,3 +223,30 @@ describe('buildLabelZpl — adattamento del corpo', () => {
     expect(fontOf(zpl)).toBe(Math.round(2.5 * 8))
   })
 })
+
+describe('buildLabelZpl — copie native ^PQ', () => {
+  it('senza copie non emette ^PQ', () => {
+    expect(buildLabelZpl(base, layout)).not.toContain('^PQ')
+    expect(buildLabelZpl(base, layout, undefined, 1)).not.toContain('^PQ')
+  })
+
+  it('con copies > 1 emette ^PQ una sola volta, prima di ^XZ', () => {
+    const zpl = buildLabelZpl(base, layout, undefined, 12)
+    expect(zpl).toContain('^PQ12,0,0,N')
+    expect(zpl.match(/\^PQ/g)).toHaveLength(1)
+    expect(zpl.indexOf('^PQ')).toBeLessThan(zpl.indexOf('^XZ'))
+  })
+
+  it('il formato resta uno solo: ^XA e ^XZ non si ripetono per copia', () => {
+    const zpl = buildLabelZpl(base, layout, undefined, 30)
+    expect(zpl.match(/\^XA/g)).toHaveLength(1)
+    expect(zpl.match(/\^XZ/g)).toHaveLength(1)
+  })
+
+  it('normalizza quantità assurde invece di propagarle alla stampante', () => {
+    expect(buildLabelZpl(base, layout, undefined, 2.7)).toContain('^PQ2,')
+    expect(buildLabelZpl(base, layout, undefined, -5)).not.toContain('^PQ')
+    expect(buildLabelZpl(base, layout, undefined, NaN)).not.toContain('^PQ')
+    expect(buildLabelZpl(base, layout, undefined, 99999)).toContain('^PQ9999,')
+  })
+})

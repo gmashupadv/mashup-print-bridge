@@ -428,6 +428,65 @@ describe('POST /print-label', () => {
     expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(3)
   })
 
+  it('usa le copie native del driver quando ci sono: un invio solo, non N', async () => {
+    // Regressione: il ciclo di N printLabel riapriva la 9100 a ogni copia e le
+    // teste lente ne perdevano pezzi. Chi sa fare ^PQ riceve la quantità e basta.
+    const driver = makeMockDriver()
+    const printLabelCopies = vi.fn(async () => ({
+      success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '',
+    }))
+    ;(driver as unknown as Record<string, unknown>).printLabelCopies = printLabelCopies
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 7 },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(printLabelCopies).toHaveBeenCalledTimes(1)
+    expect(printLabelCopies.mock.calls[0][2]).toBe(7)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0)
+    expect(res.json()).toMatchObject({ copiesRequested: 7, copiesPrinted: 7 })
+  })
+
+  it('le copie native rispettano il clamp a 50', async () => {
+    const driver = makeMockDriver()
+    const printLabelCopies = vi.fn(async () => ({
+      success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '',
+    }))
+    ;(driver as unknown as Record<string, unknown>).printLabelCopies = printLabelCopies
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 100 },
+    })
+    expect(printLabelCopies.mock.calls[0][2]).toBe(50)
+    expect(res.json()).toMatchObject({ copiesRequested: 100, copiesPrinted: 50 })
+  })
+
+  it('copie native fallite: copiesPrinted a 0, non la quantità richiesta', async () => {
+    const driver = makeMockDriver()
+    ;(driver as unknown as Record<string, unknown>).printLabelCopies = vi.fn(async () => ({
+      success: false, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: 'Printer timeout',
+    }))
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { ...payload, copies: 4 },
+    })
+    expect(res.json()).toMatchObject({ success: false, copiesRequested: 4, copiesPrinted: 0 })
+  })
+
+  it('senza copie native resta il ciclo di N printLabel', async () => {
+    const driver = makeMockDriver()
+    expect((driver as unknown as Record<string, unknown>).printLabelCopies).toBeUndefined()
+    const app = buildServer(makeOpts(driver))
+    await app.inject({ method: 'POST', url: '/print-label', payload: { ...payload, copies: 3 } })
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(3)
+  })
+
   it('returns 503 when no printer has label capability', async () => {
     const driver = makeMockDriver({ capabilities: ['fiscal-receipt'] })
     const app = buildServer(makeOpts(driver))
