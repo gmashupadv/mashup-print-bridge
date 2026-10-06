@@ -1,19 +1,31 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, dialog } from 'electron'
 import * as path from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
+import { readFile, writeFile } from 'node:fs/promises'
 import log from 'electron-log'
-import { createConfigManager } from './config'
+import { createConfigManager, sanitizePresets } from './config'
 import type { PrinterConfig } from './config'
 import { createDriver, listDrivers } from './drivers/registry'
 import { startServer } from './server'
 import type { ManagedPrinter } from './server'
 import { initUpdater } from './updater'
 import type { FastifyInstance } from 'fastify'
-import type { PrinterDriver, PaperConfig, LabelTemplate, NonFiscalDoc } from './drivers/interface'
+import type {
+  PrinterDriver,
+  PaperConfig,
+  LabelTemplate,
+  LabelPreset,
+  NonFiscalDoc,
+} from './drivers/interface'
 import { listSystemPrinters } from './printing/silent-print'
 import { getPaperInfo } from './printing/paper-info'
 import { renderLabelHtml } from './printing/label-renderer'
-import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE, SAMPLE_LABEL } from './printing/defaults'
+import {
+  BUILTIN_LABEL_PRESETS,
+  DEFAULT_LABEL_PAPER,
+  DEFAULT_LABEL_TEMPLATE,
+  SAMPLE_LABEL,
+} from './printing/defaults'
 // ?asset: electron-vite copia il file in out/ e risolve il percorso anche dentro app.asar.
 // Un path costruito a mano verso resources/ funziona in dev ma non esiste nell'app impacchettata.
 import trayIconAsset from '../../resources/icon.png?asset'
@@ -117,9 +129,13 @@ function openConfigWindow(): void {
     return
   }
   configWindow = new BrowserWindow({
-    width: 400,
-    height: 520,
-    resizable: false,
+    // L'editor etichette vuole spazio: finestra più larga e ridimensionabile
+    // (prima era fissa a 400x520, l'anteprima trascinabile non ci starebbe).
+    width: 560,
+    height: 720,
+    minWidth: 380,
+    minHeight: 480,
+    resizable: true,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -291,6 +307,40 @@ ipcMain.handle('label:preview', (_e, paper?: PaperConfig, template?: LabelTempla
     template: { ...DEFAULT_LABEL_TEMPLATE, ...template },
   })
 )
+
+// Layout etichetta pronti all'uso, forniti con l'app (sola lettura)
+ipcMain.handle('label:builtin-presets', () => BUILTIN_LABEL_PRESETS)
+
+// Esporta un preset in un file JSON, da mandare/riusare su un'altra postazione
+ipcMain.handle('label:export-preset', async (_e, preset: LabelPreset) => {
+  const safeName = String(preset?.name ?? 'etichetta').replace(/[^\p{L}\p{N}._-]+/gu, '-')
+  const result = await dialog.showSaveDialog({
+    title: 'Esporta layout etichetta',
+    defaultPath: `${safeName}.mashup-label.json`,
+    filters: [{ name: 'Layout etichetta', extensions: ['json'] }],
+  })
+  if (result.canceled || !result.filePath) return null
+  await writeFile(result.filePath, JSON.stringify(preset, null, 2), 'utf-8')
+  emitLog(`Layout etichetta esportato: ${result.filePath}`)
+  return result.filePath
+})
+
+// Importa uno o più preset da file JSON (accetta sia un oggetto sia un array)
+ipcMain.handle('label:import-preset', async () => {
+  const result = await dialog.showOpenDialog({
+    title: 'Importa layout etichetta',
+    properties: ['openFile'],
+    filters: [{ name: 'Layout etichetta', extensions: ['json'] }],
+  })
+  if (result.canceled || result.filePaths.length === 0) return []
+  const raw = JSON.parse(await readFile(result.filePaths[0], 'utf-8')) as unknown
+  const presets = sanitizePresets(Array.isArray(raw) ? raw : [raw])
+  if (presets.length === 0) {
+    throw new Error('Il file non contiene un layout etichetta valido')
+  }
+  emitLog(`Layout etichetta importati: ${presets.map((p) => p.name).join(', ')}`)
+  return presets
+})
 
 // Selettore di cartella per il driver axon-fpid (cartella di ascolto e LOG)
 ipcMain.handle('dialog:pick-folder', async () => {

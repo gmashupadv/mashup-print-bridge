@@ -38,9 +38,10 @@ Three Electron layers, each compiled by electron-vite into `out/`:
 
 - **`src/main/`** — Node.js main process. Entry `index.ts` owns app lifecycle: tray menu, the config window, the Fastify server, the updater, and a `Map<printerId, PrinterDriver>` of live driver instances. It wires config → drivers → server.
   - **`printing/`** — shared rendering/encoding helpers used by drivers:
-    - `defaults.ts` — default label paper (50×30 mm), default template, sample label for previews
-    - `barcode.ts` — pure-SVG barcode rendering with auto-detection (`barcodeSvg`): 13 numeric digits with valid checksum → EAN-13, anything else (alphanumeric SKUs, **12 digits / UPC-A**, bad checksum) → Code128 literal. The printed barcode always encodes the exact string the POS sent: a check digit is never added, otherwise the scanned value would not match the stored one; `assertPrintableBarcode` is the permissive server-side validator
-    - `label-renderer.ts` — `LabelData + LabelLayout` → self-contained HTML (also non-fiscal docs → HTML)
+    - `defaults.ts` — default label paper (50×30 mm), default template, sample label for previews, `BUILTIN_LABEL_PRESETS` (layout pronti: standard 50×30, solo prezzo 30×12 per matite/trucchi, prezzo+prezzo pieno 40×20, verticale 12×40 ruotata)
+    - `label-template.ts` — **modello di layout condiviso** fra i motori di stampa: `LabelElement[]` posizionati in mm assoluti, `resolvePaper`/`resolveElements` (coercizione numerica + guardia anti-iniezione), `defaultElementsFor` (layout automatico ricalcolato sulla carta), `elementText`/`barcodeValue` (formattazione dei valori), `fitFontMm`/`linesNeeded` (adattamento del corpo al riquadro, condiviso HTML+ZPL), `materializeTemplate` (auto → elementi modificabili), `scaleLayout` (riscala un layout esplicito per le teste che non coprono tutta la carta)
+    - `barcode.ts` — pure-SVG barcode rendering with auto-detection (`barcodeSvg`): 13 numeric digits with valid checksum → EAN-13, anything else (alphanumeric SKUs, **12 digits / UPC-A**, bad checksum) → Code128 literal. The printed barcode always encodes the exact string the POS sent: a check digit is never added, otherwise the scanned value would not match the stored one; `assertPrintableBarcode` is the permissive server-side validator; `hri: false` toglie le cifre sotto le barre e `barcodeModuleCount(value)` dà il numero di moduli (serve a ricavare la larghezza del modulo da una larghezza voluta)
+    - `label-renderer.ts` — `LabelData + LabelLayout` → self-contained HTML (also non-fiscal docs → HTML); ogni elemento è un `position:absolute` in mm, la rotazione usa `translate(...) rotate(...)` ancorata a (x, y)
     - `escpos-encoder.ts` — ESC/POS byte encoding: CP858 text, formatted non-fiscal lines, raster bitmaps
     - `html-to-bitmap.ts` — renders HTML to a monochrome bitmap via an offscreen BrowserWindow (for ESC/POS raster)
     - `silent-print.ts` — silent printing of HTML through the OS driver (hidden BrowserWindow, **no print dialog**) + `listSystemPrinters()`
@@ -70,12 +71,15 @@ interface PrinterDriver {
   printReceipt?(data: ReceiptData): Promise<PrintResult>
   printNonFiscal?(doc: NonFiscalDoc): Promise<PrintResult>
   printLabel?(label: LabelData, layout: LabelLayout): Promise<PrintResult>
+  printLabelCopies?(label, layout, copies): Promise<PrintResult>   // copie native, vedi sotto
   dailyClose?(operatorId: string): Promise<PrintResult>
   openDrawer?(operatorId: string): Promise<void>
 }
 ```
 
 A driver's `capabilities` array is the contract: the server routes requests only to printers whose driver declares the needed capability, and the optional methods (`printReceipt`/`printNonFiscal`/`printLabel`/`dailyClose`/`openDrawer`) must be implemented iff the matching capability is declared.
+
+`printLabelCopies` è l'eccezione: non è legata a una capability ma alla **capacità della testa di ripetere l'etichetta da sé**. Quando c'è, `/print-label` la chiama una volta con la quantità invece di ciclare N volte su `printLabel`. Serve perché sulla porta 9100 riaprire la connessione a ogni copia fa perdere etichette (vedi `sendTcp` sotto).
 
 `registry.ts` is the single source of truth for available drivers — a name→factory map. **To add a driver: implement the interface, then register it in `registry.ts`.** `listDrivers()` (surfaced to the UI via IPC) and `createDriver(name)` both read from this map.
 
@@ -85,7 +89,7 @@ Registered drivers:
 - `ditron-streamwec` — HTTP/1.0 POST `/cmd/wec` (port 80) with plain-text WEC commands; fiscal + non-fiscal. Receipt syntax confirmed from a capture of the Danea gestionale: `CLEAR` / `CHIAVE REG` / `VEND REP=,PREZZO=,DES='…'` / `SUBT` / `CHIUS T=<tender>` / `wecfine`; success response is one `OK.` line per command. `DES=` gives the descriptive ("parlante") receipt — **preferred over `ditron-keycode` because it prints the article name**. Tender codes are printer-programmed (this unit: cash=1, card=5)
 - `ditron-keycode` — HTTPS POST `/cmd/keycode` emulating the physical keypad (same protocol as Ditron's own FCR Manager web UI); status via GET `/cmd/display` (`fiscal-receipt`, `daily-close`, `drawer`)
 - `escpos-network` — raw TCP port 9100 ESC/POS, complete: non-fiscal + label (rendered HTML → raster bitmap) + cut (`non-fiscal`, `label`, `cut`)
-- `zpl-network` — raw TCP port 9100 ZPL for Zebra-emulation label printers (Printex G300, Godex, TSC, Zebra); native barcodes (`^BE` EAN-13, `^BC` Code128) generated by `printing/zpl.ts`, no raster (`label`)
+- `zpl-network` — raw TCP port 9100 ZPL for Zebra-emulation label printers (Printex G300, Godex, TSC, Zebra); native barcodes (`^BE` EAN-13, `^BC` Code128) generated by `printing/zpl.ts`, no raster (`label`). Le **copie sono native**: `printLabelCopies` emette `^PQ<n>,0,0,N` e invia un solo formato su una sola connessione, col timeout scalato sulla quantità. `buildLabelZpl` legge lo **stesso modello a elementi** dell'anteprima HTML: mm → dot con `^FO x,y`, testo con `^A0<orient>` + `^FB` (a capo e allineamento), rotazione `N/R/I/B`, linee `^GB`, barcode con `^BY` ricavato dalla larghezza del riquadro
 - `os-printer` — prints via the OS printer driver (`connection.deviceName`), silent, no dialog; label + non-fiscal (`label`, `non-fiscal`)
 - `axon-fpid` — stampanti fiscali RT pilotate da **axonFPiD_Pro_v7** (A.P.esse): il driver non parla con la stampante ma deposita file di comandi **SF20** nella cartella di ascolto del Server di Stampa e legge `Response_<job>.xml` dalla cartella LOG (`fiscal-receipt`, `non-fiscal`, `daily-close`, `drawer`). Scrittura `.tmp` + rename atomico, coda seriale, timeout diagnostico a tre esiti. La sintassi SF20 non è documentata da nessuna fonte: quella di **vendita** è stata ricavata dagli "Scontrini di test" del Pannello del Tecnico e validata su una RT30 FW serie 2 G100 emettendo uno scontrino reale (`3/S/desc//qty/prezzo/reparto/iva///0/` → `U/` → `4/importo/Sconto//0/0/1/` → `5/cod/importo////PC//`; importo pagamento 0 = salda il residuo, e lo sconto è di riga o sul totale a seconda che stia prima o dopo `U/`). Il **documento gestionale** (non fiscale, usato da `/print-courtesy`) è `7/1/1/<testo>/` per riga più `m/` per chiudere, sintassi catturata dal LOG verbose di axonFPiD mentre Danea stampava uno scontrino di cortesia; testo troncato a 32 caratteri, attributi `bold`/`size`/`align` ignorati. Restano ignoti **chiusura giornaliera**, **apertura cassetto** e la **natura di esenzione** per l'IVA 0%: `printing/sf20.ts` li isola dietro `Sf20CommandUnavailableError` — vedi `docs/axon-fpid-setup.md`, che documenta anche la procedura di cattura via LOG verbose. La sonda (`driver:probe`) legge tabella IVA e reparti dalla RT per generare `deptMapping`; supporta i 12 slot IVA del FW serie 2 G100, non solo le 5 lettere A-E della serie 1.
 
@@ -118,7 +122,40 @@ Printer resolution for every print route follows the capability rule above (expl
 
 `/print` remaps each item's `department` via the target printer's `deptMapping` keyed by `vatRate.toFixed(2)`.
 
-`/print-label`: `label.name` (string) and `label.price` (number) are mandatory → **400** otherwise. `copies` is clamped to 1–50; the response includes `copiesRequested` and `copiesPrinted` (partial failures return `success: false` with the copies actually printed). The label layout merges the printer's `paper`/`template` config over `DEFAULT_LABEL_PAPER`/`DEFAULT_LABEL_TEMPLATE`.
+`/print-label`: `label.name` (string) and `label.price` (number) are mandatory → **400** otherwise. `copies` is clamped to 1–50; the response includes `copiesRequested` (il valore **chiesto**, non clampato) e `copiesPrinted` (partial failures return `success: false` with the copies actually printed; con le copie native è 0 o tutte, la testa non riporta i parziali). Sui driver di rete `copiesPrinted` conta gli **invii riusciti**, non le etichette uscite: la 9100 non dà riscontro. The label layout merges the printer's `paper`/`template` config over `DEFAULT_LABEL_PAPER`/`DEFAULT_LABEL_TEMPLATE`.
+
+## Layout etichetta (modello a elementi)
+
+Un `LabelTemplate` **senza** `elements` significa *layout automatico*: nome → variante → prezzo/SKU → barcode ancorato in basso, ricalcolato da `defaultElementsFor()` in base al formato carta. È il comportamento storico e resta il default.
+
+Un template **con** `elements` è un layout esplicito: una lista di riquadri in millimetri assoluti sulla carta.
+
+```ts
+interface LabelElement {
+  id: string
+  type: 'name'|'variant'|'price'|'compareAtPrice'|'sku'|'barcode'|'static'|'line'
+  visible?: boolean          // false = nascosto ma conservato
+  xMm: number; yMm: number; wMm: number; hMm?: number
+  fontMm?: number; bold?: boolean; align?: 'left'|'center'|'right'
+  maxLines?: number          // a capo del testo
+  autoFit?: boolean          // riduce fontMm finché il testo entra nel riquadro (default false)
+  minFontMm?: number         // pavimento dell'autoFit (default 1.8); sotto, il testo resta tagliato
+  rotate?: 0|90|180|270      // ancorata a (x, y), estende verso destra/basso
+  text?: string              // 'static': il testo; altri tipi: formato con {value}; 'barcode': codice fisso
+  showHri?: boolean          // barcode: cifre sotto le barre
+  moduleMm?: number          // barcode: larghezza barre forzata (default: ricavata da wMm)
+  strikethrough?: boolean    // default true su compareAtPrice
+}
+```
+
+Regole trasversali ai due motori (HTML e ZPL):
+- se il campo prodotto è assente, l'elemento **sparisce** invece di lasciare un buco (`elementText` → `null`);
+- per il barcode `hMm` è l'altezza dell'**intero blocco** (barre + cifre) e `wMm` determina la larghezza del modulo — ridimensionare il riquadro allarga/stringe le barre;
+- `fontScale` resta un moltiplicatore globale dei corpi; `showBarcode: false` (campo legacy v1) resta un interruttore globale del barcode;
+- `autoFit` è opt-in per elemento: `fitFontMm()` (in `label-template.ts`) stima la larghezza del testo da una tabella di avanzamenti in em, simula l'a capo greedy e scala `fontMm` a passi di 0.05mm finché il testo entra in `wMm × maxLines × hMm`, fermandosi a `minFontMm`. Il calcolo sta nel modello **condiviso** e non nel browser perché la Zebra non sa misurare il testo: un fit lato HTML farebbe divergere anteprima e stampa ZPL;
+- ogni valore passa da `resolveElements()`, che coercizza i numeri: nessun `NaN` e nessuna iniezione di CSS/ZPL da input IPC.
+
+I preset (`AppConfig.labelPresets`) sono layout riusabili salvati dall'utente, esportabili/importabili in JSON via IPC (`label:export-preset` / `label:import-preset`); `BUILTIN_LABEL_PRESETS` sono quelli forniti con l'app (IPC `label:builtin-presets`). L'editor visuale è `renderer/components/LabelDesigner.tsx`: riquadri trascinabili e ridimensionabili sovrapposti all'anteprima HTML reale, più il pannello numerico; `LabelTemplatePanel.tsx` gestisce carta, libreria preset e il passaggio automatico ↔ personalizzato.
 
 `/print-nonfiscal` line options: `bold` (boolean), `size` (`normal` | `double`), `align` (`left` | `center` | `right`); `cut` requests a paper cut where supported.
 
@@ -152,13 +189,37 @@ Printer resolution for every print route follows the capability rule above (expl
   ],
   "autostart": true,
   "port": 8765,
-  "logLevel": "info"
+  "logLevel": "info",
+  "labelPresets": [
+    {
+      "id": "preset-abc",
+      "name": "Etichetta matite",
+      "paper": { "widthMm": 30, "heightMm": 12, "marginsMm": { "top": 1, "right": 1.5, "bottom": 1, "left": 1.5 } },
+      "template": {
+        "version": 2,
+        "elements": [
+          { "id": "price", "type": "price", "xMm": 1.5, "yMm": 2.4, "wMm": 27, "hMm": 7, "fontMm": 5.4, "bold": true, "align": "center" }
+        ]
+      }
+    }
+  ]
 }
 ```
 
 Per-printer fields: `role` (`fiscal` | `label` | `receipt`, used by the UI; routing uses driver capabilities), `connection.deviceName` (OS printer name, required by `os-printer`), `connection.spoolDir` / `connection.logDir` (cartella di ascolto e cartella LOG di axonFPiD, richieste da `axon-fpid`), optional `paper` and `template` (label layout overrides; defaults in `printing/defaults.ts`).
 
+`labelPresets` è la libreria dei layout etichetta, condivisa fra tutte le stampanti; `config.ts:sanitizePresets()` scarta le voci malformate (anche quelle che arrivano da un file importato).
+
 `deptMapping` maps VAT-rate strings to printer-specific fiscal department numbers. `config.ts:migrate()` upgrades the **legacy single-printer format** (top-level `driver`/`connection`/`operatorId`/`deptMapping`, no `printers`) into the array form — preserve that migration path when touching config.
+
+## Stampa raw su TCP 9100 (`sendTcp`)
+
+`sendTcp` in `drivers/escpos-network.ts` è condivisa da `escpos-network` e `zpl-network`. Due invarianti da non rompere — entrambe sono state causa di job scartati:
+
+1. **Si legge sempre dal socket** (`socket.on('data', …)`, anche solo per scartare). Molte teste 9100 rispondono con byte di stato non richiesti; lasciarli nel buffer di ricezione fa sì che la chiusura emetta un **RST** invece del FIN, e un RST con dati ancora in volo fa scartare il job alla stampante.
+2. **Non si chiude a forza subito dopo la scrittura.** Il callback di `end()` dice solo che i byte sono nel buffer del kernel. Si aspetta la chiusura del peer (`'close'`), con un linger di 400ms per le teste che tengono aperta la connessione e non chiudono mai, e il timeout resta armato per tutta l'attesa.
+
+Corollario: **evitare i cicli di connessioni ravvicinate** sulla 9100 — le teste accettano una connessione per volta. Dove la stampante sa ripetere il job da sé, si usa quello (`^PQ` per ZPL) invece di riconnettersi per ogni copia.
 
 ## Security constraint
 
@@ -178,4 +239,4 @@ The POS uses `PrintBridgeClient` (`src/shared/lib/printBridgeClient.ts` in the P
 
 - `*.pcapng` / `ditron.html` at the repo root are packet captures / protocol reverse-engineering scratch for the Ditron drivers — not part of the build.
 - `axonfpid_pro_v7.txt` e `sf20.txt` sono i manuali A.P.esse / Micrelec usati per il driver `axon-fpid` — non fanno parte della build.
-- Tests use vitest; coverage spans `config`, `server`, the drivers (`epson-fpmate`, `ditron-streamwec`, `ditron-keycode`, `escpos-network`, `zpl-network`, `os-printer`) and the `printing/` helpers (`barcode`, `label-renderer`, `escpos-encoder`, `paper-info`).
+- Tests use vitest; coverage spans `config`, `server`, the drivers (`epson-fpmate`, `ditron-streamwec`, `ditron-keycode`, `escpos-network` — incluso `sendTcp` contro un server TCP finto in loopback —, `zpl-network`, `os-printer`) and the `printing/` helpers (`barcode`, `label-template`, `label-renderer`, `zpl`, `escpos-encoder`, `paper-info`).

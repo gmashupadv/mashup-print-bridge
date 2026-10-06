@@ -14,10 +14,83 @@ export interface PaperConfig {
   marginsMm?: { top: number; right: number; bottom: number; left: number }
 }
 
+/** Tipi di elemento piazzabili su un'etichetta. */
+export type LabelElementType =
+  | 'name'
+  | 'variant'
+  | 'price'
+  | 'compareAtPrice'
+  | 'sku'
+  | 'barcode'
+  | 'static'
+  | 'line'
+
+export type LabelAlign = 'left' | 'center' | 'right'
+export type LabelRotation = 0 | 90 | 180 | 270
+
+/**
+ * Un elemento posizionato in millimetri assoluti sull'etichetta.
+ * Le coordinate mm si mappano 1:1 su CSS (position:absolute) e su ZPL (^FO in dot),
+ * quindi lo stesso elemento descrive sia la stampa HTML sia quella nativa Zebra.
+ */
+export interface LabelElement {
+  id: string
+  type: LabelElementType
+  /** Default true. False = elemento nascosto ma conservato nel template. */
+  visible?: boolean
+  xMm: number
+  yMm: number
+  wMm: number
+  /** Testo: altezza del riquadro. Barcode: altezza delle barre. Linea: spessore. */
+  hMm?: number
+  fontMm?: number
+  bold?: boolean
+  align?: LabelAlign
+  /** Righe massime per il testo a capo (default 1). */
+  maxLines?: number
+  /**
+   * Adatta il corpo al riquadro: se il testo non entra in `wMm` x `maxLines`,
+   * `fontMm` viene ridotto fino a `minFontMm`. Sotto quella soglia il testo
+   * resta tagliato come senza adattamento. Default false (opt-in dall'editor).
+   */
+  autoFit?: boolean
+  /** Corpo minimo in mm sotto cui l'adattamento non scende (default 1.8). */
+  minFontMm?: number
+  rotate?: LabelRotation
+  /**
+   * 'static': il testo stesso. Altri tipi: formato con segnaposto {value}
+   * (es. "Cod. {value}"); per 'barcode' un valore fisso che sostituisce label.barcode.
+   */
+  text?: string
+  /** Barcode: cifre leggibili sotto le barre (default true). */
+  showHri?: boolean
+  /** Barcode: larghezza modulo forzata in mm; se assente si ricava da wMm. */
+  moduleMm?: number
+  /** Testo barrato (default true per compareAtPrice). */
+  strikethrough?: boolean
+}
+
+/**
+ * Template etichetta. Senza `elements` vale il layout automatico storico
+ * (nome/variante/prezzo/SKU/barcode) ricalcolato sulla carta corrente.
+ */
 export interface LabelTemplate {
-  preset: 'product-price'
-  showBarcode: boolean
-  fontScale: number
+  version?: 2
+  elements?: LabelElement[]
+  /** Moltiplicatore globale applicato a tutti i corpi carattere. */
+  fontScale?: number
+  /** Legacy v1: nome del preset di partenza, puramente descrittivo. */
+  preset?: string
+  /** Legacy v1: interruttore globale del barcode; false nasconde ogni elemento barcode. */
+  showBarcode?: boolean
+}
+
+/** Layout riusabile salvato in configurazione o importato da file. */
+export interface LabelPreset {
+  id: string
+  name: string
+  paper: PaperConfig
+  template: LabelTemplate
 }
 
 export interface LabelLayout {
@@ -105,6 +178,13 @@ export interface PrinterDriver {
   printReceipt?(data: ReceiptData): Promise<PrintResult>
   printNonFiscal?(doc: NonFiscalDoc): Promise<PrintResult>
   printLabel?(label: LabelData, layout: LabelLayout): Promise<PrintResult>
+  /**
+   * Stampa N copie in un invio solo, per le teste che sanno ripetere l'etichetta
+   * da sé (^PQ su ZPL). Opzionale e indipendente dalle capability: quando c'è, il
+   * server la preferisce al ciclo di N chiamate a `printLabel`, che sulla porta
+   * 9100 costringe a riaprire la connessione a ogni copia. Implica 'label'.
+   */
+  printLabelCopies?(label: LabelData, layout: LabelLayout, copies: number): Promise<PrintResult>
   dailyClose?(operatorId: string): Promise<PrintResult>
   openDrawer?(operatorId: string): Promise<void>
 }

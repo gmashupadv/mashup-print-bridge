@@ -72,10 +72,20 @@ export class ZplNetworkDriver implements PrinterDriver {
   }
 
   async printLabel(label: LabelData, layout: LabelLayout): Promise<PrintResult> {
+    return this.printLabelCopies(label, layout, 1)
+  }
+
+  /**
+   * Copie native: un solo formato con ^PQ, una sola connessione alla 9100.
+   * Il timeout va scalato sulla quantità — la testa accetta i byte subito ma
+   * chiude la connessione solo dopo aver sfornato le etichette.
+   */
+  async printLabelCopies(label: LabelData, layout: LabelLayout, copies: number): Promise<PrintResult> {
     const cfg = this.requireCfg()
     try {
-      const zpl = buildLabelZpl(label, layout)
-      await this.deps.send(cfg.ip, cfg.port, cfg.timeout, Buffer.from(zpl, 'utf-8'))
+      const qty = Math.max(1, Math.trunc(Number(copies) || 1))
+      const zpl = buildLabelZpl(label, layout, undefined, qty)
+      await this.deps.send(cfg.ip, cfg.port, cfg.timeout * qty, Buffer.from(zpl, 'utf-8'))
       return { ...OK }
     } catch (err: unknown) {
       return fail(err)

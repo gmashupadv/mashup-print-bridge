@@ -46,6 +46,7 @@ export interface Ean13SvgOptions {
   heightMm?: number     // altezza barre
   moduleMm?: number     // larghezza di un modulo
   fontMm?: number       // altezza testo leggibile
+  hri?: boolean         // cifre leggibili sotto le barre (default true)
 }
 
 export function ean13Svg(code: string, opts: Ean13SvgOptions = {}): string {
@@ -55,9 +56,10 @@ export function ean13Svg(code: string, opts: Ean13SvgOptions = {}): string {
   const fontMm = opts.fontMm ?? 2.2
   const quietLeft = 11 * moduleMm
   const quietRight = 7 * moduleMm
+  const hri = opts.hri !== false
   const bits = ean13Modules(code13)
   const widthMm = 95 * moduleMm + quietLeft + quietRight
-  const totalH = heightMm + fontMm + 0.8
+  const totalH = heightMm + (hri ? fontMm + 0.8 : 0)
 
   const rects: string[] = []
   let run = 0
@@ -77,8 +79,10 @@ export function ean13Svg(code: string, opts: Ean13SvgOptions = {}): string {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${widthMm.toFixed(2)}mm" height="${totalH.toFixed(2)}mm" ` +
     `viewBox="0 0 ${widthMm.toFixed(3)} ${totalH.toFixed(3)}">` +
     rects.join('') +
-    `<text x="${(widthMm / 2).toFixed(3)}" y="${(heightMm + fontMm).toFixed(3)}" ` +
-    `font-family="monospace" font-size="${fontMm}" text-anchor="middle">${code13}</text>` +
+    (hri
+      ? `<text x="${(widthMm / 2).toFixed(3)}" y="${(heightMm + fontMm).toFixed(3)}" ` +
+        `font-family="monospace" font-size="${fontMm}" text-anchor="middle">${code13}</text>`
+      : '') +
     `</svg>`
   )
 }
@@ -140,14 +144,19 @@ export function code128Modules(value: string): string {
   return values.map((v) => widthsToBits(CODE128_WIDTHS[v])).join('')
 }
 
+function esc128(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 export function code128Svg(value: string, opts: Ean13SvgOptions = {}): string {
   const moduleMm = opts.moduleMm ?? 0.33
   const heightMm = opts.heightMm ?? 10
   const fontMm = opts.fontMm ?? 2.2
+  const hri = opts.hri !== false
   const quiet = 10 * moduleMm // quiet zone minima Code128
   const bits = code128Modules(value)
   const widthMm = bits.length * moduleMm + quiet * 2
-  const totalH = heightMm + fontMm + 0.8
+  const totalH = heightMm + (hri ? fontMm + 0.8 : 0)
 
   const rects: string[] = []
   let run = 0
@@ -167,8 +176,10 @@ export function code128Svg(value: string, opts: Ean13SvgOptions = {}): string {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${widthMm.toFixed(2)}mm" height="${totalH.toFixed(2)}mm" ` +
     `viewBox="0 0 ${widthMm.toFixed(3)} ${totalH.toFixed(3)}">` +
     rects.join('') +
-    `<text x="${(widthMm / 2).toFixed(3)}" y="${(heightMm + fontMm).toFixed(3)}" ` +
-    `font-family="monospace" font-size="${fontMm}" text-anchor="middle">${value}</text>` +
+    (hri
+      ? `<text x="${(widthMm / 2).toFixed(3)}" y="${(heightMm + fontMm).toFixed(3)}" ` +
+        `font-family="monospace" font-size="${fontMm}" text-anchor="middle">${esc128(value)}</text>`
+      : '') +
     `</svg>`
   )
 }
@@ -177,12 +188,25 @@ export function code128Svg(value: string, opts: Ean13SvgOptions = {}): string {
 // resto (SKU alfanumerici, 12 cifre/UPC-A, 13 cifre con checksum errato) →
 // Code128 letterale. Regola: il barcode stampato codifica SEMPRE la stringa
 // esatta ricevuta dal POS, così lo scanner restituisce il valore salvato.
+export function isEan13(value: string): boolean {
+  const v = String(value).trim()
+  return /^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12))
+}
+
 export function barcodeSvg(value: string, opts: Ean13SvgOptions = {}): string {
   const v = String(value).trim()
-  if (/^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12))) {
-    return ean13Svg(v, opts)
-  }
-  return code128Svg(v, opts)
+  return isEan13(v) ? ean13Svg(v, opts) : code128Svg(v, opts)
+}
+
+/**
+ * Numero totale di moduli (barre+spazi+quiet zone) che occuperà il barcode.
+ * Serve a ricavare la larghezza del modulo da una larghezza in mm desiderata:
+ * moduleMm = larghezzaVoluta / barcodeModuleCount(valore).
+ */
+export function barcodeModuleCount(value: string): number {
+  const v = String(value).trim()
+  if (isEan13(v)) return 95 + 11 + 7 // moduli dati + quiet zone sinistra/destra
+  return code128Modules(v).length + 20 // quiet zone 10 moduli per lato
 }
 
 // Validazione permissiva usata dal server: lancia solo se il valore non è

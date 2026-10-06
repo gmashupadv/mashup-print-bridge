@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ean13Checksum, normalizeEan13, ean13Svg, ean13Modules, code128Modules, barcodeSvg, assertPrintableBarcode } from './barcode'
+import { ean13Checksum, normalizeEan13, ean13Svg, ean13Modules, code128Modules, barcodeSvg, barcodeModuleCount, assertPrintableBarcode } from './barcode'
 
 describe('ean13Checksum', () => {
   it('computes the check digit', () => {
@@ -96,6 +96,12 @@ describe('Code128 + auto-detect', () => {
     expect(svg).toContain('E39C2E14')
     // 13 cifre con checksum SBAGLIATO → Code128, non errore
     expect(() => barcodeSvg('8001234567891')).not.toThrow()
+  })
+
+  it('barcodeModuleCount segue la stessa simbologia del rendering (12 cifre = Code128, non EAN)', () => {
+    expect(barcodeModuleCount('8001234567897')).toBe(95 + 11 + 7)
+    // 12 cifre → Code128: Start B + 12 dati + check = 14×11 + Stop 13 = 167, + quiet 2×10
+    expect(barcodeModuleCount('012345678905')).toBe(167 + 20)
   })
 
   it('assertPrintableBarcode: ok per alfanumerici, errore per vuoto/controllo', () => {

@@ -16,6 +16,11 @@ interface Window {
       template?: import('../../main/drivers/interface').LabelTemplate
     ): Promise<string>
     pickFolder(): Promise<string | null>
+    listBuiltinLabelPresets(): Promise<import('../../main/drivers/interface').LabelPreset[]>
+    exportLabelPreset(
+      preset: import('../../main/drivers/interface').LabelPreset
+    ): Promise<string | null>
+    importLabelPresets(): Promise<import('../../main/drivers/interface').LabelPreset[]>
     probePrinter(printerId: string): Promise<import('../../main/printing/axon-probe').AxonProbe>
     onLogEvent(cb: (msg: string) => void): () => void
     onUpdateAvailable(cb: (version: string) => void): () => void

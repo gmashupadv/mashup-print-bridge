@@ -20,12 +20,12 @@ describe('buildLabelZpl', () => {
   it('stampa nome e prezzo in euro con la virgola', () => {
     const zpl = buildLabelZpl(base, layout)
     expect(zpl).toContain('^FDMaglietta^FS')
-    expect(zpl).toContain('19,90 €')
+    expect(zpl).toContain('€ 19,90')
   })
 
   it('stampa il prezzo di confronto barrato (testo + linea ^GB) se maggiore del prezzo', () => {
     const zpl = buildLabelZpl({ ...base, compareAtPrice: 29.9 }, layout)
-    expect(zpl).toContain('29,90 €')
+    expect(zpl).toContain('€ 29,90')
     expect(zpl).toContain('^GB')
   })
 
@@ -70,5 +70,190 @@ describe('buildLabelZpl', () => {
   it('neutralizza ^ e ~ nel testo (sono prefissi comando ZPL)', () => {
     const zpl = buildLabelZpl({ name: 'A^B~C', price: 1 }, layout)
     expect(zpl).toContain('^FDA B C^FS')
+  })
+
+  // --- Modello a elementi: le stesse coordinate mm dell'anteprima HTML ---
+
+  it('con elements espliciti stampa SOLO gli elementi elencati, alle coordinate date', () => {
+    const zpl = buildLabelZpl(
+      { name: 'Matita', price: 1.5, sku: 'MAT-1', barcode: '8001234567897' },
+      {
+        paper: { widthMm: 30, heightMm: 12 },
+        template: {
+          version: 2,
+          elements: [
+            { id: 'p', type: 'price', xMm: 2, yMm: 3, wMm: 26, hMm: 7, fontMm: 5, align: 'center' },
+          ],
+        },
+      }
+    )
+    // 2mm * 8 dot/mm = 16 ; 3mm = 24 ; corpo 5mm = 40 dot ; blocco 26mm = 208
+    expect(zpl).toContain('^FO16,24^A0N,40,40^FB208,1,0,C^FD€ 1,50^FS')
+    expect(zpl).not.toContain('Matita')
+    expect(zpl).not.toContain('MAT-1')
+    expect(zpl).not.toContain('^BE')
+  })
+
+  it('salta gli elementi con visible: false', () => {
+    const zpl = buildLabelZpl(
+      { name: 'Matita', price: 1.5 },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [
+            { id: 'n', type: 'name', xMm: 2, yMm: 2, wMm: 40, hMm: 4, visible: false },
+            { id: 'p', type: 'price', xMm: 2, yMm: 8, wMm: 40, hMm: 5 },
+          ],
+        },
+      }
+    )
+    expect(zpl).not.toContain('Matita')
+    expect(zpl).toContain('€ 1,50')
+  })
+
+  it('la rotazione a 90° usa il font ruotato ^A0R', () => {
+    const zpl = buildLabelZpl(
+      { name: 'A', price: 1 },
+      {
+        paper: { widthMm: 12, heightMm: 40 },
+        template: {
+          version: 2,
+          elements: [{ id: 'p', type: 'price', xMm: 2, yMm: 2, wMm: 30, hMm: 6, rotate: 90 }],
+        },
+      }
+    )
+    expect(zpl).toContain('^A0R,')
+  })
+
+  it('showHri false chiede alla stampante di non stampare le cifre', () => {
+    const el = (showHri: boolean): LabelLayout => ({
+      paper: DEFAULT_LABEL_PAPER,
+      template: {
+        version: 2,
+        elements: [{ id: 'b', type: 'barcode', xMm: 2, yMm: 2, wMm: 40, hMm: 12, showHri }],
+      },
+    })
+    expect(buildLabelZpl({ ...base, barcode: '8001234567897' }, el(true))).toContain('^BEN,')
+    const noHri = buildLabelZpl({ ...base, barcode: '8001234567897' }, el(false))
+    expect(/\^BEN,\d+,N,N/.test(noHri)).toBe(true)
+  })
+
+  it('la larghezza del riquadro barcode determina il modulo ^BY', () => {
+    const make = (wMm: number) =>
+      buildLabelZpl(
+        { ...base, barcode: '8001234567897' },
+        {
+          paper: { widthMm: 60, heightMm: 30 },
+          template: {
+            version: 2,
+            elements: [{ id: 'b', type: 'barcode', xMm: 2, yMm: 2, wMm, hMm: 12 }],
+          },
+        }
+      )
+    // 113 moduli EAN-13 (quiet zone incluse): 20mm → ~1.4 dot, 45mm → ~3.2 dot
+    expect(make(20)).toContain('^BY1^BE')
+    expect(make(45)).toContain('^BY3^BE')
+  })
+
+  it('una linea diventa un rettangolo ^GB pieno', () => {
+    const zpl = buildLabelZpl(
+      { name: 'A', price: 1 },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [{ id: 'l', type: 'line', xMm: 2, yMm: 10, wMm: 46, hMm: 0.5 }],
+        },
+      }
+    )
+    // 46mm = 368 dot, spessore 0.5mm = 4 dot
+    expect(zpl).toContain('^FO16,80^GB368,4,4^FS')
+  })
+
+  it('un testo fisso finisce sull\'etichetta anche senza dati prodotto', () => {
+    const zpl = buildLabelZpl(
+      { name: 'A', price: 1 },
+      {
+        paper: DEFAULT_LABEL_PAPER,
+        template: {
+          version: 2,
+          elements: [{ id: 't', type: 'static', xMm: 2, yMm: 2, wMm: 40, hMm: 4, text: 'SALDI' }],
+        },
+      }
+    )
+    expect(zpl).toContain('^FDSALDI^FS')
+  })
+})
+
+// Layout con un solo elemento nome, per verificare l'adattamento del corpo.
+const nameOnly = (autoFit: boolean, extra: Record<string, unknown> = {}): LabelLayout => ({
+  paper: { widthMm: 50, heightMm: 30, marginsMm: { top: 1, right: 2, bottom: 1, left: 2 } },
+  template: {
+    version: 2,
+    elements: [
+      {
+        id: 'n',
+        type: 'name',
+        xMm: 2,
+        yMm: 2,
+        wMm: 26,
+        hMm: 4,
+        fontMm: 3,
+        maxLines: 1,
+        autoFit,
+        ...extra,
+      },
+    ],
+  },
+})
+
+describe('buildLabelZpl — adattamento del corpo', () => {
+  const long: LabelData = { name: 'Rossetto liquido opaco', price: 9.9 }
+  const fontOf = (zpl: string): number => Number(/\^A0N,(\d+),/.exec(zpl)![1])
+
+  it('senza autoFit tiene il corpo dichiarato (3mm = 24 dot)', () => {
+    expect(fontOf(buildLabelZpl(long, nameOnly(false)))).toBe(24)
+  })
+
+  it('con autoFit riduce il corpo, come fa l anteprima HTML', () => {
+    const dots = fontOf(buildLabelZpl(long, nameOnly(true)))
+    expect(dots).toBeLessThan(24)
+    expect(dots).toBeGreaterThanOrEqual(Math.round(1.8 * 8))
+  })
+
+  it('non scende sotto minFontMm', () => {
+    const zpl = buildLabelZpl(
+      { name: 'Rossetto liquido opaco lunga tenuta waterproof 24h', price: 9.9 },
+      nameOnly(true, { minFontMm: 2.5 })
+    )
+    expect(fontOf(zpl)).toBe(Math.round(2.5 * 8))
+  })
+})
+
+describe('buildLabelZpl — copie native ^PQ', () => {
+  it('senza copie non emette ^PQ', () => {
+    expect(buildLabelZpl(base, layout)).not.toContain('^PQ')
+    expect(buildLabelZpl(base, layout, undefined, 1)).not.toContain('^PQ')
+  })
+
+  it('con copies > 1 emette ^PQ una sola volta, prima di ^XZ', () => {
+    const zpl = buildLabelZpl(base, layout, undefined, 12)
+    expect(zpl).toContain('^PQ12,0,0,N')
+    expect(zpl.match(/\^PQ/g)).toHaveLength(1)
+    expect(zpl.indexOf('^PQ')).toBeLessThan(zpl.indexOf('^XZ'))
+  })
+
+  it('il formato resta uno solo: ^XA e ^XZ non si ripetono per copia', () => {
+    const zpl = buildLabelZpl(base, layout, undefined, 30)
+    expect(zpl.match(/\^XA/g)).toHaveLength(1)
+    expect(zpl.match(/\^XZ/g)).toHaveLength(1)
+  })
+
+  it('normalizza quantità assurde invece di propagarle alla stampante', () => {
+    expect(buildLabelZpl(base, layout, undefined, 2.7)).toContain('^PQ2,')
+    expect(buildLabelZpl(base, layout, undefined, -5)).not.toContain('^PQ')
+    expect(buildLabelZpl(base, layout, undefined, NaN)).not.toContain('^PQ')
+    expect(buildLabelZpl(base, layout, undefined, 99999)).toContain('^PQ9999,')
   })
 })

@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('bridge', {
   getPaperInfo: (deviceName: string) => ipcRenderer.invoke('printers:paper-info', deviceName),
   previewLabel: (paper?: unknown, template?: unknown) => ipcRenderer.invoke('label:preview', paper, template),
   pickFolder: () => ipcRenderer.invoke('dialog:pick-folder'),
+  listBuiltinLabelPresets: () => ipcRenderer.invoke('label:builtin-presets'),
+  exportLabelPreset: (preset: unknown) => ipcRenderer.invoke('label:export-preset', preset),
+  importLabelPresets: () => ipcRenderer.invoke('label:import-preset'),
   probePrinter: (printerId: string) => ipcRenderer.invoke('driver:probe', printerId),
   onLogEvent: (cb: (msg: string) => void) => {
     const handler = (_e: Electron.IpcRendererEvent, msg: string) => cb(msg)

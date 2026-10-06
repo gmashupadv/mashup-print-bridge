@@ -2,9 +2,20 @@
 // Genera ZPL (Zebra Programming Language) per etichette prodotto.
 // Usato dal driver zpl-network per stampanti che emulano Zebra (Printex G300, Godex, TSC, Zebra…).
 // I barcode sono NATIVI della stampante (^BE EAN-13, ^BC Code128): niente raster, niente offscreen.
-import type { LabelData, LabelLayout } from '../drivers/interface'
-import { DEFAULT_LABEL_PAPER } from './defaults'
-import { ean13Checksum } from './barcode'
+//
+// Il layout arriva dallo stesso modello a elementi che alimenta l'anteprima HTML
+// (label-template.ts): i millimetri diventano dot con ^FO x,y, quindi ciò che si
+// vede nell'editor è ciò che esce dalla Zebra.
+import type { LabelData, LabelLayout, LabelRotation } from '../drivers/interface'
+import { isEan13, barcodeModuleCount } from './barcode'
+import {
+  barcodeValue,
+  elementText,
+  fitFontMm,
+  resolveElements,
+  resolvePaper,
+  type ResolvedElement,
+} from './label-template'
 
 // 203 dpi è lo standard Zebra (8 dot/mm). Il G300 è 200dpi → ~1.5% di scostamento, irrilevante.
 const DOTS_PER_MM = 8
@@ -14,8 +25,14 @@ function zplText(s: string): string {
   return s.replace(/[\^~]/g, ' ')
 }
 
-function eurIt(n: number): string {
-  return n.toFixed(2).replace('.', ',') + ' €'
+// N = 0°, R = 90° orario, I = 180°, B = 270°. Stessa convenzione della rotazione CSS
+// nell'anteprima: il campo resta ancorato a (x, y) ed estende verso destra/basso.
+function orientation(rotate: LabelRotation): 'N' | 'R' | 'I' | 'B' {
+  return rotate === 90 ? 'R' : rotate === 180 ? 'I' : rotate === 270 ? 'B' : 'N'
+}
+
+function alignLetter(align: ResolvedElement['align']): 'L' | 'C' | 'R' {
+  return align === 'center' ? 'C' : align === 'right' ? 'R' : 'L'
 }
 
 interface BarcodeField {
@@ -26,89 +43,98 @@ interface BarcodeField {
 // EAN-13 solo per 13 cifre con checksum valido, altrimenti Code128 letterale — stessa logica
 // di barcodeSvg. 12 cifre NON diventano ^BE: la stampante aggiungerebbe un check digit e il
 // codice stampato non coinciderebbe più con quello salvato nel POS.
-function barcodeField(raw: string, moduleDots: number, heightDots: number): BarcodeField {
+function barcodeField(
+  raw: string,
+  moduleDots: number,
+  heightDots: number,
+  o: string,
+  hri: boolean
+): BarcodeField {
   const v = raw.trim()
-  if (/^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12))) {
+  const h = hri ? 'Y' : 'N'
+  if (isEan13(v)) {
     // ^BE = EAN-13: passiamo 12 cifre, il check digit lo ricalcola la stampante (è lo stesso)
-    return { command: `^BY${moduleDots}^BEN,${heightDots},Y,N`, data: v.slice(0, 12) }
+    return { command: `^BY${moduleDots}^BE${o},${heightDots},${h},N`, data: v.slice(0, 12) }
   }
-  return { command: `^BY${moduleDots}^BCN,${heightDots},Y,N,N`, data: v }
+  return { command: `^BY${moduleDots}^BC${o},${heightDots},${h},N,N`, data: v }
 }
 
-export function buildLabelZpl(label: LabelData, layout: LabelLayout, dotsPerMm = DOTS_PER_MM): string {
-  const paper = { ...DEFAULT_LABEL_PAPER, ...layout.paper }
-  const m = { ...DEFAULT_LABEL_PAPER.marginsMm!, ...paper.marginsMm }
-  const fs = layout.template.fontScale || 1
-  const widthDots = Math.round(paper.widthMm * dotsPerMm)
-  const heightDots = Math.round((paper.heightMm ?? DEFAULT_LABEL_PAPER.heightMm!) * dotsPerMm)
-  const x = Math.round(m.left * dotsPerMm)
-  // Respiro extra in alto: ~1.5mm sopra il margine configurato, così la prima riga non resta
-  // incollata/tagliata al bordo superiore (offset tipico di queste etichettatrici termiche).
-  const top = Math.round((m.top + 1.5) * dotsPerMm)
-  const bottom = Math.round(m.bottom * dotsPerMm)
-  const innerW = widthDots - Math.round((m.left + m.right) * dotsPerMm)
+/**
+ * ZPL di un'etichetta. `copies > 1` usa ^PQ, il contatore NATIVO della stampante:
+ * un solo formato inviato una sola volta, ripetuto dalla testa. È molto più
+ * affidabile che riaprire la 9100 N volte — le teste accettano una connessione
+ * per volta e un ciclo serrato di connect/write/close ne fa perdere pezzi.
+ */
+export function buildLabelZpl(
+  label: LabelData,
+  layout: LabelLayout,
+  dotsPerMm = DOTS_PER_MM,
+  copies = 1
+): string {
+  const paper = resolvePaper(layout.paper)
+  const elements = resolveElements(layout.template, paper)
+  const dots = (v: number): number => Math.max(0, Math.round(v * dotsPerMm))
 
+  const widthDots = dots(paper.widthMm)
+  const heightDots = dots(paper.heightMm)
   const lines: string[] = ['^XA', '^CI28', `^PW${widthDots}`, `^LL${heightDots}`, '^LH0,0']
 
-  // --- Barcode ancorato in basso: 7mm di barre (leggibile, non invadente; prima erano 12mm). ---
-  // Riserviamo il blocco in fondo PRIMA di posizionare il resto, così il prezzo gli sta sopra.
-  const hasBarcode = !!(layout.template.showBarcode && label.barcode)
-  const barcodeH = Math.round(7 * dotsPerMm)
-  const barcodeBlock = hasBarcode ? barcodeH + Math.round(3 * dotsPerMm) : 0 // +3mm per la riga cifre HRI
-  const barcodeY = heightDots - bottom - barcodeBlock
+  for (const el of elements) {
+    const x = dots(el.xMm)
+    const y = dots(el.yMm)
+    const o = orientation(el.rotate)
 
-  // --- Prezzo (moderato, non gigante: 30 dot vs i 44 di prima), ancorato sopra il barcode. ---
-  // Il prezzo di confronto barrato va IN LINEA, a destra del prezzo: recupera una riga verticale.
-  const priceH = Math.round(30 * fs)
-  const cmp = Number(label.compareAtPrice)
-  const hasCompare = Number.isFinite(cmp) && cmp > label.price
-  const cmpH = Math.round(18 * fs)
-  const priceBlockH = priceH // compare è in linea, non aggiunge altezza
+    if (el.type === 'line') {
+      const t = Math.max(1, dots(el.hMm))
+      lines.push(`^FO${x},${y}^GB${Math.max(1, dots(el.wMm))},${t},${t}^FS`)
+      continue
+    }
 
-  // --- Nome: font compatto (22 dot). Il numero di righe è ADATTIVO allo spazio disponibile
-  //     sopra il blocco prezzo: titoli lunghi prendono fino a 4 righe su etichette grandi,
-  //     meno su quelle piccole — così non sforano mai sul prezzo/barcode. ---
-  const nameH = Math.round(22 * fs)
-  const vH = Math.round(17 * fs)
-  const variantBlock = label.variant ? vH + 4 : 0
-  const priceBlockY = Math.max(top, barcodeY - 6 - priceBlockH)
-  const availForName = priceBlockY - top - variantBlock - 6
-  const nameLines = Math.max(1, Math.min(4, Math.floor(availForName / nameH)))
+    if (el.type === 'barcode') {
+      const value = barcodeValue(el, label)
+      if (!value) continue
+      // hMm è l'altezza dell'intero blocco: le cifre HRI vanno sottratte alle barre,
+      // esattamente come nell'anteprima HTML.
+      const hriH = el.showHri ? el.fontMm + 0.8 : 0
+      const barsDots = Math.max(1, dots(Math.max(1, el.hMm - hriH)))
+      // Larghezza modulo: esplicita se impostata, altrimenti ricavata dalla larghezza
+      // del riquadro. ^BY vuole un intero di dot, minimo 1 (sotto non è stampabile).
+      const moduleMm = el.moduleMm ?? el.wMm / barcodeModuleCount(value)
+      const moduleDots = Math.max(1, Math.min(10, Math.round(moduleMm * dotsPerMm)))
+      const bf = barcodeField(value, moduleDots, barsDots, o, el.showHri)
+      lines.push(`^FO${x},${y}${bf.command}^FD${zplText(bf.data)}^FS`)
+      continue
+    }
 
-  let y = top
-  lines.push(`^FO${x},${y}^A0N,${nameH},${nameH}^FB${innerW},${nameLines},0,L^FD${zplText(label.name)}^FS`)
-  y += nameH * nameLines + 6
+    const text = elementText(el, label)
+    if (text === null) continue
+    // Stesso adattamento del corpo dell'anteprima HTML: calcolato nel modello
+    // condiviso perché la stampante non sa misurare il testo.
+    const fontDots = Math.max(6, dots(fitFontMm(el, text)))
+    const blockDots = Math.max(fontDots, dots(el.wMm))
+    lines.push(
+      `^FO${x},${y}^A0${o},${fontDots},${fontDots}` +
+        `^FB${blockDots},${el.maxLines},0,${alignLetter(el.align)}` +
+        `^FD${zplText(text)}^FS`
+    )
 
-  if (label.variant) {
-    lines.push(`^FO${x},${y}^A0N,${vH},${vH}^FD${zplText(label.variant)}^FS`)
-    y += vH + 4
+    // Barrato: ZPL non ha il line-through, si disegna un filetto a metà altezza.
+    // Larghezza stimata dal numero di caratteri (font scalabile ^A0 ≈ 0.6 em di avanzamento).
+    if (el.strikethrough && el.rotate === 0) {
+      const textW = Math.round(text.length * fontDots * 0.6)
+      const offset =
+        el.align === 'center'
+          ? Math.round((dots(el.wMm) - textW) / 2)
+          : el.align === 'right'
+            ? dots(el.wMm) - textW
+            : 0
+      lines.push(`^FO${x + Math.max(0, offset)},${y + Math.round(fontDots / 2)}^GB${textW},2,2^FS`)
+    }
   }
 
-  const py = priceBlockY
-  lines.push(`^FO${x},${py}^A0N,${priceH},${priceH}^FD${zplText(eurIt(label.price))}^FS`)
-
-  // Prezzo di confronto barrato IN LINEA, a destra del prezzo (allineato in basso alla sua baseline).
-  if (hasCompare) {
-    const cmpStr = eurIt(cmp)
-    const priceW = Math.round(eurIt(label.price).length * priceH * 0.6)
-    const cmpX = x + priceW + Math.round(2 * dotsPerMm)
-    const cmpY = py + (priceH - cmpH)
-    lines.push(`^FO${cmpX},${cmpY}^A0N,${cmpH},${cmpH}^FD${zplText(cmpStr)}^FS`)
-    const cmpW = Math.round(cmpStr.length * cmpH * 0.6)
-    lines.push(`^FO${cmpX},${cmpY + Math.round(cmpH / 2)}^GB${cmpW},2,2^FS`)
-  }
-
-  // SKU piccolo, allineato a destra sulla riga del prezzo (come le etichette retail).
-  if (label.sku) {
-    const skuH = Math.round(16 * fs)
-    lines.push(`^FO${x},${py + (priceH - skuH)}^A0N,${skuH},${skuH}^FB${innerW},1,0,R^FD${zplText(label.sku)}^FS`)
-  }
-
-  // Barcode nativo in fondo.
-  if (hasBarcode) {
-    const bf = barcodeField(String(label.barcode), 2, barcodeH)
-    lines.push(`^FO${x},${barcodeY}${bf.command}^FD${bf.data}^FS`)
-  }
+  // ^PQ<quantità>,<pausa>,<replicate>,<override pausa> — subito prima di ^XZ.
+  const qty = Math.max(1, Math.min(9999, Math.trunc(Number(copies) || 1)))
+  if (qty > 1) lines.push(`^PQ${qty},0,0,N`)
 
   lines.push('^XZ')
   return lines.join('\n') + '\n'

@@ -5,7 +5,7 @@ import { DeptMapping } from './DeptMapping'
 import { AxonProbePanel } from './AxonProbePanel'
 import { LabelTemplatePanel } from './LabelTemplatePanel'
 import type { PrinterConfig, PrinterRole } from '../../../main/config'
-import type { PaperConfig } from '../../../main/drivers/interface'
+import type { LabelPreset, PaperConfig } from '../../../main/drivers/interface'
 
 const ROLES: Array<{ value: PrinterRole; label: string }> = [
   { value: 'fiscal', label: 'Fiscale' },
@@ -26,9 +26,20 @@ interface Props {
   onChange: (updated: PrinterConfig) => void
   onRemove?: () => void
   onPatchPaper: (paper: Partial<PaperConfig>) => void
+  /** Libreria layout etichetta, condivisa fra tutte le stampanti (vive in AppConfig). */
+  labelPresets: LabelPreset[]
+  onLabelPresetsChange: (presets: LabelPreset[]) => void
 }
 
-export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper }: Props) {
+export function PrinterCard({
+  printer,
+  drivers,
+  onChange,
+  onRemove,
+  onPatchPaper,
+  labelPresets,
+  onLabelPresetsChange,
+}: Props) {
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
@@ -188,7 +199,9 @@ export function PrinterCard({ printer, drivers, onChange, onRemove, onPatchPaper
         <LabelTemplatePanel
           paper={printer.paper}
           template={printer.template}
+          presets={labelPresets}
           onChange={(paper, template) => onChange({ ...printer, paper, template })}
+          onPresetsChange={onLabelPresetsChange}
         />
       )}
     </div>

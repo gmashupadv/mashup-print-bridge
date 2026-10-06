@@ -227,7 +227,7 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       }
 
       if (label.barcode !== undefined && String(label.barcode).trim() !== '') {
-        // Permissivo: EAN-13 se numerico 12/13, altrimenti Code128 (SKU alfanumerici).
+        // Permissivo: EAN-13 solo se 13 cifre con checksum valido, altrimenti Code128 letterale.
         // Vuoto/spazi = nessun barcode (come il renderer). 400 solo se contiene
         // caratteri non stampabili in nessuna simbologia.
         try {
@@ -258,11 +258,22 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
         paper: { ...DEFAULT_LABEL_PAPER, ...pc.paper },
         template: { ...DEFAULT_LABEL_TEMPLATE, ...pc.template },
       }
+      const driver = resolved.printer.driver
       let copiesPrinted = 0
       try {
+        // Copie native (^PQ su ZPL): un invio solo. Ripetere la connessione per
+        // ogni copia sulla porta 9100 fa perdere etichette alle teste lente.
+        if (driver.printLabelCopies) {
+          const res = await driver.printLabelCopies(label, layout, copies)
+          return {
+            ...res,
+            copiesRequested: rawCopies ?? 1,
+            copiesPrinted: res.success ? copies : 0,
+          }
+        }
         let last: PrintResult | null = null
         for (let i = 0; i < copies; i++) {
-          last = await resolved.printer.driver.printLabel!(label, layout)
+          last = await driver.printLabel!(label, layout)
           if (!last.success) break
           copiesPrinted++
         }

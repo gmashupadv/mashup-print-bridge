@@ -3,7 +3,7 @@ import { promises as fs, writeFileSync, mkdtempSync } from 'node:fs'
 import * as path from 'node:path'
 import { tmpdir } from 'node:os'
 import * as os from 'node:os'
-import { createConfigManager } from './config'
+import { createConfigManager, sanitizePresets } from './config'
 
 function tmpConfigPath(): string {
   return path.join(mkdtempSync(path.join(os.tmpdir(), 'mpb-')), 'config.json')
@@ -219,5 +219,55 @@ describe('role migration', () => {
     const reloaded = createConfigManager(file).get()
     expect(reloaded.printers[0].connection.spoolDir).toBe('C:\\axonFPiD_Pro_v7\\Spool')
     expect(reloaded.printers[0].connection.logDir).toBe('C:\\axonFPiD_Pro_v7\\Log')
+  })
+})
+
+describe('label presets', () => {
+  it('scarta i preset malformati invece di farli arrivare all\'editor', () => {
+    const good = {
+      id: 'p1',
+      name: 'Matite',
+      paper: { widthMm: 30, heightMm: 12 },
+      template: { version: 2, elements: [] },
+    }
+    const out = sanitizePresets([
+      good,
+      { id: '', name: 'senza id', paper: { widthMm: 30 }, template: {} },
+      { id: 'p2', name: 'senza carta', template: {} },
+      { id: 'p3', name: 'carta non numerica', paper: { widthMm: 'x' }, template: {} },
+      null,
+      'stringa',
+    ])
+    expect(out).toEqual([good])
+  })
+
+  it('un file senza labelPresets riparte da una libreria vuota', async () => {
+    const fp = tmpConfigPath()
+    writeFileSync(
+      fp,
+      JSON.stringify({ printers: [], autostart: true, port: 8765, logLevel: 'info' })
+    )
+    expect(createConfigManager(fp).get().labelPresets).toEqual([])
+  })
+
+  it('conserva i preset validi già salvati', () => {
+    const fp = tmpConfigPath()
+    const preset = {
+      id: 'p1',
+      name: 'Matite',
+      paper: { widthMm: 30, heightMm: 12 },
+      template: { version: 2, elements: [] },
+    }
+    writeFileSync(
+      fp,
+      JSON.stringify({
+        printers: [],
+        autostart: true,
+        port: 8765,
+        logLevel: 'info',
+        labelPresets: [preset],
+      })
+    )
+    expect(createConfigManager(fp).get().labelPresets).toEqual([preset])
   })
 })
