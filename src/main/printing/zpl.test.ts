@@ -41,6 +41,13 @@ describe('buildLabelZpl', () => {
     expect(zpl).toContain('^FD800123456789^FS') // 13 → 12 cifre (la stampante calcola il check)
   })
 
+  it('12 cifre → Code128 letterale, mai ^BE (il codice stampato è quello salvato nel POS)', () => {
+    const zpl = buildLabelZpl({ ...base, barcode: '012345678905' }, layout)
+    expect(zpl).not.toContain('^BEN,')
+    expect(zpl).toContain('^BCN,')
+    expect(zpl).toContain('^FD012345678905^FS')
+  })
+
   it('un EAN-13 con checksum errato ricade su Code128 (stampa comunque)', () => {
     const zpl = buildLabelZpl({ ...base, barcode: '8001234567890' }, layout)
     expect(zpl).toContain('^BCN,')

@@ -538,7 +538,7 @@ describe('POST /print-label', () => {
     expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0)
   })
 
-  it('accepts a valid 12-digit barcode (800123456789) and returns 200', async () => {
+  it('accepts a 12-digit barcode (800123456789, printed as Code128) and returns 200', async () => {
     const driver = makeMockDriver()
     const app = buildServer(makeOpts(driver))
     const res = await app.inject({

@@ -14,15 +14,17 @@ export function ean13Checksum(digits12: string): number {
   return (10 - (sum % 10)) % 10
 }
 
+// Accetta SOLO 13 cifre con checksum valido. Non aggiunge mai un check digit:
+// 12 cifre sono quasi sempre un UPC-A completo, e "completarlo" a 13 stamperebbe
+// un codice diverso da quello salvato nel gestionale (lo scanner non lo troverebbe).
 export function normalizeEan13(code: string): string {
-  if (/^\d{12}$/.test(code)) return code + String(ean13Checksum(code))
   if (/^\d{13}$/.test(code)) {
     if (Number(code[12]) !== ean13Checksum(code.slice(0, 12))) {
       throw new Error(`Barcode EAN-13 con checksum non valido: ${code}`)
     }
     return code
   }
-  throw new Error(`Barcode non valido: atteso EAN-13 (12/13 cifre), ricevuto "${code}"`)
+  throw new Error(`Barcode non valido: atteso EAN-13 (13 cifre con checksum), ricevuto "${code}"`)
 }
 
 export function ean13Modules(code13: string): string {
@@ -171,12 +173,12 @@ export function code128Svg(value: string, opts: Ean13SvgOptions = {}): string {
   )
 }
 
-// Auto-rilevamento del tipo: 12/13 cifre con checksum valido → EAN-13,
-// altrimenti Code128. Un 13-cifre con checksum errato ricade su Code128 così
-// stampa comunque (niente più 400 su SKU alfanumerici).
+// Auto-rilevamento del tipo: 13 cifre con checksum valido → EAN-13, tutto il
+// resto (SKU alfanumerici, 12 cifre/UPC-A, 13 cifre con checksum errato) →
+// Code128 letterale. Regola: il barcode stampato codifica SEMPRE la stringa
+// esatta ricevuta dal POS, così lo scanner restituisce il valore salvato.
 export function barcodeSvg(value: string, opts: Ean13SvgOptions = {}): string {
   const v = String(value).trim()
-  if (/^\d{12}$/.test(v)) return ean13Svg(v, opts)
   if (/^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12))) {
     return ean13Svg(v, opts)
   }
@@ -187,7 +189,6 @@ export function barcodeSvg(value: string, opts: Ean13SvgOptions = {}): string {
 // stampabile in NESSUNA simbologia (es. vuoto o caratteri di controllo).
 export function assertPrintableBarcode(value: string): void {
   const v = String(value).trim()
-  if (/^\d{12,13}$/.test(v)) return // numerico → EAN-13 o Code128, sempre ok
   if (!isCode128Encodable(v)) {
     throw new Error(`Barcode non stampabile: "${value}" contiene caratteri non supportati o è vuoto`)
   }

@@ -23,11 +23,13 @@ interface BarcodeField {
   data: string
 }
 
-// EAN-13 se 12/13 cifre (checksum valido per i 13), altrimenti Code128 — stessa logica di barcodeSvg.
+// EAN-13 solo per 13 cifre con checksum valido, altrimenti Code128 letterale — stessa logica
+// di barcodeSvg. 12 cifre NON diventano ^BE: la stampante aggiungerebbe un check digit e il
+// codice stampato non coinciderebbe più con quello salvato nel POS.
 function barcodeField(raw: string, moduleDots: number, heightDots: number): BarcodeField {
   const v = raw.trim()
-  if (/^\d{12}$/.test(v) || (/^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12)))) {
-    // ^BE = EAN-13: passiamo 12 cifre, il check digit lo calcola la stampante
+  if (/^\d{13}$/.test(v) && Number(v[12]) === ean13Checksum(v.slice(0, 12))) {
+    // ^BE = EAN-13: passiamo 12 cifre, il check digit lo ricalcola la stampante (è lo stesso)
     return { command: `^BY${moduleDots}^BEN,${heightDots},Y,N`, data: v.slice(0, 12) }
   }
   return { command: `^BY${moduleDots}^BCN,${heightDots},Y,N,N`, data: v }

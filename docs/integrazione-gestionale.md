@@ -172,7 +172,7 @@ Risposte:
 Validazioni (→ **400** `{ "success": false, "error": "..." }`):
 
 - `label.name` **string** e `label.price` **number** finito sono **obbligatori**.
-- `barcode` (opzionale) deve essere **EAN-13**: 13 cifre con checksum valido, **oppure 12 cifre** (il bridge calcola e appende il checksum). Qualsiasi altro formato → 400. Inviarlo come stringa per preservare gli zeri iniziali.
+- `barcode` (opzionale): il bridge stampa **sempre la stringa esatta ricevuta**, senza aggiungere cifre. 13 cifre con checksum valido → EAN-13 nativo; qualsiasi altro valore (SKU alfanumerici, 12 cifre/UPC-A, checksum errato) → Code128, così lo scanner restituisce il codice salvato nel gestionale. Solo vuoto o caratteri non stampabili → 400. Inviarlo come stringa per preservare gli zeri iniziali.
 - `copies` (opzionale, default 1): numero ≥ 1; valori > 50 vengono **silenziosamente ridotti a 50**.
 
 Il layout (dimensioni carta, template, barcode on/off) è **configurato nel bridge per stampante**, non inviato dal gestionale.

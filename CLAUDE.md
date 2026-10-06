@@ -39,7 +39,7 @@ Three Electron layers, each compiled by electron-vite into `out/`:
 - **`src/main/`** — Node.js main process. Entry `index.ts` owns app lifecycle: tray menu, the config window, the Fastify server, the updater, and a `Map<printerId, PrinterDriver>` of live driver instances. It wires config → drivers → server.
   - **`printing/`** — shared rendering/encoding helpers used by drivers:
     - `defaults.ts` — default label paper (50×30 mm), default template, sample label for previews
-    - `barcode.ts` — pure-SVG barcode rendering with auto-detection (`barcodeSvg`): 12/13 numeric digits → EAN-13, anything else → Code128 (subset B, alphanumeric SKUs); `assertPrintableBarcode` is the permissive server-side validator
+    - `barcode.ts` — pure-SVG barcode rendering with auto-detection (`barcodeSvg`): 13 numeric digits with valid checksum → EAN-13, anything else (alphanumeric SKUs, **12 digits / UPC-A**, bad checksum) → Code128 literal. The printed barcode always encodes the exact string the POS sent: a check digit is never added, otherwise the scanned value would not match the stored one; `assertPrintableBarcode` is the permissive server-side validator
     - `label-renderer.ts` — `LabelData + LabelLayout` → self-contained HTML (also non-fiscal docs → HTML)
     - `escpos-encoder.ts` — ESC/POS byte encoding: CP858 text, formatted non-fiscal lines, raster bitmaps
     - `html-to-bitmap.ts` — renders HTML to a monochrome bitmap via an offscreen BrowserWindow (for ESC/POS raster)

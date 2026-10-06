@@ -9,8 +9,8 @@ describe('ean13Checksum', () => {
 })
 
 describe('normalizeEan13', () => {
-  it('appends checksum to 12 digits', () => {
-    expect(normalizeEan13('800123456789')).toBe('8001234567897')
+  it('rifiuta 12 cifre: non aggiunge mai un check digit', () => {
+    expect(() => normalizeEan13('800123456789')).toThrow(/EAN-13/i)
   })
   it('accepts a valid 13-digit code', () => {
     expect(normalizeEan13('8001234567897')).toBe('8001234567897')
@@ -75,10 +75,19 @@ describe('Code128 + auto-detect', () => {
     expect(() => code128Modules('')).toThrow(/Code128/)
   })
 
-  it('barcodeSvg sceglie EAN-13 per 12/13 cifre valide', () => {
-    expect(barcodeSvg('801234567890').replace(/\s/g, '')).toContain('<text')
-    // 13 cifre con checksum valido resta EAN-13: nessuna eccezione
-    expect(() => barcodeSvg('8001234567890')).not.toThrow()
+  it('barcodeSvg sceglie EAN-13 solo per 13 cifre con checksum valido', () => {
+    const svg = barcodeSvg('8001234567897')
+    expect(svg).toContain('>8001234567897<')
+    // EAN-13: 95 moduli + quiet zone 11/7 → larghezza fissa
+    expect(svg).toContain('width="37.29mm"')
+  })
+
+  it('barcodeSvg stampa 12 cifre come Code128 letterale (UPC-A non viene "completato" a 13)', () => {
+    const svg = barcodeSvg('012345678905')
+    expect(svg).toContain('>012345678905<')
+    expect(svg).not.toContain('0123456789050')
+    // Code128: Start B + 12 dati + check = 14×11 + Stop 13 = 167 moduli + quiet 2×10
+    expect(svg).toContain('width="61.71mm"')
   })
 
   it('barcodeSvg ricade su Code128 per alfanumerici e numerici "strani"', () => {
