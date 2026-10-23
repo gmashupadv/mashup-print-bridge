@@ -22,6 +22,7 @@ export const SAMPLE_LABEL: LabelData = {
   compareAtPrice: 29.9,
   sku: 'SKU-TEST-01',
   barcode: '8001234567897',
+  lot: 'L-000123',
 }
 
 function el(e: LabelElement): LabelElement {

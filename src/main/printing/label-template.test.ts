@@ -8,6 +8,7 @@ import {
   fitFontMm,
   linesNeeded,
   materializeTemplate,
+  qrValue,
   resolveElements,
   resolvePaper,
   scaleLayout,
@@ -216,6 +217,39 @@ describe('barcodeValue', () => {
       elements: [{ id: 'b', type: 'barcode', xMm: 0, yMm: 0, wMm: 40, hMm: 10, text: '12345678' }],
     })
     expect(barcodeValue(el, label)).toBe('12345678')
+  })
+})
+
+describe('qrValue', () => {
+  const paper = resolvePaper(DEFAULT_LABEL_PAPER)
+  const qr = (text?: string) =>
+    resolveElements(
+      { version: 2, elements: [{ id: 'q', type: 'qr', xMm: 0, yMm: 0, wMm: 10, hMm: 10, text }] },
+      paper
+    )[0]
+  const withLot: LabelData = { ...label, lot: 'L-000123' }
+
+  it('usa il lotto del prodotto; senza lotto l\'elemento non stampa nulla', () => {
+    expect(qrValue(qr(), withLot)).toBe('L-000123')
+    expect(qrValue(qr(), label)).toBeNull()
+    expect(qrValue(qr(), { ...label, lot: '   ' })).toBeNull()
+  })
+
+  it('un valore fisso ha la precedenza sul lotto', () => {
+    expect(qrValue(qr('https://esempio.it/p/1'), withLot)).toBe('https://esempio.it/p/1')
+  })
+
+  it('il segnaposto {value} compone il contenuto attorno al lotto', () => {
+    expect(qrValue(qr('LOT:{value}'), withLot)).toBe('LOT:L-000123')
+    expect(qrValue(qr('LOT:{value}'), label)).toBeNull()
+  })
+
+  it('non risponde per elementi di altro tipo', () => {
+    const el = resolveElements(
+      { version: 2, elements: [{ id: 'p', type: 'price', xMm: 0, yMm: 0, wMm: 10 }] },
+      paper
+    )[0]
+    expect(qrValue(el, withLot)).toBeNull()
   })
 })
 

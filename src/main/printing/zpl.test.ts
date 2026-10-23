@@ -256,4 +256,53 @@ describe('buildLabelZpl — copie native ^PQ', () => {
     expect(buildLabelZpl(base, layout, undefined, NaN)).not.toContain('^PQ')
     expect(buildLabelZpl(base, layout, undefined, 99999)).toContain('^PQ9999,')
   })
+
+  describe('elemento qr (lotto)', () => {
+    const qrLayout = (el: Record<string, unknown> = {}): LabelLayout => ({
+      paper: DEFAULT_LABEL_PAPER,
+      template: {
+        version: 2,
+        elements: [{ id: 'q', type: 'qr', xMm: 2, yMm: 2, wMm: 10, hMm: 10, ...el }],
+      },
+    })
+    const withLot: LabelData = { ...base, lot: 'L-000123' }
+
+    it('emette ^BQ nativo con ECC M, ingrandimento dal riquadro e simbolo centrato', () => {
+      const zpl = buildLabelZpl(withLot, qrLayout())
+      // riquadro 10mm = 80 dot; 21 moduli + 4 di quiet zone per lato = 29 → ingrandimento 2
+      // simbolo 42 dot centrato nel riquadro: offset 19 su (16,16)
+      expect(zpl).toContain('^FO35,35^BQN,2,2^FDMA,L-000123^FS')
+    })
+
+    it('l\'ingrandimento cresce con il riquadro ed è limitato a 10', () => {
+      const big = buildLabelZpl(withLot, qrLayout({ wMm: 40, hMm: 40 }))
+      expect(big).toContain('^BQN,2,10^FDMA')
+      const mid = buildLabelZpl(withLot, qrLayout({ wMm: 15, hMm: 15 }))
+      expect(mid).toContain('^BQN,2,4^FDMA') // 120 dot / 29 = 4
+    })
+
+    it('usa il lato minore del riquadro e lo centra sull\'altro asse', () => {
+      const zpl = buildLabelZpl(withLot, qrLayout({ wMm: 20, hMm: 10 }))
+      // lato 80 dot → mag 2, simbolo 42; x: 16 + (160-42)/2 = 75 ; y: 16 + (80-42)/2 = 35
+      expect(zpl).toContain('^FO75,35^BQN,2,2^FDMA,L-000123^FS')
+    })
+
+    it('senza lotto il riquadro sparisce: nessun ^BQ', () => {
+      expect(buildLabelZpl(base, qrLayout())).not.toContain('^BQ')
+    })
+
+    it('un contenuto fisso e il formato {value} sostituiscono il lotto', () => {
+      expect(buildLabelZpl(withLot, qrLayout({ text: 'ABC-1' }))).toContain('^FDMA,ABC-1^FS')
+      expect(buildLabelZpl(withLot, qrLayout({ text: 'LOT:{value}' }))).toContain('^FDMA,LOT:L-000123^FS')
+    })
+
+    it('neutralizza ^ e ~ nel contenuto, come per il testo', () => {
+      const zpl = buildLabelZpl({ ...base, lot: 'A^B~C' }, qrLayout())
+      expect(zpl).toContain('^FDMA,A B C^FS')
+    })
+
+    it('un contenuto troppo lungo per il QR è un errore, non una stampa muta', () => {
+      expect(() => buildLabelZpl({ ...base, lot: 'a'.repeat(300) }, qrLayout())).toThrow(/QR/)
+    })
+  })
 })

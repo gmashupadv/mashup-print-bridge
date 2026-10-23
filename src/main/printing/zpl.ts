@@ -8,10 +8,12 @@
 // vede nell'editor è ciò che esce dalla Zebra.
 import type { LabelData, LabelLayout, LabelRotation } from '../drivers/interface'
 import { isEan13, barcodeModuleCount } from './barcode'
+import { qrFit, qrModuleCount } from './qr'
 import {
   barcodeValue,
   elementText,
   fitFontMm,
+  qrValue,
   resolveElements,
   resolvePaper,
   type ResolvedElement,
@@ -103,6 +105,21 @@ export function buildLabelZpl(
       const moduleDots = Math.max(1, Math.min(10, Math.round(moduleMm * dotsPerMm)))
       const bf = barcodeField(value, moduleDots, barsDots, o, el.showHri)
       lines.push(`^FO${x},${y}${bf.command}^FD${zplText(bf.data)}^FS`)
+      continue
+    }
+
+    if (el.type === 'qr') {
+      const value = qrValue(el, label)
+      if (!value) continue
+      // Il QR è quadrato: qrFit usa il lato minore del riquadro, lascia 4 moduli di quiet
+      // zone per lato e centra il simbolo. L'orientamento di ^BQ è sempre N: un QR si
+      // legge ruotato comunque, quindi `rotate` non ha effetto.
+      const fit = qrFit(qrModuleCount(value), dots(el.wMm), dots(el.hMm))
+      const qx = x + fit.offXDots
+      const qy = y + fit.offYDots
+      const mag = fit.mag
+      // ^FD: M = correzione d'errore media, A = modalità automatica scelta dalla stampante.
+      lines.push(`^FO${qx},${qy}^BQN,2,${mag}^FDMA,${zplText(value)}^FS`)
       continue
     }
 

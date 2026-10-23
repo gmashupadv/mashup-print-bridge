@@ -585,6 +585,36 @@ describe('POST /print-label', () => {
     expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
   })
 
+  it('forwards the lot to the driver and returns 200', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { label: { name: 'Rossetto', price: 12.9, lot: 'L-000123' } },
+    })
+    expect(res.statusCode).toBe(200)
+    const sent = (driver.printLabel as ReturnType<typeof vi.fn>).mock.calls[0][0]
+    expect(sent.lot).toBe('L-000123')
+  })
+
+  it.each([
+    ['a number', 123],
+    ['too long', 'x'.repeat(201)],
+    ['with control characters', 'L\x01001'],
+  ])('returns 400 when lot is %s', async (_label, lot) => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await app.inject({
+      method: 'POST',
+      url: '/print-label',
+      payload: { label: { name: 'Rossetto', price: 12.9, lot } },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error).toMatch(/lot/)
+    expect((driver.printLabel as ReturnType<typeof vi.fn>).mock.calls.length).toBe(0)
+  })
+
   it('returns 400 only when barcode has unprintable characters', async () => {
     const driver = makeMockDriver()
     const app = buildServer(makeOpts(driver))

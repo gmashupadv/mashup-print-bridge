@@ -22,6 +22,7 @@ export type LabelElementType =
   | 'compareAtPrice'
   | 'sku'
   | 'barcode'
+  | 'qr'
   | 'static'
   | 'line'
 
@@ -41,7 +42,7 @@ export interface LabelElement {
   xMm: number
   yMm: number
   wMm: number
-  /** Testo: altezza del riquadro. Barcode: altezza delle barre. Linea: spessore. */
+  /** Testo: altezza del riquadro. Barcode: altezza delle barre. QR: lato del riquadro (si usa il minore tra wMm e hMm). Linea: spessore. */
   hMm?: number
   fontMm?: number
   bold?: boolean
@@ -59,7 +60,8 @@ export interface LabelElement {
   rotate?: LabelRotation
   /**
    * 'static': il testo stesso. Altri tipi: formato con segnaposto {value}
-   * (es. "Cod. {value}"); per 'barcode' un valore fisso che sostituisce label.barcode.
+   * (es. "Cod. {value}"); per 'barcode' un valore fisso che sostituisce label.barcode;
+   * per 'qr' un contenuto fisso, oppure un formato con {value} = label.lot (es. "LOT:{value}").
    */
   text?: string
   /** Barcode: cifre leggibili sotto le barre (default true). */
@@ -106,6 +108,8 @@ export interface LabelData {
   compareAtPrice?: number
   sku?: string
   barcode?: string
+  /** Lotto di produzione: alimenta l'elemento 'qr'. Opzionale, non stampa nulla se assente. */
+  lot?: string
 }
 
 export interface NonFiscalLine {

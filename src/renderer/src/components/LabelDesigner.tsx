@@ -15,6 +15,7 @@ const TYPE_LABELS: Record<LabelElementType, string> = {
   compareAtPrice: 'Prezzo pieno (barrato)',
   sku: 'SKU / Codice',
   barcode: 'Barcode',
+  qr: 'QR lotto',
   static: 'Testo fisso',
   line: 'Linea',
 }
@@ -151,7 +152,9 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
     const el: LabelElement =
       type === 'barcode'
         ? { id, type, xMm: p?.margins.left ?? 2, yMm: 2, wMm: p?.innerW ?? 30, hMm: 10, fontMm: 2.2, align: 'center', showHri: true }
-        : type === 'line'
+        : type === 'qr'
+          ? { id, type, xMm: p?.margins.left ?? 2, yMm: 2, wMm: 10, hMm: 10 }
+          : type === 'line'
           ? { id, type, xMm: p?.margins.left ?? 2, yMm: 2, wMm: p?.innerW ?? 30, hMm: 0.3 }
           : {
               id,
@@ -361,7 +364,7 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
             />
           </div>
 
-          {selected.type !== 'line' && (
+          {selected.type !== 'line' && selected.type !== 'qr' && (
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div>
                 <label className="block text-[11px] text-gray-500 mb-0.5">
@@ -417,7 +420,7 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
             </div>
           )}
 
-          {selected.type !== 'line' && selected.type !== 'barcode' && (
+          {selected.type !== 'line' && selected.type !== 'barcode' && selected.type !== 'qr' && (
             <div className="flex items-center gap-4 mb-2 text-xs">
               <label className="flex items-center gap-1.5">
                 <input
@@ -449,7 +452,7 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
             </div>
           )}
 
-          {selected.type !== 'line' && selected.type !== 'barcode' && (
+          {selected.type !== 'line' && selected.type !== 'barcode' && selected.type !== 'qr' && (
             <div className="flex items-center gap-4 mb-2 text-xs">
               <label className="flex items-center gap-1.5">
                 <input
@@ -524,7 +527,9 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
                   ? 'Testo'
                   : selected.type === 'barcode'
                     ? 'Codice fisso (vuoto = barcode del prodotto)'
-                    : 'Formato — usa {value} per il valore del prodotto'}
+                    : selected.type === 'qr'
+                      ? 'Contenuto — fisso, oppure usa {value} per il lotto (vuoto = solo il lotto)'
+                      : 'Formato — usa {value} per il valore del prodotto'}
               </label>
               <input
                 type="text"
@@ -534,11 +539,20 @@ export function LabelDesigner({ paper, elements, onChange, previewHtml }: Props)
                     ? 'Testo fisso'
                     : selected.type === 'barcode'
                       ? '(barcode del prodotto)'
-                      : '{value}'
+                      : selected.type === 'qr'
+                        ? '(lotto del prodotto)'
+                        : '{value}'
                 }
                 value={selected.text ?? ''}
                 onChange={(e) => patch(selected.id, { text: e.target.value })}
               />
+              {selected.type === 'qr' && (
+                <p className="mt-1 text-[10px] text-gray-400">
+                  Il QR è quadrato: conta il lato minore del riquadro. Il simbolo si ingrandisce a
+                  numeri interi di punti e lascia sempre il margine bianco per la lettura. Con i
+                  moduli sotto 2 punti (0,25 mm) le termiche economiche leggono male.
+                </p>
+              )}
             </div>
           )}
         </div>

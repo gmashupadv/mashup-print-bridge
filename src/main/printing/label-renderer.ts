@@ -10,8 +10,10 @@
 // modello guida zpl.ts, così anteprima e stampa Zebra coincidono.
 import type { LabelData, LabelLayout, NonFiscalDoc } from '../drivers/interface'
 import { barcodeSvg, barcodeModuleCount } from './barcode'
+import { qrFit, qrModuleCount, qrSvg } from './qr'
 import {
   barcodeValue,
+  qrValue,
   elementText,
   fitFontMm,
   resolveElements,
@@ -77,6 +79,20 @@ function renderElement(el: ResolvedElement, label: LabelData): string {
     return `<div class="el bc" style="${boxCss(el)}text-align:${el.align};">${svg}</div>`
   }
 
+  if (el.type === 'qr') {
+    const value = qrValue(el, label)
+    if (!value) return ''
+    // Stessa geometria di zpl.ts (qrFit a 8 dot/mm): l'anteprima mostra il simbolo
+    // grande quanto uscirà dalla stampante, non quanto il riquadro. Nessuna rotazione:
+    // un QR si legge in qualunque orientamento e ^BQ non la supporta.
+    const fit = qrFit(qrModuleCount(value), Math.round(el.wMm * 8), Math.round(el.hMm * 8))
+    const sizeMm = fit.symbolDots / 8
+    const box =
+      `left:${mm(el.xMm + fit.offXDots / 8)};top:${mm(el.yMm + fit.offYDots / 8)};` +
+      `width:${mm(sizeMm)};height:${mm(sizeMm)};`
+    return `<div class="el qr" data-type="qr" style="${box}">${qrSvg(value, sizeMm)}</div>`
+  }
+
   const text = elementText(el, label)
   if (text === null) return ''
   // Corpo adattato al riquadro (se l'elemento ha autoFit): la stessa funzione la
@@ -115,6 +131,8 @@ body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; color: #000;
 .line { background: #000; }
 .bc { line-height: 0; }
 .bc svg { display: inline-block; max-width: 100%; max-height: 100%; }
+.qr { line-height: 0; }
+.qr svg { display: block; width: 100%; height: 100%; }
 </style></head><body>${body}</body></html>`
 }
 

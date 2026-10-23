@@ -58,6 +58,15 @@ export function resolveByCapability(
   return { printer: p }
 }
 
+// Caratteri di controllo (0-31, 127): non stampabili in nessuna simbologia.
+function hasControlChars(s: string): boolean {
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i)
+    if (c < 32 || c === 127) return true
+  }
+  return false
+}
+
 export function buildServer(opts: ServerOptions): FastifyInstance {
   const app = Fastify({ logger: false })
   const { getPrinters, version } = opts
@@ -235,6 +244,19 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
         } catch (err: unknown) {
           reply.status(400)
           return { success: false, error: err instanceof Error ? err.message : 'Barcode non valido' }
+        }
+      }
+
+      // Lotto (contenuto del QR): stringa stampabile, al massimo 200 caratteri. Vuoto = nessun QR.
+      // Il limite sta sotto la capacità del QR di versione 10 (213 byte) per lasciare margine.
+      if (label.lot !== undefined && label.lot !== null) {
+        const lot: unknown = label.lot
+        if (typeof lot !== 'string' || lot.length > 200 || hasControlChars(lot)) {
+          reply.status(400)
+          return {
+            success: false,
+            error: 'label.lot deve essere una stringa di al massimo 200 caratteri, senza caratteri di controllo',
+          }
         }
       }
 

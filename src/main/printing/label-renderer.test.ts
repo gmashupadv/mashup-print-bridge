@@ -402,4 +402,31 @@ describe('renderLabelHtml — adattamento del corpo', () => {
   it('un nome corto non viene rimpicciolito', () => {
     expect(renderLabelHtml({ name: 'Matita', price: 2 }, nameOnly(true))).toContain('font-size:3.00mm')
   })
+
+  describe('elemento qr (lotto)', () => {
+    const qrLayout = (el: Record<string, unknown> = {}): LabelLayout => ({
+      paper: DEFAULT_LABEL_PAPER,
+      template: {
+        version: 2,
+        elements: [{ id: 'q', type: 'qr', xMm: 2, yMm: 2, wMm: 10, hMm: 10, ...el }],
+      },
+    })
+
+    it('disegna il QR del lotto con la stessa misura che avrà sulla Zebra', () => {
+      const html = renderLabelHtml({ name: 'X', price: 1, lot: 'L-000123' }, qrLayout())
+      expect(html).toContain('data-type="qr"')
+      expect(html).toContain('viewBox="0 0 21 21"')
+      // 21 moduli × ingrandimento 2 a 8 dot/mm = 42 dot = 5.25mm
+      expect(html).toContain('width="5.25mm"')
+    })
+
+    it('senza lotto non disegna nulla', () => {
+      const html = renderLabelHtml({ name: 'X', price: 1 }, qrLayout())
+      expect(html).not.toContain('data-type="qr"')
+    })
+
+    it('un contenuto troppo lungo è un errore, non un riquadro vuoto', () => {
+      expect(() => renderLabelHtml({ name: 'X', price: 1, lot: 'a'.repeat(300) }, qrLayout())).toThrow(/QR/)
+    })
+  })
 })

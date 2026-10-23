@@ -162,7 +162,8 @@ Risposte:
     "variant": "porzione grande",
     "price": 8.50,
     "sku": "TAG-001",
-    "barcode": "8001234567890"
+    "barcode": "8001234567890",
+    "lot": "L-000123"
   },
   "copies": 3,
   "printerId": "labels"
@@ -173,6 +174,7 @@ Validazioni (→ **400** `{ "success": false, "error": "..." }`):
 
 - `label.name` **string** e `label.price` **number** finito sono **obbligatori**.
 - `barcode` (opzionale): il bridge stampa **sempre la stringa esatta ricevuta**, senza aggiungere cifre. 13 cifre con checksum valido → EAN-13 nativo; qualsiasi altro valore (SKU alfanumerici, 12 cifre/UPC-A, checksum errato) → Code128, così lo scanner restituisce il codice salvato nel gestionale. Solo vuoto o caratteri non stampabili → 400. Inviarlo come stringa per preservare gli zeri iniziali.
+- `lot` (opzionale): **stringa** di al massimo 200 caratteri, senza caratteri di controllo (numeri o altri tipi → 400). Viene stampato come **QR code** solo se il layout della stampante contiene un elemento *QR lotto*; senza elemento, o senza `lot`, non esce nulla. Il QR codifica la stringa esatta ricevuta (UTF-8), oppure il formato configurato nell'elemento, per esempio `LOT:{value}`. Sopra circa 200 byte il QR non è stampabile e la richiesta fallisce con un errore invece di produrre un simbolo illeggibile.
 - `copies` (opzionale, default 1): numero ≥ 1; valori > 50 vengono **silenziosamente ridotti a 50**.
 
 Il layout (dimensioni carta, template, barcode on/off) è **configurato nel bridge per stampante**, non inviato dal gestionale.

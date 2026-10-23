@@ -147,6 +147,19 @@ export function barcodeValue(el: ResolvedElement, label: LabelData): string | nu
   return s.length > 0 ? s : null
 }
 
+/**
+ * Contenuto del QR per un elemento di tipo 'qr', o null se non c'è nulla da
+ * codificare. Con `text` senza segnaposto il contenuto è fisso; con {value} è
+ * il formato attorno a `label.lot`; senza `text` è direttamente `label.lot`.
+ */
+export function qrValue(el: ResolvedElement, label: LabelData): string | null {
+  if (el.type !== 'qr') return null
+  if (el.text && !el.text.includes('{value}')) return el.text
+  const lot = label.lot === undefined || label.lot === null ? '' : String(label.lot).trim()
+  if (lot.length === 0) return null
+  return el.text ? el.text.replace('{value}', lot) : lot
+}
+
 // --- Adattamento del corpo al riquadro ------------------------------------
 // Il corpo va deciso QUI, nel modello condiviso, non nel browser: la Zebra non
 // sa misurare il testo, quindi un fit calcolato lato HTML farebbe divergere
@@ -358,7 +371,7 @@ function coerce(el: LabelElement, i: number, paper: ResolvedPaper, fontScale: nu
     xMm: num(el.xMm, 0),
     yMm: num(el.yMm, 0),
     wMm: Math.max(0, num(el.wMm, paper.innerW)),
-    hMm: Math.max(0, num(el.hMm, isBarcode ? 8 : num(el.fontMm, defFont) * 1.25)),
+    hMm: Math.max(0, num(el.hMm, isBarcode ? 8 : type === 'qr' ? num(el.wMm, 10) : num(el.fontMm, defFont) * 1.25)),
     fontMm: Math.max(0.5, num(el.fontMm, defFont) * fontScale),
     bold: el.bold === true,
     align: ALIGNS.includes(el.align as LabelAlign) ? (el.align as LabelAlign) : 'left',
