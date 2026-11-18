@@ -957,3 +957,154 @@ describe('integrazione axon-fpid via HTTP', () => {
     30_000
   )
 })
+
+describe('POST /print-deposit', () => {
+  const OK = { success: true, receiptNumber: '', closureNumber: '', printerSerial: '', errorMessage: '' }
+  const payload = {
+    format: 'receipt',
+    copyLabels: ['Copia cliente', 'Copia negozio'],
+    header: ['Sneakers Area Srl', 'Via Roma 1'],
+    orderNumber: 'POS-1234',
+    barcode: 'POS-1234',
+    customerName: 'Mario Rossi',
+    customerPhone: '333 1234567',
+    depositDate: '18/11/2026 15:42',
+    depositMethod: 'Contanti',
+    total: 250,
+    paid: 80,
+    remaining: 170,
+  }
+
+  function printer(id: string, role: PrinterConfig['role'], driver: PrinterDriver, extra: Partial<PrinterConfig> = {}): ManagedPrinter {
+    return {
+      config: {
+        id, label: id, role, driver: driver.name,
+        connection: { ip: '0', port: 0, timeout: 0 }, operatorId: '1', deptMapping: {}, ...extra,
+      },
+      driver,
+    }
+  }
+
+  const post = (app: ReturnType<typeof buildServer>, body: unknown) =>
+    app.inject({ method: 'POST', url: '/print-deposit', payload: body as Record<string, unknown> })
+
+  it('scontrino: una stampa per copia, la voce della copia in fondo, con taglio', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await post(app, payload)
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({ success: true, copiesRequested: 2, copiesPrinted: 2 })
+    const calls = (driver.printNonFiscal as ReturnType<typeof vi.fn>).mock.calls
+    expect(calls).toHaveLength(2)
+    expect(calls[0][0].lines.at(-1).text).toBe('Copia cliente')
+    expect(calls[1][0].lines.at(-1).text).toBe('Copia negozio')
+    expect(calls[0][0].cut).toBe(true)
+    const all = calls[0][0].lines.map((l: { text: string }) => l.text).join('\n')
+    expect(all).toContain('RICEVUTA\nDI ACCONTO')
+    expect(all).toContain('€ 170,00')
+    expect(all).toContain('Mario Rossi')
+  })
+
+  it('scontrino: usa printNonFiscalBatch quando il driver ce l\'ha (un invio solo)', async () => {
+    const batch = vi.fn().mockResolvedValue(OK)
+    const driver = makeMockDriver({ printNonFiscalBatch: batch })
+    const app = buildServer(makeOpts(driver))
+    const res = await post(app, payload)
+    expect(res.statusCode).toBe(200)
+    expect(batch).toHaveBeenCalledTimes(1)
+    expect(batch.mock.calls[0][0]).toHaveLength(2)
+    expect(driver.printNonFiscal).not.toHaveBeenCalled()
+  })
+
+  it('etichetta: layout sulla carta della stampante etichette, una per copia', async () => {
+    const receipt = makeMockDriver({ name: 'rcpt', capabilities: ['non-fiscal'] })
+    const labels = makeMockDriver({ name: 'lbl', capabilities: ['label'] })
+    const app = buildServer({
+      getPrinters: () => [
+        printer('banco', 'receipt', receipt),
+        printer('etichette', 'label', labels, { paper: { widthMm: 62, heightMm: 100 } }),
+      ],
+      version: '1.0.0',
+    })
+    const res = await post(app, { ...payload, format: 'label' })
+    expect(res.statusCode).toBe(200)
+    expect(receipt.printNonFiscal).not.toHaveBeenCalled()
+    const calls = (labels.printLabel as ReturnType<typeof vi.fn>).mock.calls
+    expect(calls).toHaveLength(2)
+    const [, layout] = calls[1]
+    expect(layout.paper.widthMm).toBe(62)
+    const texts = layout.template.elements.map((e: { text?: string }) => e.text)
+    expect(texts).toContain('Copia negozio')
+    expect(texts).toContain('€ 170,00')
+    expect(layout.template.elements.some((e: { type: string }) => e.type === 'barcode')).toBe(true)
+  })
+
+  it('etichetta: preferisce printLabelBatch', async () => {
+    const batch = vi.fn().mockResolvedValue(OK)
+    const driver = makeMockDriver({ printLabelBatch: batch })
+    const app = buildServer(makeOpts(driver))
+    const res = await post(app, { ...payload, format: 'label', copyLabels: ['Copia cliente'] })
+    expect(res.statusCode).toBe(200)
+    expect(batch).toHaveBeenCalledTimes(1)
+    expect(driver.printLabel).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [{ format: 'a4' }, 'format'],
+    [{ copyLabels: [] }, 'copyLabels'],
+    [{ copyLabels: ['1', '2', '3', '4', '5', '6'] }, 'copyLabels'],
+    [{ customerPhone: '' }, 'customerPhone'],
+    [{ total: 'tanti' }, 'total'],
+    [{ barcode: 'POS\u00001' }, 'barcode'],
+    [{ orderNumber: 'POS\n1' }, 'orderNumber'],
+  ])('400 con %j', async (over, fieldName) => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    const res = await post(app, { ...payload, ...over })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().success).toBe(false)
+    expect(res.json().error.startsWith(fieldName)).toBe(true)
+    expect(driver.printNonFiscal).not.toHaveBeenCalled()
+  })
+
+  it('stampante: 404 se l\'id non esiste, 409 se manca la capability, 503 se nessuna', async () => {
+    const labelsOnly = makeMockDriver({ capabilities: ['label'] })
+    const app = buildServer({ getPrinters: () => [printer('etichette', 'label', labelsOnly)], version: '1' })
+    expect((await post(app, { ...payload, printerId: 'nessuna' })).statusCode).toBe(404)
+    expect((await post(app, { ...payload, printerId: 'etichette' })).statusCode).toBe(409)
+    expect((await post(app, payload)).statusCode).toBe(503)
+  })
+
+  it('copia fallita: 500 con le copie effettivamente stampate', async () => {
+    const printNonFiscal = vi.fn()
+      .mockResolvedValueOnce(OK)
+      .mockResolvedValueOnce({ ...OK, success: false, errorMessage: 'Carta esaurita' })
+    const driver = makeMockDriver({ printNonFiscal })
+    const app = buildServer(makeOpts(driver))
+    const res = await post(app, payload)
+    expect(res.statusCode).toBe(500)
+    expect(res.json()).toMatchObject({ success: false, error: 'Carta esaurita', copiesRequested: 2, copiesPrinted: 1 })
+  })
+
+  it('driver che lancia: 500', async () => {
+    const driver = makeMockDriver({ printNonFiscal: vi.fn().mockRejectedValue(new Error('boom')) })
+    const app = buildServer(makeOpts(driver))
+    const res = await post(app, payload)
+    expect(res.statusCode).toBe(500)
+    expect(res.json()).toMatchObject({ success: false, error: 'boom', copiesPrinted: 0 })
+  })
+
+  it('gift card: riga "di cui gift card" nella ricevuta', async () => {
+    const driver = makeMockDriver()
+    const app = buildServer(makeOpts(driver))
+    await post(app, { ...payload, giftCardAmount: 30, copyLabels: ['Copia cliente'] })
+    const doc = (driver.printNonFiscal as ReturnType<typeof vi.fn>).mock.calls[0][0]
+    expect(doc.lines.some((l: { text: string }) => l.text.includes('di cui gift card') && l.text.endsWith('€ 30,00'))).toBe(true)
+  })
+
+  it('preflight CORS risponde 204 anche per /print-deposit', async () => {
+    const app = buildServer(makeOpts())
+    const res = await app.inject({ method: 'OPTIONS', url: '/print-deposit', headers: { origin: 'https://cashflow.example' } })
+    expect(res.statusCode).toBe(204)
+  })
+})

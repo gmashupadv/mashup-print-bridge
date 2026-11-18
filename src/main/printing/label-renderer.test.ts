@@ -430,3 +430,18 @@ describe('renderLabelHtml — adattamento del corpo', () => {
     })
   })
 })
+
+describe('renderNonFiscalHtml — riga barcode', () => {
+  it('disegna il barcode SVG al posto del testo', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'TESTO-RIPIEGO', barcode: 'POS-1234', align: 'center' }] }, 80)
+    expect(html).toContain('<svg')
+    expect(html).toContain('POS-1234') // cifre sotto le barre
+    expect(html).not.toContain('TESTO-RIPIEGO')
+  })
+
+  it('valore non codificabile → testo di ripiego', () => {
+    const html = renderNonFiscalHtml({ lines: [{ text: 'RIPIEGO', barcode: 'àè' }] }, 80)
+    expect(html).not.toContain('<svg')
+    expect(html).toContain('RIPIEGO')
+  })
+})

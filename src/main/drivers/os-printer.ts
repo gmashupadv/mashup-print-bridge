@@ -97,7 +97,7 @@ export class OsPrinterDriver implements PrinterDriver {
     // (quella è la geometria delle etichette: un documento non fiscale non deve essere troncato all'altezza etichetta)
     const estimatedHeightMm = Math.max(
       30,
-      10 + doc.lines.reduce((mm, l) => mm + (l.size === 'double' ? 8 : 4), 0)
+      10 + doc.lines.reduce((mm, l) => mm + (l.barcode ? 16 : l.size === 'double' ? 8 : 4), 0)
     )
     const opts = this.printOpts(widthMm, estimatedHeightMm, false)
     if (!opts) return fail('os-printer: deviceName non configurato (seleziona la stampante di sistema)')

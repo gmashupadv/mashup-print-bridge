@@ -136,6 +136,16 @@ body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; color: #000;
 </style></head><body>${body}</body></html>`
 }
 
+// Barcode di una riga non fiscale, o null se il valore non è codificabile
+// (si stampa allora il testo di ripiego della riga).
+function safeBarcodeSvg(value: string): string | null {
+  try {
+    return barcodeSvg(value, { heightMm: 10, moduleMm: 0.33, fontMm: 2.5 })
+  } catch {
+    return null
+  }
+}
+
 export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number, heightMm?: number): string {
   // doc.cut è ignorato qui: la responsabilità del taglio carta appartiene al driver, non al renderer HTML.
   // heightMm: l'altezza la passa il chiamante per farla coincidere col pageSize di stampa.
@@ -148,6 +158,10 @@ export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number, heightMm
   }
   const rows = doc.lines
     .map((l) => {
+      const barcode = l.barcode ? safeBarcodeSvg(l.barcode) : null
+      if (barcode) {
+        return `<div style="text-align:${l.align ?? 'left'};line-height:0;padding:1mm 0">${barcode}</div>`
+      }
       const styles = [
         `text-align:${l.align ?? 'left'}`,
         l.bold ? 'font-weight:bold' : '',
@@ -164,5 +178,6 @@ export function renderNonFiscalHtml(doc: NonFiscalDoc, widthMm: number, heightMm
 @page { size: ${w}mm ${hVal}mm; margin: 0; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { width: ${w}mm; font-family: monospace; color: #000; padding: 2mm; white-space: pre-wrap; }
+svg { max-width: 100%; }
 </style></head><body>${rows}</body></html>`
 }

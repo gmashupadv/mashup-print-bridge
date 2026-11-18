@@ -210,6 +210,59 @@ Entrambi i campi opzionali; `operatorId` di default usa quello configurato sulla
 - **204 No Content** in caso di successo — **body vuoto**, non tentare il parse JSON.
 - 404 / 409 / 503 / 500 come sopra (con body JSON di errore).
 
+### 4.9 `POST /print-deposit` — ricevuta di acconto  *(capability: `non-fiscal` o `label`)*
+
+Riepilogo stampato di un acconto preso in cassa: chi è il cliente, quanto ha versato e quanto resta. Una stampa per ogni voce di `copyLabels`; la voce va in fondo alla ricevuta o all'etichetta.
+
+```json
+{
+  "format": "receipt",
+  "printerId": "epson-banco",
+  "copyLabels": ["Copia cliente", "Copia negozio"],
+  "header": ["Sneakers Area Srl", "Via Roma 1", "80100 Napoli (NA)", "P.Iva 01234567890"],
+  "orderNumber": "POS-1234",
+  "barcode": "POS-1234",
+  "customerName": "Mario Rossi",
+  "customerPhone": "333 1234567",
+  "depositDate": "18/11/2026 15:42",
+  "depositMethod": "Contanti",
+  "total": 250.00,
+  "paid": 80.00,
+  "remaining": 170.00,
+  "giftCardAmount": 30.00
+}
+```
+
+| Campo | Tipo | Obbl. | Note |
+|---|---|---|---|
+| `format` | `"receipt"` \| `"label"` | sì | `receipt` → stampante con capability `non-fiscal`; `label` → capability `label` |
+| `printerId` | string | no | assente = prima stampante con la capability (regola del §3) |
+| `copyLabels` | string[] | sì | da 1 a 5 voci non vuote |
+| `header` | string[] | no | intestazione negozio; le righe vuote si scartano |
+| `orderNumber` | string non vuota | sì | |
+| `barcode` | string | no | stessa regola di `/print-label` (EAN-13 se valido, altrimenti Code128 della stringa esatta); vuoto = niente barcode |
+| `customerName`, `customerPhone` | string non vuota | sì | |
+| `depositDate` | string non vuota | sì | già formattata, il bridge non la interpreta |
+| `depositMethod` | string | no | |
+| `total`, `paid`, `remaining` | number finito ≥ 0 | sì | il bridge li formatta `€ 1.234,56` e **non** li ricalcola |
+| `giftCardAmount` | number finito > 0 | no | parte di `paid` pagata con gift card: riga "di cui gift card" sotto "Versato"; `null` = assente |
+
+Nessuna stringa può contenere caratteri di controllo (a capo compresi).
+
+Risposte:
+
+- **200** `PrintResult` + `copiesRequested`, `copiesPrinted`.
+- **400** `{ "success": false, "error": "<campo> ..." }`: il messaggio inizia sempre col nome del campo.
+- **404 / 409 / 503**: risoluzione della stampante, come gli altri endpoint.
+- **500** `{ "success": false, "error": "...", "copiesRequested", "copiesPrinted" }`: errore del driver. A differenza di `/print-courtesy`, qui un `success: false` del driver diventa **HTTP 500**.
+- Un bridge precedente a questa rotta risponde **404** senza `success`: il gestionale lo tratta come "bridge da aggiornare" e stampa dal browser.
+
+Impaginazione, decisa dal bridge:
+
+- `receipt`: un documento non fiscale per copia, chiuso dal taglio, su 32 colonne (la riga più stretta fra le stampanti supportate). Titolo "RICEVUTA DI ACCONTO" (su due righe, in doppia), poi Ordine, Cliente, Telefono, Acconto del, Metodo, Totale ordine, Versato, "di cui gift card", e "Da saldare" in grassetto con l'importo in doppia. Un testo che in doppia supera 16 caratteri (il limite della carta da 58mm), come un numero d'ordine lungo, resta in grassetto normale. Il barcode esce sulle stampanti ESC/POS e su quelle di sistema; le RT (Epson FP-Mate, Ditron, axonFPiD) stampano al suo posto il numero d'ordine in doppia altezza.
+- `label`: layout in mm sulla carta configurata della stampante etichette. Se le righe non entrano a un corpo leggibile si tolgono, in quest'ordine, intestazione, metodo, barcode, gift card, data e titolo. Nome, telefono, numero d'ordine, i tre importi e la voce della copia restano sempre.
+- Sulle stampanti di rete 9100 (ESC/POS, ZPL) tutte le copie partono in un solo invio.
+
 ## 5. `PrintResult` — risposta comune delle stampe
 
 ```typescript
@@ -266,6 +319,24 @@ interface PrintResult {
 }
 type PrintLabelResult = PrintResult & { copiesRequested: number; copiesPrinted: number }
 
+interface PrintDepositReq {
+  format: 'receipt' | 'label'
+  printerId?: string
+  copyLabels: string[]          // 1–5 voci
+  header?: string[]
+  orderNumber: string
+  barcode?: string
+  customerName: string
+  customerPhone: string
+  depositDate: string           // già formattata, es. "18/11/2026 15:42"
+  depositMethod?: string
+  total: number
+  paid: number
+  remaining: number
+  giftCardAmount?: number       // > 0, oppure assente
+}
+type PrintDepositResult = PrintResult & { copiesRequested: number; copiesPrinted: number }
+
 interface PrinterStatus { online: boolean; paperPresent: boolean; coverClosed: boolean; errorMessage: string }
 
 type Capability = 'fiscal-receipt' | 'non-fiscal' | 'label' | 'daily-close' | 'drawer' | 'cut'
@@ -290,8 +361,9 @@ interface BridgeError { success?: false; error: string }
 2. **Vendita:** `POST /print` con `printerId` fiscale → se `success: false` o HTTP ≥ 400, mostrare `error`/`errorMessage` all'operatore e **non** chiudere la vendita.
 3. **Pre-vendita (preconto/comanda):** `POST /print-nonfiscal` con `cut: true`.
 4. **Etichette da scheda prodotto:** `POST /print-label`; su fallimento parziale ristampare `copiesRequested − copiesPrinted`.
-5. **Fine giornata:** `GET /status` (stampante ok?) → conferma utente → `POST /daily-close`.
-6. **Cassetto:** `POST /open-drawer`, trattare 204 come successo.
+5. **Acconto in cassa:** `POST /print-deposit` con `copyLabels: ["Copia cliente", "Copia negozio"]`; un 404 senza `success` vuol dire bridge vecchio → stampa dal browser.
+6. **Fine giornata:** `GET /status` (stampante ok?) → conferma utente → `POST /daily-close`.
+7. **Cassetto:** `POST /open-drawer`, trattare 204 come successo.
 
 Gestione errori di rete (fetch rigettata / timeout): trattare come "bridge non disponibile" e proporre retry o fallback — **non** dare per fallita la stampa fiscale senza verificare, perché un timeout lato client può avvenire a stampa già eseguita.
 

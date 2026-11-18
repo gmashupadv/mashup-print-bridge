@@ -1,6 +1,7 @@
 // src/main/printing/escpos-encoder.ts
 // Encoder ESC/POS standard (Epson TM e compatibili). CP858 per i caratteri italiani + €.
 import type { NonFiscalDoc } from '../drivers/interface'
+import { code128Modules, isCode128Encodable, isEan13 } from './barcode'
 
 const ESC = 0x1b
 const GS = 0x1d
@@ -24,6 +25,41 @@ export function encodeCp858(s: string): Buffer {
   return Buffer.from(bytes)
 }
 
+// Larghezza stampabile più stretta fra le teste supportate (58mm → 48mm a 8 dot/mm):
+// la larghezza del modulo si sceglie perché il barcode ci stia comunque.
+const BARCODE_MAX_DOTS = 384
+const BARCODE_HEIGHT_DOTS = 80 // 10mm
+
+/**
+ * Barcode nativo (GS k, funzione B). Stessa regola di /print-label: EAN-13 solo
+ * con 13 cifre e checksum valido, altrimenti Code128 set B della stringa esatta.
+ * Null se il valore non è codificabile: il chiamante stampa il testo di ripiego.
+ */
+export function encodeBarcode(value: string): Buffer | null {
+  const v = value.trim()
+  if (!isCode128Encodable(v)) return null
+  let symbol: Buffer
+  let modules: number
+  if (isEan13(v)) {
+    symbol = Buffer.concat([Buffer.from([GS, 0x6b, 67, 13]), Buffer.from(v, 'ascii')])
+    modules = 95 + 18
+  } else {
+    // "{B" seleziona il set B; una graffa nei dati va raddoppiata.
+    const data = Buffer.from('{B' + v.replace(/\{/g, '{{'), 'ascii')
+    if (data.length > 255) return null
+    symbol = Buffer.concat([Buffer.from([GS, 0x6b, 73, data.length]), data])
+    modules = code128Modules(v).length + 20
+  }
+  const width = modules * 3 <= BARCODE_MAX_DOTS ? 3 : modules * 2 <= BARCODE_MAX_DOTS ? 2 : 1
+  return Buffer.concat([
+    Buffer.from([GS, 0x68, BARCODE_HEIGHT_DOTS]), // altezza
+    Buffer.from([GS, 0x77, width]),               // larghezza modulo
+    Buffer.from([GS, 0x48, 2]),                   // cifre sotto le barre
+    Buffer.from([GS, 0x66, 0]),                   // font A per le cifre
+    symbol,
+  ])
+}
+
 export function encodeNonFiscal(doc: NonFiscalDoc): Buffer {
   const parts: Buffer[] = [
     Buffer.from([ESC, 0x40]),      // init
@@ -32,6 +68,12 @@ export function encodeNonFiscal(doc: NonFiscalDoc): Buffer {
   for (const line of doc.lines) {
     const align = line.align === 'center' ? 1 : line.align === 'right' ? 2 : 0
     parts.push(Buffer.from([ESC, 0x61, align]))
+    const barcode = line.barcode ? encodeBarcode(line.barcode) : null
+    if (barcode) {
+      parts.push(barcode)
+      parts.push(Buffer.from([0x0a]))
+      continue
+    }
     parts.push(Buffer.from([ESC, 0x45, line.bold ? 1 : 0]))
     parts.push(Buffer.from([GS, 0x21, line.size === 'double' ? 0x11 : 0x00]))
     parts.push(encodeCp858(line.text))

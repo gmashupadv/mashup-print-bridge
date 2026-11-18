@@ -64,3 +64,20 @@ describe('ZplNetworkDriver — copie', () => {
     await expect(driver.printLabelCopies(label, layout, 2)).rejects.toThrow(/not connected/)
   })
 })
+
+describe('ZplNetworkDriver — etichette diverse in un invio', () => {
+  it('printLabelBatch concatena i formati ^XA…^XZ su una sola connessione', async () => {
+    const { driver, send, calls } = makeDriver()
+    await driver.connect(cfg)
+    const res = await driver.printLabelBatch([
+      { label: { name: 'Copia cliente', price: 1 }, layout },
+      { label: { name: 'Copia negozio', price: 1 }, layout },
+    ])
+    expect(res.success).toBe(true)
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(calls[0].timeout).toBe(6000)
+    expect(calls[0].data.match(/\^XA/g)).toHaveLength(2)
+    expect(calls[0].data.indexOf('Copia cliente')).toBeLessThan(calls[0].data.indexOf('Copia negozio'))
+    expect(calls[0].data).not.toContain('^PQ')
+  })
+})

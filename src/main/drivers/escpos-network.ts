@@ -4,7 +4,7 @@
 import { createConnection } from 'node:net'
 import type {
   PrinterDriver, DriverConfig, PrinterStatus, PrintResult,
-  NonFiscalDoc, LabelData, LabelLayout, Capability,
+  NonFiscalDoc, LabelData, LabelLayout, LabelJob, Capability,
 } from './interface'
 import { encodeNonFiscal, encodeRaster, type MonoBitmap } from '../printing/escpos-encoder'
 import { renderLabelHtml } from '../printing/label-renderer'
@@ -137,9 +137,15 @@ export class EscPosNetworkDriver implements PrinterDriver {
   }
 
   async printNonFiscal(doc: NonFiscalDoc): Promise<PrintResult> {
+    return this.printNonFiscalBatch([doc])
+  }
+
+  /** Più documenti, ognuno col suo taglio, su una sola connessione alla 9100. */
+  async printNonFiscalBatch(docs: NonFiscalDoc[]): Promise<PrintResult> {
     const cfg = this.requireCfg()
     try {
-      await this.deps.send(cfg.ip, cfg.port, cfg.timeout, encodeNonFiscal(doc))
+      const payload = Buffer.concat(docs.map((d) => encodeNonFiscal(d)))
+      await this.deps.send(cfg.ip, cfg.port, cfg.timeout * Math.max(1, docs.length), payload)
       return { ...OK }
     } catch (err: unknown) {
       return fail(err)
@@ -147,29 +153,39 @@ export class EscPosNetworkDriver implements PrinterDriver {
   }
 
   async printLabel(label: LabelData, layout: LabelLayout): Promise<PrintResult> {
+    return this.printLabelBatch([{ label, layout }])
+  }
+
+  /** Più etichette rasterizzate una per una e spedite su una sola connessione. */
+  async printLabelBatch(jobs: LabelJob[]): Promise<PrintResult> {
     const cfg = this.requireCfg()
     try {
-      const printableMm = PRINTABLE_MM[layout.paper.widthMm] ?? layout.paper.widthMm
-      const widthPx = Math.round(printableMm * DOTS_PER_MM)
-      // Layout automatico: basta restringere la carta, gli elementi si ricalcolano.
-      // Layout disegnato a mano: le coordinate sono assolute, quindi va riscalato
-      // tutto insieme o gli elementi a destra finiscono fuori dall'area stampabile.
-      const printableLayout = layout.template?.elements?.length
-        ? scaleLayout(layout, printableMm / Number(layout.paper.widthMm))
-        : { ...layout, paper: { ...layout.paper, widthMm: printableMm } }
-      const html = renderLabelHtml(label, printableLayout)
-      const bitmap = await this.deps.rasterize(html, widthPx)
-      const payload = Buffer.concat([
-        Buffer.from([0x1b, 0x40]),             // init
-        Buffer.from([0x1b, 0x61, 0x01]),       // center
-        encodeRaster(bitmap),
-        Buffer.from([0x1b, 0x64, 0x04]),       // feed
-        Buffer.from([0x1d, 0x56, 0x42, 0x00]), // partial cut
-      ])
-      await this.deps.send(cfg.ip, cfg.port, cfg.timeout, payload)
+      const payloads: Buffer[] = []
+      for (const { label, layout } of jobs) payloads.push(await this.encodeLabel(label, layout))
+      await this.deps.send(cfg.ip, cfg.port, cfg.timeout * Math.max(1, jobs.length), Buffer.concat(payloads))
       return { ...OK }
     } catch (err: unknown) {
       return fail(err)
     }
+  }
+
+  private async encodeLabel(label: LabelData, layout: LabelLayout): Promise<Buffer> {
+    const printableMm = PRINTABLE_MM[layout.paper.widthMm] ?? layout.paper.widthMm
+    const widthPx = Math.round(printableMm * DOTS_PER_MM)
+    // Layout automatico: basta restringere la carta, gli elementi si ricalcolano.
+    // Layout disegnato a mano: le coordinate sono assolute, quindi va riscalato
+    // tutto insieme o gli elementi a destra finiscono fuori dall'area stampabile.
+    const printableLayout = layout.template?.elements?.length
+      ? scaleLayout(layout, printableMm / Number(layout.paper.widthMm))
+      : { ...layout, paper: { ...layout.paper, widthMm: printableMm } }
+    const html = renderLabelHtml(label, printableLayout)
+    const bitmap = await this.deps.rasterize(html, widthPx)
+    return Buffer.concat([
+      Buffer.from([0x1b, 0x40]),             // init
+      Buffer.from([0x1b, 0x61, 0x01]),       // center
+      encodeRaster(bitmap),
+      Buffer.from([0x1b, 0x64, 0x04]),       // feed
+      Buffer.from([0x1d, 0x56, 0x42, 0x00]), // partial cut
+    ])
   }
 }

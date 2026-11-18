@@ -38,6 +38,7 @@ Three Electron layers, each compiled by electron-vite into `out/`:
 
 - **`src/main/`** — Node.js main process. Entry `index.ts` owns app lifecycle: tray menu, the config window, the Fastify server, the updater, and a `Map<printerId, PrinterDriver>` of live driver instances. It wires config → drivers → server.
   - **`printing/`** — shared rendering/encoding helpers used by drivers:
+    - `deposit-receipt.ts` — ricevuta di acconto (`/print-deposit`): validazione della richiesta, documento non fiscale per copia, layout etichetta a elementi statici
     - `defaults.ts` — default label paper (50×30 mm), default template, sample label for previews, `BUILTIN_LABEL_PRESETS` (layout pronti: standard 50×30, solo prezzo 30×12 per matite/trucchi, prezzo+prezzo pieno 40×20, verticale 12×40 ruotata)
     - `label-template.ts` — **modello di layout condiviso** fra i motori di stampa: `LabelElement[]` posizionati in mm assoluti, `resolvePaper`/`resolveElements` (coercizione numerica + guardia anti-iniezione), `defaultElementsFor` (layout automatico ricalcolato sulla carta), `elementText`/`barcodeValue` (formattazione dei valori), `fitFontMm`/`linesNeeded` (adattamento del corpo al riquadro, condiviso HTML+ZPL), `materializeTemplate` (auto → elementi modificabili), `scaleLayout` (riscala un layout esplicito per le teste che non coprono tutta la carta)
     - `qr.ts` — QR code per il **lotto** (elemento `qr`): `qrPlan` sceglie modalità (numerica/alfanumerica/byte UTF-8) e versione 1-10 a correzione M, `qrFit` calcola ingrandimento e posizione del simbolo in dot (lato minore del riquadro, 4 moduli di quiet zone per lato, centrato), `qrMatrix`/`qrSvg` lo disegnano per l'anteprima con `qrcode-generator`. **ZPL e anteprima usano la stessa `qrFit` a 8 dot/mm**, quindi il simbolo ha la stessa misura a video e su carta. Oltre la versione 10 lancia un errore (nessuna stampa muta)
@@ -80,6 +81,8 @@ interface PrinterDriver {
 
 A driver's `capabilities` array is the contract: the server routes requests only to printers whose driver declares the needed capability, and the optional methods (`printReceipt`/`printNonFiscal`/`printLabel`/`dailyClose`/`openDrawer`) must be implemented iff the matching capability is declared.
 
+`printNonFiscalBatch(docs)` e `printLabelBatch(jobs)` sono opzionali come `printLabelCopies`: più documenti (o etichette diverse fra loro) in un solo invio. Li implementano `escpos-network` e `zpl-network` per non riaprire la 9100 a ogni copia; `/print-deposit` li preferisce al ciclo.
+
 `printLabelCopies` è l'eccezione: non è legata a una capability ma alla **capacità della testa di ripetere l'etichetta da sé**. Quando c'è, `/print-label` la chiama una volta con la quantità invece di ciclare N volte su `printLabel`. Serve perché sulla porta 9100 riaprire la connessione a ogni copia fa perdere etichette (vedi `sendTcp` sotto).
 
 `registry.ts` is the single source of truth for available drivers — a name→factory map. **To add a driver: implement the interface, then register it in `registry.ts`.** `listDrivers()` (surfaced to the UI via IPC) and `createDriver(name)` both read from this map.
@@ -116,6 +119,7 @@ Config holds a `printers[]` array; each printer has an `id` and a `role` (`fisca
 | POST | `/print-nonfiscal` | Non-fiscal document; body `{ lines: [{ text, bold?, size?, align? }], cut?, printerId? }` |
 | POST | `/print-courtesy` | Scontrino di cortesia (non fiscale); body `{ header[], items[], number?, date?, returnPolicy?[], footer?[], printerId? }` |
 | POST | `/print-label` | Product label; body `{ label: { name, price, variant?, sku?, barcode?, lot? }, copies?, printerId? }` |
+| POST | `/print-deposit` | Ricevuta di acconto su scontrino o etichetta; body `{ format, copyLabels[], orderNumber, customerName, customerPhone, depositDate, total, paid, remaining, header?, barcode?, depositMethod?, giftCardAmount?, printerId? }` |
 | POST | `/daily-close` | Z closure; body `{ operatorId?, printerId? }` |
 | POST | `/open-drawer` | Cash drawer open; body `{ operatorId?, printerId? }`; 204 on success |
 
@@ -162,6 +166,11 @@ I preset (`AppConfig.labelPresets`) sono layout riusabili salvati dall'utente, e
 `/print-nonfiscal` line options: `bold` (boolean), `size` (`normal` | `double`), `align` (`left` | `center` | `right`); `cut` requests a paper cut where supported.
 
 `/print-courtesy`: documento non fiscale strutturato. `header` e `items` (array di stringhe non vuoti) sono obbligatori → **400** altrimenti. Il layout (ordine blocchi, righe vuote, titolo "Scontrino di cortesia N") è prodotto da `printing/courtesy-receipt.ts`; l'invio passa per la capability `non-fiscal` (stessa regola 404/409/503). Lo split payment NON è qui: è già gestito da `/print` via l'array `payments`.
+
+`/print-deposit`: ricevuta di acconto, una stampa per voce di `copyLabels` (1-5). Validazione e impaginazione in `printing/deposit-receipt.ts` (`parseDepositRequest`, `buildDepositDoc`, `buildDepositLabelLayout`); contratto completo in `docs/integrazione-gestionale.md` §4.9. Gli importi arrivano già calcolati dal gestionale: il bridge li formatta (`formatEur`, `€ 1.234,56`) e **non li ricalcola mai**. Se il driver risponde `success: false` la rotta dà **500**, non 200 come `/print-courtesy`.
+- `format: 'receipt'` → capability `non-fiscal`: un `NonFiscalDoc` per copia con `cut: true`, su 32 colonne (`RECEIPT_COLS`, la riga più stretta: 58mm e axonFPiD). Il barcode è una riga con `NonFiscalLine.barcode`: lo disegnano `escpos-encoder` (GS k nativo) e `renderNonFiscalHtml` (SVG); tutti gli altri driver stampano il `text` della riga, cioè il numero d'ordine in doppia altezza. Epson FP-Mate **non** stampa ancora il barcode (`printBarCode` non è stato provato su una RT reale: un XML rifiutato farebbe perdere tutta la ricevuta).
+- `format: 'label'` → capability `label`: nessun motore dedicato. Il layout è un `LabelTemplate` di elementi `static` + `barcode` calcolato sulla carta della stampante (il `template` configurato è ignorato), quindi HTML, ZPL e raster ESC/POS lo stampano già. Righe impilate con `autoFit`; sotto 2,2mm di corpo si tolgono righe facoltative per priorità (intestazione → metodo → barcode → gift card → data → titolo); nome, telefono, ordine, i tre importi e la copia restano sempre.
+- Copie: se il driver ha `printNonFiscalBatch` / `printLabelBatch` (escpos-network, zpl-network) parte **un solo invio** sulla 9100, altrimenti un ciclo di `printNonFiscal` / `printLabel` che si ferma alla prima copia fallita (`copiesPrinted`).
 
 ## Config schema
 

@@ -259,3 +259,43 @@ describe('sendTcp — chiusura del socket', () => {
     await new Promise<void>((r) => srv.close(() => r()))
   })
 })
+
+describe('EscPosNetworkDriver — invii multipli', () => {
+  it('printNonFiscalBatch spedisce tutti i documenti su UNA connessione, un taglio per copia', async () => {
+    const { driver, deps, sent } = makeDriver()
+    await driver.connect(cfg)
+    const res = await driver.printNonFiscalBatch([
+      { lines: [{ text: 'Copia cliente' }], cut: true },
+      { lines: [{ text: 'Copia negozio' }], cut: true },
+    ])
+    expect(res.success).toBe(true)
+    expect(deps.send).toHaveBeenCalledTimes(1)
+    expect(deps.send.mock.calls[0][2]).toBe(6000) // timeout scalato sulle copie
+    const cut = Buffer.from([0x1d, 0x56, 0x42, 0x00])
+    const first = sent[0].indexOf(cut)
+    expect(first).toBeGreaterThan(sent[0].indexOf(Buffer.from('Copia cliente')))
+    expect(sent[0].indexOf(Buffer.from('Copia negozio'))).toBeGreaterThan(first)
+    expect(sent[0].indexOf(cut, first + 1)).toBeGreaterThan(sent[0].indexOf(Buffer.from('Copia negozio')))
+  })
+
+  it('printLabelBatch rasterizza ogni etichetta e spedisce una volta sola', async () => {
+    const { driver, deps } = makeDriver()
+    await driver.connect(cfg)
+    const layout = { paper: { widthMm: 80 }, template: DEFAULT_LABEL_TEMPLATE }
+    const res = await driver.printLabelBatch([
+      { label: { name: 'A', price: 1 }, layout },
+      { label: { name: 'B', price: 2 }, layout },
+    ])
+    expect(res.success).toBe(true)
+    expect(deps.rasterize).toHaveBeenCalledTimes(2)
+    expect(deps.send).toHaveBeenCalledTimes(1)
+  })
+
+  it('un errore di invio diventa success:false, non un throw', async () => {
+    const { driver, deps } = makeDriver()
+    deps.send.mockRejectedValueOnce(new Error('Printer timeout'))
+    await driver.connect(cfg)
+    const res = await driver.printNonFiscalBatch([{ lines: [{ text: 'x' }] }])
+    expect(res).toMatchObject({ success: false, errorMessage: 'Printer timeout' })
+  })
+})

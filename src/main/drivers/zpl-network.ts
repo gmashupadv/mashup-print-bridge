@@ -5,7 +5,7 @@
 import { createConnection } from 'node:net'
 import type {
   PrinterDriver, DriverConfig, PrinterStatus, PrintResult,
-  LabelData, LabelLayout, Capability,
+  LabelData, LabelLayout, LabelJob, Capability,
 } from './interface'
 import { buildLabelZpl } from '../printing/zpl'
 import { sendTcp } from './escpos-network'
@@ -86,6 +86,21 @@ export class ZplNetworkDriver implements PrinterDriver {
       const qty = Math.max(1, Math.trunc(Number(copies) || 1))
       const zpl = buildLabelZpl(label, layout, undefined, qty)
       await this.deps.send(cfg.ip, cfg.port, cfg.timeout * qty, Buffer.from(zpl, 'utf-8'))
+      return { ...OK }
+    } catch (err: unknown) {
+      return fail(err)
+    }
+  }
+
+  /**
+   * Etichette diverse fra loro (es. "Copia cliente" / "Copia negozio") in un solo
+   * invio: più formati ^XA…^XZ uno dopo l'altro sulla stessa connessione.
+   */
+  async printLabelBatch(jobs: LabelJob[]): Promise<PrintResult> {
+    const cfg = this.requireCfg()
+    try {
+      const zpl = jobs.map(({ label, layout }) => buildLabelZpl(label, layout)).join('')
+      await this.deps.send(cfg.ip, cfg.port, cfg.timeout * Math.max(1, jobs.length), Buffer.from(zpl, 'utf-8'))
       return { ...OK }
     } catch (err: unknown) {
       return fail(err)

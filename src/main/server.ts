@@ -12,6 +12,11 @@ import type { PrinterConfig } from './config'
 import { DEFAULT_LABEL_PAPER, DEFAULT_LABEL_TEMPLATE } from './printing/defaults'
 import { assertPrintableBarcode } from './printing/barcode'
 import { buildCourtesyDoc, type CourtesyData } from './printing/courtesy-receipt'
+import {
+  buildDepositDoc,
+  buildDepositLabelLayout,
+  parseDepositRequest,
+} from './printing/deposit-receipt'
 
 export interface ManagedPrinter {
   config: PrinterConfig
@@ -306,6 +311,78 @@ export function buildServer(opts: ServerOptions): FastifyInstance {
       }
     }
   )
+
+  // Ricevuta di acconto: una stampa per voce di copyLabels, sulla stampante
+  // scontrini (non-fiscal) o etichette (label). I numeri arrivano già calcolati
+  // dal gestionale e qui si formattano soltanto. Contratto in CLAUDE.md.
+  app.post('/print-deposit', async (req, reply) => {
+    const parsed = parseDepositRequest(req.body)
+    if (!parsed.ok) {
+      reply.status(400)
+      return { success: false, error: parsed.error }
+    }
+    const { format, printerId, copyLabels, data } = parsed.request
+    const resolved = resolveByCapability(getPrinters(), format === 'receipt' ? 'non-fiscal' : 'label', printerId)
+    if ('error' in resolved) {
+      reply.status(resolved.status)
+      return { success: false, error: resolved.error }
+    }
+    const { driver, config: pc } = resolved.printer
+    const copiesRequested = copyLabels.length
+    let copiesPrinted = 0
+    try {
+      let res: PrintResult | null = null
+      if (format === 'receipt') {
+        const docs = copyLabels.map((copy) => buildDepositDoc(data, copy))
+        // Un invio solo dove il driver lo sa fare (9100): niente connessioni a raffica.
+        if (driver.printNonFiscalBatch) {
+          res = await driver.printNonFiscalBatch(docs)
+          copiesPrinted = res.success ? docs.length : 0
+        } else {
+          for (const doc of docs) {
+            res = await driver.printNonFiscal!(doc)
+            if (!res.success) break
+            copiesPrinted++
+          }
+        }
+      } else {
+        const paper = { ...DEFAULT_LABEL_PAPER, ...pc.paper }
+        // Il layout è tutto statico: label serve solo a dare un valore al barcode
+        // anche nel caso limite in cui il numero d'ordine contenga "{value}".
+        const label: LabelData = { name: data.orderNumber, price: data.remaining, barcode: data.barcode || undefined }
+        const jobs = copyLabels.map((copy) => ({ label, layout: buildDepositLabelLayout(data, copy, paper) }))
+        if (driver.printLabelBatch) {
+          res = await driver.printLabelBatch(jobs)
+          copiesPrinted = res.success ? jobs.length : 0
+        } else {
+          for (const job of jobs) {
+            res = await driver.printLabel!(job.label, job.layout)
+            if (!res.success) break
+            copiesPrinted++
+          }
+        }
+      }
+      if (!res || !res.success) {
+        reply.status(500)
+        return {
+          ...res,
+          success: false,
+          error: res?.errorMessage || 'Stampa non riuscita',
+          copiesRequested,
+          copiesPrinted,
+        }
+      }
+      return { ...res, copiesRequested, copiesPrinted }
+    } catch (err: unknown) {
+      reply.status(500)
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+        copiesRequested,
+        copiesPrinted,
+      }
+    }
+  })
 
   app.post<{ Body: { operatorId?: string; printerId?: string } }>('/daily-close', async (req, reply) => {
     const resolved = resolveByCapability(getPrinters(), 'daily-close', req.body.printerId)

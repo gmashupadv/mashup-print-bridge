@@ -114,6 +114,15 @@ export interface LabelData {
 
 export interface NonFiscalLine {
   text: string
+  /**
+   * Barcode da stampare al posto della riga. I driver che sanno disegnarlo
+   * (ESC/POS, stampa di sistema) stampano il barcode con le cifre sotto; tutti
+   * gli altri ignorano il campo e stampano `text`, che quindi deve sempre
+   * contenere un ripiego leggibile (di solito lo stesso valore). Stessa regola
+   * di `/print-label`: EAN-13 se 13 cifre con checksum valido, altrimenti
+   * Code128 letterale.
+   */
+  barcode?: string
   bold?: boolean
   size?: 'normal' | 'double'
   align?: 'left' | 'center' | 'right'
@@ -189,6 +198,22 @@ export interface PrinterDriver {
    * 9100 costringe a riaprire la connessione a ogni copia. Implica 'label'.
    */
   printLabelCopies?(label: LabelData, layout: LabelLayout, copies: number): Promise<PrintResult>
+  /**
+   * Più documenti non fiscali, ognuno col suo taglio, in un invio solo. Opzionale:
+   * chi non ce l'ha riceve N chiamate a `printNonFiscal`. Serve sulla 9100, dove
+   * riaprire la connessione per ogni copia è da evitare (vedi `sendTcp`).
+   */
+  printNonFiscalBatch?(docs: NonFiscalDoc[]): Promise<PrintResult>
+  /**
+   * Più etichette, anche diverse fra loro, in un invio solo (stesso motivo di
+   * `printNonFiscalBatch`). Opzionale; senza, N chiamate a `printLabel`. Implica 'label'.
+   */
+  printLabelBatch?(jobs: LabelJob[]): Promise<PrintResult>
   dailyClose?(operatorId: string): Promise<PrintResult>
   openDrawer?(operatorId: string): Promise<void>
+}
+
+export interface LabelJob {
+  label: LabelData
+  layout: LabelLayout
 }

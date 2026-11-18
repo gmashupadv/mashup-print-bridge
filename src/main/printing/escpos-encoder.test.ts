@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { encodeCp858, encodeNonFiscal, encodeRaster } from './escpos-encoder'
+import { encodeBarcode, encodeCp858, encodeNonFiscal, encodeRaster } from './escpos-encoder'
 
 describe('encodeCp858', () => {
   it('passes through ASCII and maps Italian accents and euro', () => {
@@ -83,5 +83,40 @@ describe('encodeNonFiscal — embedded newline sanitization', () => {
     expect(aIdx).toBeGreaterThanOrEqual(0)
     // The four bytes starting at A must be [0x41, 0x20, 0x42, 0x0a]
     expect(bytes.slice(aIdx, aIdx + 4)).toEqual([0x41, 0x20, 0x42, 0x0a])
+  })
+})
+
+describe('encodeNonFiscal — riga barcode', () => {
+  it('Code128 set B nativo (GS k 73) con la stringa esatta e le cifre sotto', () => {
+    const buf = encodeNonFiscal({ lines: [{ text: 'POS-1234', barcode: 'POS-1234', align: 'center' }] })
+    const data = Buffer.from('{BPOS-1234', 'ascii')
+    expect(buf.includes(Buffer.concat([Buffer.from([0x1d, 0x6b, 73, data.length]), data]))).toBe(true)
+    expect(buf.includes(Buffer.from([0x1d, 0x48, 2]))).toBe(true) // HRI sotto
+    // Il testo di ripiego non si stampa quando c'è il barcode.
+    expect(buf.includes(Buffer.from([0x1d, 0x21]))).toBe(false)
+  })
+
+  it('EAN-13 valido → GS k 67 con le 13 cifre, nessun check digit aggiunto', () => {
+    const buf = encodeNonFiscal({ lines: [{ text: 'x', barcode: '8001234567897' }] })
+    expect(buf.includes(Buffer.concat([Buffer.from([0x1d, 0x6b, 67, 13]), Buffer.from('8001234567897')]))).toBe(true)
+  })
+
+  it('le graffe nei dati Code128 vengono raddoppiate', () => {
+    const buf = encodeNonFiscal({ lines: [{ text: 'x', barcode: 'A{B' }] })
+    expect(buf.includes(Buffer.from('{BA{{B', 'ascii'))).toBe(true)
+  })
+
+  it('valore non codificabile → stampa il testo di ripiego', () => {
+    const buf = encodeNonFiscal({ lines: [{ text: 'ORDINE', barcode: 'àè' }] })
+    expect(buf.includes(Buffer.from([0x1d, 0x6b]))).toBe(false)
+    expect(buf.includes(Buffer.from('ORDINE'))).toBe(true)
+  })
+
+  it('codici lunghi stringono il modulo per restare nei 48mm', () => {
+    const short = encodeBarcode('POS-1')!
+    const long = encodeBarcode('ORDINE-POS-2026-11-18-0001234')!
+    const width = (b: Buffer): number => b[b.indexOf(Buffer.from([0x1d, 0x77])) + 2]
+    expect(width(short)).toBe(3)
+    expect(width(long)).toBeLessThan(3)
   })
 })
